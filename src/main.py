@@ -1,38 +1,37 @@
-import math
-import pygame
-
-from camera import Camera
-from scene import Scene
-from canvas import Canvas
-from renderer import RayTracingRenderer, Renderer
-from vector import Vector
-from color import BLACK, RED, GREEN, BLUE, WHITE, YELLOW, GRAY, PURPLE
-from image_saver import save2file
-from object import Sphere, Plane, Material
-from light import DirectionalLight
-
-WIDTH = 400
-ASPECT = 1
-HEIGHT = int(WIDTH / ASPECT)
-
-FOV = 2 / 3 * math.pi
-NEAR = 1
-
-BACKGROUND_COLOR = BLACK
-
-
 def main():
+    import math
+    import pygame
+
+    from camera import Camera
+    from scene import Scene
+    from canvas import Canvas
+    from renderer import RayTracingRenderer, Renderer
+    from vector import Vector
+    from color import BLACK, RED, GREEN, BLUE, WHITE, YELLOW, GRAY, PURPLE
+    from image_saver import save2file
+    from object import Sphere, Plane, Material
+    from light import DirectionalLight
+
+    WIDTH = 600
+    ASPECT = 16 / 9
+    HEIGHT = int(WIDTH / ASPECT)
+
+    FOV = 2 / 3 * math.pi
+    NEAR = 1
+
+    BACKGROUND_COLOR = BLACK
+
     scene: Scene = Scene()
 
-    scene.add_obj(Plane(Vector(-1, 0, 0), 0, Material(GRAY, 0.2)))
-    scene.add_obj(Sphere(Vector(-10, 5, 0), 10, Material(RED, 0.65)))
-    scene.add_obj(Sphere(Vector(-7.5, 20, 10), 7.5, Material(GREEN, 0.25)))
-    scene.add_obj(Sphere(Vector(-5, 30, 20), 5, Material(BLUE, 0.4)))
-    # scene.add_obj(Sphere(Vector(10, 10, -50), 50, Material(YELLOW, 0.5)))
-    scene.add_light(DirectionalLight(Vector(3, 10, -3), YELLOW, 0.7))
+    scene.add_obj(Plane(Vector(-1, 0, 0), 0.2, Material(GRAY, 0)))
+    scene.add_obj(Sphere(Vector(-5, 0, 0), -5, Material(RED, 0.15)))
+    # scene.add_obj(Sphere(Vector(-7.5, 0, -10), 7.5, Material(GREEN, 0.35)))
+    # scene.add_obj(Sphere(Vector(-5, 15, -15), 5, Material(BLUE, 0.5)))
+    # scene.add_obj(Sphere(Vector(0, 0, 0), 50, Material(YELLOW, 0.5)))
+    scene.add_light(DirectionalLight(Vector(3, 3, -3), WHITE, 1))
 
     camera: Camera = Camera(
-        pos=Vector(-10, 15, 40),
+        pos=Vector(-1, 0, 10),
         dir=Vector(0, 0, -1),
         up=Vector(1, 0, 0),
         fov=FOV,
@@ -74,6 +73,7 @@ def main():
 
         if changed:
             renderer.render(canvas, scene, camera)
+            # renderer.parallel_render(canvas, scene, camera)
             pygame.surfarray.blit_array(screen, canvas.get())
             pygame.display.flip()
             changed = False

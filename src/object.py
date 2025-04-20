@@ -16,7 +16,7 @@ class Material:
     reflective: float = 0.5
     diffuse: float = 0.5
     specular: float = 4
-    shininess: float = 32
+    shininess: float = 1
 
 
 class Object(ABC):
@@ -61,6 +61,8 @@ class Sphere(Object):
 
     def normal(self, point: Vector) -> Vector:
         n = point - self.center
+        if n.length() + EPSILON < self.radius:
+            n = -n
         n.normalize()
         return n
 

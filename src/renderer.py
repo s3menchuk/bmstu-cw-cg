@@ -1,12 +1,17 @@
 from abc import ABC, abstractmethod
 import math
 
+from multiprocessing import Pool
+import os
+from itertools import product
+from functools import partial
+
 from camera import Camera, DEFAULT_NEAR, DEFAULT_FAR
 from canvas import Canvas
-from object import Object, Plane, EPSILON
+from object import Object, EPSILON
 from scene import Scene
 from ray import Ray
-from color import Color
+from color import SKY_BLUE, WHITE, Color
 from vector import Vector
 from light import PointLight, DirectionalLight
 
@@ -48,6 +53,26 @@ def find_closest_obj(
     return closest_obj
 
 
+def calc_pixel_color(
+    pixel: tuple[int, int],
+    canvas: Canvas,
+    scene: Scene,
+    camera: Camera,
+    view_width: float,
+    view_height: float,
+    left_bottom_corner_view: Vector,
+) -> tuple[int, int, Color]:
+    x, y = pixel
+    dx = my_map(x + 0.5, 0.5, canvas.width - 0.5, 0, view_width)
+    dy = my_map(y + 0.5, 0.5, canvas.height - 0.5, 0, view_height)
+    point = left_bottom_corner_view + camera.right * dx + camera.up * dy
+    direction = point - camera.pos
+    direction.normalize()
+    ray = Ray(camera.pos.copy(), direction)
+    color = RayTracingRenderer.trace_ray(scene, ray, near=camera.near, far=camera.far)
+    return x, y, color
+
+
 class RayTracingRenderer(Renderer):
     @staticmethod
     def render(canvas: Canvas, scene: Scene, camera: Camera):
@@ -61,7 +86,8 @@ class RayTracingRenderer(Renderer):
             - camera.right * (view_width / 2)
             - camera.up * (view_height / 2)
         )
-
+        print(view_center)
+        print(left_bottom_corner_view)
         ray = Ray(camera.pos.copy(), Vector(0, 0, -1))
 
         for x in range(canvas.width):
@@ -76,6 +102,35 @@ class RayTracingRenderer(Renderer):
                     scene, ray, near=camera.near, far=camera.far
                 )
                 canvas.set_pixel(x, y, color)
+
+    @staticmethod
+    def parallel_render(canvas: Canvas, scene: Scene, camera: Camera):
+        view_center = camera.pos + camera.dir * camera.near
+
+        view_height = 2 * math.tan(camera.fov / 2) * camera.near
+        view_width = view_height * camera.aspect
+
+        left_bottom_corner_view = (
+            view_center
+            - camera.right * (view_width / 2)
+            - camera.up * (view_height / 2)
+        )
+
+        func = partial(
+            calc_pixel_color,
+            canvas=canvas,
+            scene=scene,
+            camera=camera,
+            view_width=view_width,
+            view_height=view_height,
+            left_bottom_corner_view=left_bottom_corner_view,
+        )
+
+        with Pool(os.cpu_count()) as p:
+            for x, y, c in p.map(
+                func, product(range(canvas.width), range(canvas.height))
+            ):
+                canvas.set_pixel(x, y, c)
 
     @staticmethod
     def is_in_shadow(scene: Scene, point: Vector, light: DirectionalLight) -> bool:
@@ -96,14 +151,13 @@ class RayTracingRenderer(Renderer):
         closest_obj = find_closest_obj(scene, ray, near, far)
         if closest_obj is None:
             k = my_map(ray.direction.x, -1, 1, 0, 1)
-            return Color.normalize(255 * k, 255 * k, 255)
+            return (1 - k) * SKY_BLUE + k * WHITE
 
         dist = closest_obj.dist(ray)
-
         intersection = ray.at(dist)
         normal = closest_obj.normal(intersection)
 
-        final_color = closest_obj.material.color * (1 - closest_obj.material.reflective)
+        final_color = Color()
         for light in scene.iter_lights():
             if isinstance(light, DirectionalLight):
                 if not (
@@ -113,17 +167,25 @@ class RayTracingRenderer(Renderer):
                     N = normal
                     L = -light.dir
                     H = 2 * N.dot(L) * N - L
-                    diffuse = closest_obj.material.diffuse * light.color * N.dot(L)
+                    diffuse = (
+                        closest_obj.material.diffuse
+                        * light.color
+                        * max(N.dot(L), 0)
+                        * light.intensity
+                    )
                     specular = (
                         closest_obj.material.specular
                         * light.color
-                        * N.dot(H) ** closest_obj.material.shininess
+                        * max(N.dot(H), 0) ** closest_obj.material.shininess
                         * light.intensity
                     )
                     final_color += diffuse + specular
 
-        reflected_dir = ray.direction - 2 * normal.dot(ray.direction) * normal
+        final_color = final_color.mul(closest_obj.material.color)
+        final_color *= 1 - closest_obj.material.reflective
+
         if depth > 1 and closest_obj.material.reflective > 0:
+            reflected_dir = ray.direction - 2 * normal.dot(ray.direction) * normal
             reflected_ray = Ray(intersection, reflected_dir)
             reflective_color = RayTracingRenderer.trace_ray(
                 scene, reflected_ray, depth - 1, near, far
