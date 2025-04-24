@@ -28,4 +28,6 @@ public:
 	std::shared_ptr<Object> find_closest_obj(const Scene& scene, const Ray& ray) const;
 
 	bool is_in_shadow(const Scene& scene, std::shared_ptr<Object> object, const Vector& point, const Light& light) const;
+
+	Color background_color(const Ray& ray) const;
 };

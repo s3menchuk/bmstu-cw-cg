@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{ccf8635a-bd60-48c9-94b9-fe41da00ed81}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GraphicsEngine.cpp">
@@ -26,6 +29,24 @@
     </ClCompile>
     <ClCompile Include="Vector.cpp">
       <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\imgui-master\imgui.cpp">
+      <Filter>Include</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\imgui-master\imgui_draw.cpp">
+      <Filter>Include</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\imgui-master\imgui_widgets.cpp">
+      <Filter>Include</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\imgui-sfml-master\imgui-SFML.cpp">
+      <Filter>Include</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\imgui-master\imgui_tables.cpp">
+      <Filter>Include</Filter>
+    </ClCompile>
+    <ClCompile Include="Dependencies\imgui-master\imgui_demo.cpp">
+      <Filter>Include</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +82,15 @@
     </ClInclude>
     <ClInclude Include="Material.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\imgui-master\imgui.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Dependencies\imgui-sfml-master\imgui-SFML.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="imconfig.h">
+      <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
