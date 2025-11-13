@@ -17,6 +17,6 @@ public:
 	Color ambient_color;
 	float ambient_intensity;
 
-	void add_object(std::shared_ptr<Object> object) { objects.push_back(object); }
-	void add_light(std::shared_ptr<Light> light) { lights.push_back(light); }
+	void add_object(const std::shared_ptr<Object>& object) { objects.push_back(object); }
+	void add_light(const std::shared_ptr<Light>& light) { lights.push_back(light); }
 };

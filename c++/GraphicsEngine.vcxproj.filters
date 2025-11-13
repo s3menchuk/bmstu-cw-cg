@@ -27,7 +27,7 @@
     <ClCompile Include="Color.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Vector.cpp">
+    <ClCompile Include="Vec3.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Dependencies\imgui-master\imgui.cpp">
@@ -48,6 +48,12 @@
     <ClCompile Include="Dependencies\imgui-master\imgui_demo.cpp">
       <Filter>Include</Filter>
     </ClCompile>
+    <ClCompile Include="math.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -65,7 +71,7 @@
     <ClInclude Include="Color.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Vector.h">
+    <ClInclude Include="Vec3.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Ray.h">

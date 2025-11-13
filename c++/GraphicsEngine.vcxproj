@@ -106,6 +106,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\Personal\BMSTU\5sem\CW-CG\GraphicsEngine\Dependencies\imgui-sfml-master;D:\Personal\BMSTU\5sem\CW-CG\GraphicsEngine\Dependencies\imgui-master;D:\Personal\BMSTU\5sem\CW-CG\GraphicsEngine\Dependencies\SFML-3.0.0\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,6 +125,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\Personal\BMSTU\5sem\CW-CG\GraphicsEngine\Dependencies\imgui-sfml-master;D:\Personal\BMSTU\5sem\CW-CG\GraphicsEngine\Dependencies\imgui-master;D:\Personal\BMSTU\5sem\CW-CG\GraphicsEngine\Dependencies\SFML-3.0.0\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,8 +145,10 @@
     <ClCompile Include="Dependencies\imgui-master\imgui_widgets.cpp" />
     <ClCompile Include="Dependencies\imgui-sfml-master\imgui-SFML.cpp" />
     <ClCompile Include="GraphicsEngine.cpp" />
+    <ClCompile Include="math.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="Vector.cpp" />
+    <ClCompile Include="Vec3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -160,7 +164,7 @@
     <ClInclude Include="Ray.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
-    <ClInclude Include="Vector.h" />
+    <ClInclude Include="Vec3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -15,22 +15,22 @@ public:
 
 class MattePlastic : public Material {
 public:
-    MattePlastic(const Color& diffuse) : Material(diffuse / 6, diffuse, WHITE * 0.3, 0.04, 20) {}
+    MattePlastic(const Color& diffuse) : Material(diffuse / 6, diffuse, WHITE * 0.3, 0.1, 20) {}
 };
 
 class GlossyPlastic : public Material {
 public:
-    GlossyPlastic(const Color& diffuse) : Material(diffuse / 4, diffuse, WHITE * 0.8, 0.08, 75) {}
+    GlossyPlastic(const Color& diffuse) : Material(diffuse / 4, diffuse, WHITE * 0.8, 0.2, 75) {}
 };
 
 class Metal : public Material {
 public:
-    Metal(const Color& diffuse) : Material(diffuse / 4, diffuse, diffuse * 5 / 4, 0.9, 350) {}
+    Metal(const Color& diffuse) : Material(diffuse / 4, diffuse, diffuse * 5 / 4, 0.7, 350) {}
 };
 
 class Glass : public Material {
 public:
-    Glass(const Color& diffuse) : Material(BLACK, diffuse, diffuse * 10, 0.075, 750) {}
+    Glass(const Color& diffuse) : Material(BLACK, diffuse, diffuse * 10, 0.4, 750) {}
 };
 
 //class BaseMaterial {

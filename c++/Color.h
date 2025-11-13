@@ -2,12 +2,16 @@
 
 #include <cstdint>
 #include <algorithm>
+#include <array>
 
 class Color
 {
 public:
-	Color() : Color(0, 0, 0) {}
-	Color(uint8_t R, uint8_t G, uint8_t B) : R(R), G(G), B(B) {}
+	constexpr Color() : Color(0, 0, 0) {}
+	constexpr Color(uint8_t c) : Color(c, c, c) {}
+	constexpr Color(uint8_t R, uint8_t G, uint8_t B) : R(R), G(G), B(B) {}
+	constexpr Color(const std::array<float, 3>& a) : Color(a[0] * 255, a[1] * 255, a[2] * 255) {}
+
 	uint8_t R, G, B;
 
 	static Color normalize(size_t r, size_t g, size_t b) {
@@ -19,6 +23,10 @@ public:
 			b *= k;
 		}
 		return Color(r, g, b);
+	}
+
+	std::array<float, 3> as_float_rgb() const {
+		return { static_cast<float>(R) / 255, static_cast<float>(G) / 255, static_cast<float>(B) / 255 };
 	}
 
 	Color operator*(float k) const {
@@ -51,21 +59,25 @@ public:
 		*this = *this * other;
 		return *this;
 	}
+
+	bool operator==(const Color& other) const {
+		return R == other.R && G == other.G && B == other.B;
+	}
 };
 
 Color operator*(float k, const Color& color);
 
-const Color BLACK(0, 0, 0);
-const Color WHITE(255, 255, 255);
+constexpr Color BLACK(0, 0, 0);
+constexpr Color WHITE(255, 255, 255);
 
-const Color RED(255, 0, 0);
-const Color GREEN(0, 255, 0);
-const Color BLUE(0, 0, 255);
-const Color SKY_BLUE(127, 178, 255);
+constexpr Color RED(255, 0, 0);
+constexpr Color GREEN(0, 255, 0);
+constexpr Color BLUE(0, 0, 255);
+constexpr Color SKY_BLUE(127, 178, 255);
 
-const Color YELLOW(255, 255, 0);
-const Color PURPLE(139, 0, 255);
-const Color ORANGE(255, 165, 0);
-const Color TEAL(0, 128, 128);
+constexpr Color YELLOW(255, 255, 0);
+constexpr Color PURPLE(139, 0, 255);
+constexpr Color ORANGE(255, 165, 0);
+constexpr Color TEAL(0, 128, 128);
 
-const Color GRAY(128, 128, 128);
+constexpr Color GRAY(128, 128, 128);

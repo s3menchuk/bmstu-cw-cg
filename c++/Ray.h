@@ -1,14 +1,14 @@
 #pragma once
 
-#include "Vector.h"
+#include "Vec3.h"
 
-class Ray
+class Ray3
 {
 public:
-	Ray(Vector origin, Vector direction) : origin(origin), direction(direction) {};
-	Vector origin;
-	Vector direction;
+	Ray3(Point3 origin, Vec3 direction) : origin(origin), direction(direction) {};
+	Point3 origin;
+	Vec3 direction;
 
-	Vector at(float dist) const { return origin + direction * dist; }
+	Vec3 at(float dist) const { return origin + direction * dist; }
 };
 

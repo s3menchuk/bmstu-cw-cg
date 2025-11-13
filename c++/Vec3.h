@@ -2,28 +2,40 @@
 
 #include <cmath>
 #include <iostream>
+#include <array>
 
-class Vector
+class Vec3
 {
 public:
-	Vector(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {};
+	Vec3(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
+	Vec3(const std::array<float, 3>& a) : Vec3(a[0], a[1], a[2]) {}
 
 	float x, y, z;
 
-	float length() const { return sqrt(x * x + y * y + z * z); }
+	float length() const {
+		return sqrt(x * x + y * y + z * z);
+	}
 
 	void normalize() {
 		float len = length();
+		if (!len)
+			throw std::runtime_error("Cannot normalize a zero-length vector");
 		x /= len;
 		y /= len;
 		z /= len;
 	}
 
-	float dot(const Vector& other) const { return x * other.x + y * other.y + z * other.z;  }
+	float dot(const Vec3& other) const {
+		return x * other.x + y * other.y + z * other.z;
+	}
 
-	Vector cross(const Vector& other) const { return Vector(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x); }
+	Vec3 cross(const Vec3& other) const {
+		return Vec3(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x);
+	}
 
-	float sqr() const { return dot(*this); }
+	float sqr() const {
+		return dot(*this);
+	}
 
 	void rotate_x(float angle) {
 		float new_y = y * std::cos(angle) - z * std::sin(angle);
@@ -46,7 +58,7 @@ public:
 		y = new_y;
 	}
 
-	void rotate(const Vector& axis, float angle) {
+	void rotate(const Vec3& axis, float angle) {
 		//float c = std::cos(angle);
 		//float s = std::sin(angle);
 
@@ -74,32 +86,32 @@ public:
 		*this = *this * std::cos(angle) + axis.cross(*this) * std::sin(angle) + axis * axis.dot(*this) * (1 - std::cos(angle));
 	}
 
-	Vector operator*(float scalar) const {
-		return Vector(x * scalar, y * scalar, z * scalar);
+	Vec3 operator*(float scalar) const {
+		return Vec3(x * scalar, y * scalar, z * scalar);
 	}
 	
-	Vector operator/(float scalar) const {
-		return Vector(x / scalar, y / scalar, z / scalar);
+	Vec3 operator/(float scalar) const {
+		return Vec3(x / scalar, y / scalar, z / scalar);
 	}
 
-	Vector operator+(const Vector& other) const {
-		return Vector(x + other.x, y + other.y, z + other.z);
+	Vec3 operator+(const Vec3& other) const {
+		return Vec3(x + other.x, y + other.y, z + other.z);
 	}
 
-	Vector operator-(const Vector& other) const {
-		return Vector(x - other.x, y - other.y, z - other.z);
+	Vec3 operator-(const Vec3& other) const {
+		return Vec3(x - other.x, y - other.y, z - other.z);
 	}
 
-	Vector operator-() const {
-		return Vector(-x, -y, -z);
+	Vec3 operator-() const {
+		return Vec3(-x, -y, -z);
 	}
 
-	Vector& operator+=(const Vector& other) {
+	Vec3& operator+=(const Vec3& other) {
 		*this = *this + other;
 		return *this;
 	}
 
-	Vector& operator-=(const Vector& other) {
+	Vec3& operator-=(const Vec3& other) {
 		*this = *this - other;
 		return *this;
 	}
@@ -118,11 +130,17 @@ public:
 		throw std::out_of_range("Vector index out of bounds!");
 	}
 
-	bool operator==(const Vector& other) const {
+	bool operator==(const Vec3& other) const {
 		return x == other.x && y == other.y && z == other.z;
+	}
+
+	operator std::array<float, 3>() const {
+		return { x, y, z };
 	}
 };
 
-Vector operator*(float scalar, const Vector& vector);
+using Point3 = Vec3;
 
-std::ostream& operator<<(std::ostream& out, const Vector& vector);
+Vec3 operator*(float scalar, const Vec3& vector);
+
+std::ostream& operator<<(std::ostream& out, const Vec3& vector);
