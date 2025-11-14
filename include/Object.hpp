@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Vec3.h"
-#include "Material.h"
-#include "Ray.h"
+#include "Vec3.hpp"
+#include "Material.hpp"
+#include "Ray.hpp"
 
 #include <stdexcept>
 #include <numbers>
@@ -186,7 +186,7 @@ public:
 		float det = edge1.dot(h);
 
 		if (std::abs(det) < EPSILON)
-			return false;  // Луч параллелен плоскости треугольника
+			return false;  // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 		float inv_det = 1.0f / det;
 		Vec3 s = ray.origin - a;

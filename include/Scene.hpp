@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Object.h"
-#include "Ray.h"
-#include "Color.h"
-#include "Light.h"
+#include "Object.hpp"
+#include "Ray.hpp"
+#include "Color.hpp"
+#include "Light.hpp"
 
 #include <vector>
 #include <memory>

@@ -46,7 +46,7 @@ public:
 
 	void rotate_y(float angle) {
 		float new_x = x * std::cos(angle) + z * std::sin(angle);
-		float new_z = -x * std::sin(angle) + z * std::cos(angle);
+		float new_z = -x * std::sin(angle) + z * std::cosf(angle);
 		x = new_x;
 		z = new_z;
 	}

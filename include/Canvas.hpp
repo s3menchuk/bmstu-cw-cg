@@ -5,7 +5,7 @@
 #include <memory>
 #include <cstdint>
 
-#include "Color.h"
+#include "Color.hpp"
 
 class Canvas
 {

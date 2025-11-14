@@ -1,4 +1,4 @@
-#include "Vec3.h"
+#include "Vec3.hpp"
 
 Vec3 operator*(float scalar, const Vec3& vector) {
 	return vector * scalar;

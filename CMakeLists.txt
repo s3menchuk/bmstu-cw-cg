@@ -1,0 +1,36 @@
+cmake_minimum_required(VERSION 3.15)
+project(MyApp)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Опционально: универсальный билд для Intel + Apple Silicon
+# set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+
+
+set(SFML_DIR "/opt/homebrew/opt/sfml/lib/cmake/SFML")
+find_package(SFML 3 COMPONENTS Graphics Window System Audio REQUIRED)
+
+add_executable(MyApp src/main.cpp)
+
+# Добавляем директории с заголовками
+target_include_directories(MyApp PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(MyApp PRIVATE
+    SFML::Graphics
+    SFML::Window
+    SFML::System
+    SFML::Audio
+)
+
+# Для macOS: фреймворки Cocoa и OpenGL
+if(APPLE)
+    find_library(COCOA Cocoa)
+    find_library(OpenGL OpenGL)
+    find_library(IOKIT IOKit)
+    find_library(COREVIDEO CoreVideo)
+    target_link_libraries(MyApp PRIVATE ${COCOA} ${OpenGL} ${IOKIT} ${COREVIDEO})
+endif()

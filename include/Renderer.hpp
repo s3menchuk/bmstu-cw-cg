@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Canvas.h"
-#include "Scene.h"
-#include "Camera.h"
-#include "Ray.h"
-#include "Object.h"
+#include "Canvas.hpp"
+#include "Scene.hpp"
+#include "Camera.hpp"
+#include "Ray.hpp"
+#include "Object.hpp"
 
 #include <cfloat>
 

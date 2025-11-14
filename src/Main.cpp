@@ -1,18 +1,18 @@
 ﻿#include <SFML/Graphics.hpp>
 
-#include "imgui.h"
-#include "imgui-SFML.h"
+// #include "imgui.h"
+// #include "imgui-SFML.h"
 
 #include <iostream>
 #include <memory>
 #include <numbers>
 #include <array>
 
-#include "Renderer.h"
-#include "Canvas.h"
-#include "Camera.h"
-#include "Scene.h"
-#include "math.h"
+#include "Renderer.hpp"
+#include "Canvas.hpp"
+#include "Camera.hpp"
+#include "Scene.hpp"
+#include "math.hpp"
 
 /*
 TODO:

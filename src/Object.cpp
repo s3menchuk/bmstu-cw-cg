@@ -1,7 +1,7 @@
 #include <vector>
 #include <numbers>
 
-#include "Object.h"
+#include "Object.hpp"
 
 void move_points_by(std::vector<Point3>& points, const Vec3& offset) {
 	for (Point3& p : points)

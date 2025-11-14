@@ -1,10 +1,10 @@
-#include "Renderer.h"
+#include "Renderer.hpp"
 
-#include "Vec3.h"
-#include "Ray.h"
-#include "Color.h"
-#include "Light.h"
-#include "math.h"
+#include "Vec3.hpp"
+#include "Ray.hpp"
+#include "Color.hpp"
+#include "Light.hpp"
+#include "math.hpp"
 
 #include <iostream>
 
