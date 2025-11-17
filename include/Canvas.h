@@ -1,11 +1,11 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include "Color.h"
 
 #include <memory>
 #include <cstdint>
 
-#include "Color.hpp"
+#include <SFML/Graphics.hpp>
 
 class Canvas
 {

@@ -1,10 +1,9 @@
-#include "Renderer.hpp"
-
-#include "Vec3.hpp"
-#include "Ray.hpp"
-#include "Color.hpp"
-#include "Light.hpp"
-#include "math.hpp"
+#include "Renderer.h"
+#include "Vec3.h"
+#include "Ray.h"
+#include "Color.h"
+#include "Light.h"
+#include "math.h"
 
 #include <iostream>
 
@@ -23,7 +22,7 @@ std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(const Scene& scene,
 	float closest_dist = FLT_MAX;
 	HitRecord hit_record;
 	for (const auto& obj : scene.objects) {
-		if ((*obj)->hit(ray, hit_record) && hit_record.dist < closest_dist) {
+		if (obj->visible && (*obj)->hit(ray, hit_record) && hit_record.dist < closest_dist) {
 			closest_dist = hit_record.dist;
 			closest_obj = obj;
 		}
@@ -86,9 +85,10 @@ void RayTracingRenderer::render(Canvas& canvas, const Scene& scene, const Camera
 
 	const size_t width = canvas.get_width();
 	const size_t height = canvas.get_height();
-	for (size_t row = 0; row < height; ++row) {
+	#pragma omp parallel for schedule(dynamic)
+	for (int row = 0; row < height; ++row) {
 		float dy = map(row, 0, height, 0, view_height);
-		for (size_t col = 0; col < width; ++col) {
+		for (int col = 0; col < width; ++col) {
 			float dx = map(col, 0, width, 0, view_width);
 			Vec3 point = left_bottom_corner_view + camera.right * dx + camera.up * dy;
 			Vec3 direction = point - camera.pos;
