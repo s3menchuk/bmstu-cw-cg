@@ -5,12 +5,10 @@
 #include "Vec3.hpp"
 #include "math.hpp"
 
-class Camera
-{
-public:
-	Camera(const Point3 &pos, const Vec3 &dir, float fov, float aspect, float near, float far) :
-		pos(pos), dir(dir), fov(fov), aspect(aspect), near(near), far(far)
-	{
+class Camera {
+  public:
+	Camera(const Point3 &pos, const Vec3 &dir, float fov, float aspect, float near, float far)
+		: pos(pos), dir(dir), fov(fov), aspect(aspect), near(near), far(far) {
 		this->dir.normalize();
 
 		if (this->dir == Vec3(0, 1, 0)) {

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(MyApp)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Опционально: универсальный билд для Intel + Apple Silicon
@@ -17,6 +17,8 @@ add_executable(MyApp src/main.cpp)
 target_include_directories(MyApp PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui-sfml
 )
 
 target_link_libraries(MyApp PRIVATE
