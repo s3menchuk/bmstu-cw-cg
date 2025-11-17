@@ -1,27 +1,27 @@
-#include "Renderer.h"
-#include "Vec3.h"
-#include "Ray.h"
-#include "Color.h"
-#include "Light.h"
-#include "math.h"
+#include "Renderer.hpp"
+#include "Color.hpp"
+#include "Light.hpp"
+#include "Math.hpp"
+#include "Ray.hpp"
+#include "Vec3.hpp"
 
 #include <iostream>
 
-bool RayTracingRenderer::is_in_shadow(const Scene& scene, const std::shared_ptr<Object>& object, const Vec3& point, const Light& light) const {
+bool RayTracingRenderer::is_in_shadow(const Scene &scene, const std::shared_ptr<Object> &object, const Vec3 &point,
+									  const Light &light) const {
 	Ray3 ray(point, -light.get_direction(point));
 	HitRecord hit_record;
-	for (const auto& obj : scene.objects)
+	for (const auto &obj : scene.objects)
 		if (obj != object && (*obj)->hit(ray, hit_record))
 			return true;
 	return false;
 }
 
-std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(const Scene& scene, const Ray3& ray) const
-{
+std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(const Scene &scene, const Ray3 &ray) const {
 	std::shared_ptr<Object> closest_obj = nullptr;
 	float closest_dist = FLT_MAX;
 	HitRecord hit_record;
-	for (const auto& obj : scene.objects) {
+	for (const auto &obj : scene.objects) {
 		if (obj->visible && (*obj)->hit(ray, hit_record) && hit_record.dist < closest_dist) {
 			closest_dist = hit_record.dist;
 			closest_obj = obj;
@@ -30,18 +30,17 @@ std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(const Scene& scene,
 	return closest_obj;
 }
 
-Color RayTracingRenderer::background_color(const Ray3& ray) const {
+Color RayTracingRenderer::background_color(const Ray3 &ray) const {
 	float k = map(ray.direction.x, -1, 1, 0, 1);
 	return SKY_BLUE * (1.0f - k) + WHITE * k;
 }
 
-Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t depth)
-{
-    auto closest_obj = find_closest_obj(scene, ray);
-    if (!closest_obj) {
+Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t depth) {
+	auto closest_obj = find_closest_obj(scene, ray);
+	if (!closest_obj) {
 		return background_color(ray);
-    }
-	
+	}
+
 	HitRecord hit_record;
 	(*closest_obj)->hit(ray, hit_record);
 
@@ -51,16 +50,20 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
 	uint8_t b = map(hit_record.normal.z, -1, 1, 0, 255);
 	return Color(r, g, b);
 	*/
-	
+
 	Color ambient(closest_obj->material.ambient * scene.ambient_color * scene.ambient_intensity);
 	Color diffuse;
 	Color specular;
-	for (const auto& light : scene.lights) {
-		if (hit_record.normal.dot(light->get_direction(hit_record.point)) < 0 && !is_in_shadow(scene, closest_obj, hit_record.point, *light)) {
+	for (const auto &light : scene.lights) {
+		if (hit_record.normal.dot(light->get_direction(hit_record.point)) < 0 &&
+			!is_in_shadow(scene, closest_obj, hit_record.point, *light)) {
 			Vec3 L = -light->get_direction(hit_record.point);
 			Vec3 H = 2 * hit_record.normal.dot(L) * hit_record.normal - L;
-			diffuse += closest_obj->material.diffuse * light->color * std::max(hit_record.normal.dot(L), 0.0f) * light->get_intensity(hit_record.point);
-			specular += closest_obj->material.specular * light->color * std::pow(std::max(hit_record.normal.dot(H), 0.0f), closest_obj->material.shininess) * light->get_intensity(hit_record.point);
+			diffuse += closest_obj->material.diffuse * light->color * std::max(hit_record.normal.dot(L), 0.0f) *
+					   light->get_intensity(hit_record.point);
+			specular += closest_obj->material.specular * light->color *
+						std::pow(std::max(hit_record.normal.dot(H), 0.0f), closest_obj->material.shininess) *
+						light->get_intensity(hit_record.point);
 		}
 	}
 	Color phong_color = ambient + diffuse + specular;
@@ -75,9 +78,9 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
 	return final_color;
 }
 
-void RayTracingRenderer::render(Canvas& canvas, const Scene& scene, const Camera& camera, size_t depth) {
+void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth) {
 	Vec3 view_center = camera.pos + camera.dir * camera.near;
-	
+
 	float view_height = 2 * std::tan(camera.fov / 2) * camera.near;
 	float view_width = view_height * camera.aspect;
 
@@ -85,7 +88,7 @@ void RayTracingRenderer::render(Canvas& canvas, const Scene& scene, const Camera
 
 	const size_t width = canvas.get_width();
 	const size_t height = canvas.get_height();
-	#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic)
 	for (int row = 0; row < height; ++row) {
 		float dy = map(row, 0, height, 0, view_height);
 		for (int col = 0; col < width; ++col) {

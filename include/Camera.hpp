@@ -1,17 +1,15 @@
 #pragma once
 
-#include "types.h"
-#include "Vec3.h"
-#include "math.h"
+#include "Math.hpp"
+#include "Types.hpp"
+#include "Vec3.hpp"
 
 #include <iostream>
 
-class Camera
-{
-public:
-	Camera(const Point3& pos, const Vec3& dir, T fov, T aspect, T near, T far) :
-		pos(pos), dir(dir), fov(fov), aspect(aspect), near(near), far(far)
-	{
+class Camera {
+  public:
+	Camera(const Point3 &pos, const Vec3 &dir, T fov, T aspect, T near, T far)
+		: pos(pos), dir(dir), fov(fov), aspect(aspect), near(near), far(far) {
 		this->dir.normalize();
 
 		if (this->dir == Vec3(0, 1, 0)) {

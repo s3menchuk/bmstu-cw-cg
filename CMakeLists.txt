@@ -4,21 +4,28 @@ project(MyApp)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Опционально: универсальный билд для Intel + Apple Silicon
-# set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
-
-
 set(SFML_DIR "/opt/homebrew/opt/sfml/lib/cmake/SFML")
 find_package(SFML 3 COMPONENTS Graphics Window System Audio REQUIRED)
 
-add_executable(MyApp src/main.cpp)
+add_executable(MyApp
+    src/Main.cpp
+    src/Color.cpp
+    src/Interval.cpp
+    src/Math.cpp
+    src/Object.cpp
+    src/Renderer.cpp
+    src/Vec3.cpp
+
+    external/imgui/imgui.cpp
+    external/imgui-sfml/imgui-sfml.cpp
+)
 
 # Добавляем директории с заголовками
 target_include_directories(MyApp PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui
-    ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui-sfml
+    external/imgui
+    external/imgui-sfml
 )
 
 target_link_libraries(MyApp PRIVATE

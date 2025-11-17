@@ -1,73 +1,70 @@
 #pragma once
 
-#include "Vec3.h"
-#include "Material.h"
-#include "Ray.h"
-#include "AABB.h"
-#include "Interval.h"
-#include "types.h"
+#include "AABB.hpp"
+#include "Interval.hpp"
+#include "Material.hpp"
+#include "Ray.hpp"
+#include "Types.hpp"
+#include "Vec3.hpp"
 
-#include <stdexcept>
-#include <numbers>
-#include <vector>
 #include <limits>
+#include <numbers>
+#include <stdexcept>
+#include <vector>
 
-// Центр тяжести
-Vec3 compute_centroid(const std::vector<Vec3>& points);
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+Vec3 compute_centroid(const std::vector<Vec3> &points);
 
-// Сортировка вершин по кругу в плоскости
-void sort_vertices_ccw3d(std::vector<Vec3>& vertices);
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+void sort_vertices_ccw3d(std::vector<Vec3> &vertices);
 
-void move_points_by(std::vector<Point3>& points, const Vec3& offset);
+void move_points_by(std::vector<Point3> &points, const Vec3 &offset);
 
-std::vector<Point3> get_points_on_circle(const Vec3& center, T radius, size_t order);
+std::vector<Point3> get_points_on_circle(const Vec3 &center, T radius, size_t order);
 
 class HitRecord {
-public:
+  public:
 	Vec3 point;
 	Vec3 normal;
 	T dist;
 };
 
 class Hittable {
-public:
-	virtual bool hit(const Ray3& ray, HitRecord& hit_record) const = 0;
-	//virtual AABB bounding_box() const = 0;
+  public:
+	virtual bool hit(const Ray3 &ray, HitRecord &hit_record) const = 0;
+	// virtual AABB bounding_box() const = 0;
 	virtual ~Hittable() = default;
 };
 
-//class Movable {
-//public:
+// class Movable {
+// public:
 //	virtual void set_pos(const Vec3& new_pos) = 0;
 //	virtual Vec3 get_pos() const = 0;
 //	virtual ~Movable() = default;
-//};
-
+// };
 
 class GeometricPrimitive : public Hittable {
-public:
+  public:
 	virtual std::string get_type() const = 0;
 	virtual ~GeometricPrimitive() = default;
 };
 
 class Object {
-public:
-	Object(const std::shared_ptr<GeometricPrimitive>& primitive, const Material& material, bool visible = true) : primitive(primitive), material(material), visible(visible) {}
+  public:
+	Object(const std::shared_ptr<GeometricPrimitive> &primitive, const Material &material, bool visible = true)
+		: primitive(primitive), material(material), visible(visible) {}
 	std::shared_ptr<GeometricPrimitive> operator->() { return primitive; }
 	std::shared_ptr<const GeometricPrimitive> operator->() const { return primitive; }
 	Material material;
 	bool visible;
-private:
+
+  private:
 	std::shared_ptr<GeometricPrimitive> primitive;
 };
 
-
-class Sphere : public GeometricPrimitive
-{
-public:
-	Sphere(const Point3& center, T radius) : center(center) {
-		set_radius(radius);
-	}
+class Sphere : public GeometricPrimitive {
+  public:
+	Sphere(const Point3 &center, T radius) : center(center) { set_radius(radius); }
 
 	Point3 center;
 
@@ -79,7 +76,7 @@ public:
 		radius = value;
 	}
 
-	bool hit(const Ray3& ray, HitRecord& hit_record) const override {
+	bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
 		Vec3 co = ray.origin - center;
 
 		auto a = ray.direction.sqr();
@@ -100,38 +97,38 @@ public:
 		hit_record.dist = t_min;
 		hit_record.point = ray.at(t_min);
 		hit_record.normal = hit_record.point - center;
-		//if (hit_record.normal.length() + EPSILON < radius)
+		// if (hit_record.normal.length() + EPSILON < radius)
 		//	hit_record.normal = -hit_record.normal;
 		hit_record.normal.normalize();
 		return true;
 	}
 
 	static const std::string type;
-	std::string get_type() const { return type; }
-private:
+	std::string get_type() const override { return type; }
+
+  private:
 	float radius;
 };
 
-class Plane : public GeometricPrimitive
-{
-public:
+class Plane : public GeometricPrimitive {
+  public:
 	T offset;
 
-	Plane(const Vec3& normal, T offset) {
+	Plane(const Vec3 &normal, T offset) {
 		set_normal(normal);
 		this->offset = offset;
 	}
 
 	Vec3 get_normal() const { return normal; }
 
-	void set_normal(const Vec3& new_normal) {
+	void set_normal(const Vec3 &new_normal) {
 		if (new_normal.length() == 0)
 			throw std::invalid_argument("Normal vector must be non-zero");
 		this->normal = new_normal;
 		this->normal.normalize();
 	}
 
-	bool hit(const Ray3& ray, HitRecord& hit_record) const override {
+	bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
 		float N = normal.dot(ray.origin) + offset;
 		float D = normal.dot(ray.direction);
 		if (D == 0)
@@ -146,14 +143,15 @@ public:
 	}
 
 	static const std::string type;
-	std::string get_type() const { return type; }
-private:
+	std::string get_type() const override { return type; }
+
+  private:
 	Vec3 normal;
 };
 
 class Quad : public GeometricPrimitive {
-public:
-	Quad(const Vec3& Q, const Vec3& u, const Vec3& v) : Q(Q), u(u), v(v) {
+  public:
+	Quad(const Vec3 &Q, const Vec3 &u, const Vec3 &v) : Q(Q), u(u), v(v) {
 		Vec3 n = u.cross(v);
 		normal = n;
 		normal.normalize();
@@ -161,12 +159,12 @@ public:
 		w = n / n.dot(n);
 	}
 
-	bool hit(const Ray3& ray, HitRecord& hit_record) const override {
+	bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
 		auto denom = normal.dot(ray.direction);
 
 		if (std::abs(denom) < std::numeric_limits<T>::epsilon()) // 1e-8
 			return false;
-		
+
 		auto t = (D - normal.dot(ray.origin)) / denom;
 
 		if (t < 0)
@@ -177,7 +175,6 @@ public:
 		auto alpha = w.dot(planar_hitpt_vector.cross(v));
 		auto beta = w.dot(u.cross(planar_hitpt_vector));
 
-		
 		Interval interval(0, 1);
 		if (!(interval.contains(alpha) && interval.contains(beta)))
 			return false;
@@ -190,8 +187,9 @@ public:
 	}
 
 	static const std::string type;
-	std::string get_type() const { return type; }
-private:
+	std::string get_type() const override { return type; }
+
+  private:
 	Vec3 Q;
 	Vec3 u, v;
 	Vec3 w;
@@ -200,13 +198,13 @@ private:
 };
 
 class Triangle : public GeometricPrimitive {
-public:
-	Triangle(const Point3& a, const Point3& b, const Point3& c) : a(a), b(b), c(c) {
+  public:
+	Triangle(const Point3 &a, const Point3 &b, const Point3 &c) : a(a), b(b), c(c) {
 		const auto v = (b - a).cross(c - a);
 		normal = v / v.length();
 	}
 
-	bool hit(const Ray3& ray, HitRecord& hit_record) const {
+	bool hit(const Ray3 &ray, HitRecord &hit_record) const {
 		constexpr T EPSILON = std::numeric_limits<T>::epsilon(); // 1e-6f
 		auto edge1 = b - a;
 		auto edge2 = c - a;
@@ -215,7 +213,7 @@ public:
 		auto det = edge1.dot(h);
 
 		if (std::abs(det) < EPSILON)
-			return false;  // Луч параллелен плоскости треугольника
+			return false; // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 		auto inv_det = 1.0 / det;
 		auto s = ray.origin - a;
@@ -242,22 +240,23 @@ public:
 
 	static const std::string type;
 	std::string get_type() const { return type; }
-private:
+
+  private:
 	Point3 a, b, c;
 	Vec3 normal;
 };
 
 class Mesh : public GeometricPrimitive {
-public:
-	Mesh(const std::vector<Triangle>& triangles) : triangles(triangles) {
+  public:
+	Mesh(const std::vector<Triangle> &triangles) : triangles(triangles) {
 		if (triangles.empty())
 			throw std::invalid_argument("Must be at least 1 triangle");
 	}
 
-	bool hit(const Ray3& ray, HitRecord& hit_record) const override {
+	bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
 		T min_dist = std::numeric_limits<T>::max();
 		HitRecord temp_hit_record;
-		for (const auto& t : triangles) {
+		for (const auto &t : triangles) {
 			if (t.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
 				min_dist = temp_hit_record.dist;
 				hit_record = temp_hit_record;
@@ -266,27 +265,28 @@ public:
 		return min_dist != std::numeric_limits<T>::max();
 	}
 
-	static Mesh get_base(const Vec3& center, T radius, size_t order, T offset) {
+	static Mesh get_base(const Vec3 &center, T radius, size_t order, T offset) {
 		std::vector<Point3> points = get_points_on_circle(center, radius, order);
 		move_points_by(points, Vec3(offset, 0, 0));
 		const Point3 lower_base_center = center + Vec3(offset, 0, 0);
 		std::vector<Triangle> triangles;
 		for (size_t i = 0; i < points.size(); ++i)
-			triangles.push_back({ points[i], points[(i + 1) % order], lower_base_center });
+			triangles.push_back({points[i], points[(i + 1) % order], lower_base_center});
 		return Mesh(triangles);
 	}
 
 	static const std::string type;
-	std::string get_type() const { return type; }
-private:
+	std::string get_type() const override { return type; }
+
+  private:
 	std::vector<Triangle> triangles;
 };
 
 class Box : public GeometricPrimitive {
-public:
-	Box(const Point3& a, const Point3& b) : a(a), b(b), sides(get_sides(a, b)), center((a + b) / 2.0f) {}
+  public:
+	Box(const Point3 &a, const Point3 &b) : a(a), b(b), sides(get_sides(a, b)), center((a + b) / 2.0f) {}
 
-	static std::array<Quad, 6> get_sides(const Vec3&a, const Vec3& b) {
+	static std::array<Quad, 6> get_sides(const Vec3 &a, const Vec3 &b) {
 		auto min = Vec3(std::fmin(a.x, b.x), std::fmin(a.y, b.y), std::fmin(a.z, b.z));
 		auto max = Vec3(std::fmax(a.x, b.x), std::fmax(a.y, b.y), std::fmax(a.z, b.z));
 
@@ -296,20 +296,20 @@ public:
 
 		std::array<Quad, 6> res = {
 			Quad(Vec3(min.x, min.y, max.z), dx, dy),  // front
-			Quad(Vec3(max.x, min.y, max.z), -dz, dy),  // right
-			Quad(Vec3(max.x, min.y, min.z), -dx, dy),  // back
+			Quad(Vec3(max.x, min.y, max.z), -dz, dy), // right
+			Quad(Vec3(max.x, min.y, min.z), -dx, dy), // back
 			Quad(Vec3(min.x, min.y, min.z), dz, dy),  // left
-			Quad(Vec3(min.x, max.y, max.z), dx, -dz),  // top
+			Quad(Vec3(min.x, max.y, max.z), dx, -dz), // top
 			Quad(Vec3(min.x, min.y, min.z), dx, dz),  // bottom
 		};
 
 		return res;
 	}
 
-	bool hit(const Ray3& ray, HitRecord& hit_record) const override {
+	bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
 		T min_dist = std::numeric_limits<T>::max();
 		HitRecord temp_hit_record;
-		for (const auto& side : sides) {
+		for (const auto &side : sides) {
 			if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
 				min_dist = temp_hit_record.dist;
 				hit_record = temp_hit_record;
@@ -318,7 +318,7 @@ public:
 		return min_dist != std::numeric_limits<T>::max();
 	}
 
-	void set_center(const Vec3& new_center) {
+	void set_center(const Vec3 &new_center) {
 		const Vec3 offset = new_center - center;
 		*this = Box(a + offset, b + offset);
 	}
@@ -326,8 +326,9 @@ public:
 	Point3 get_center() const { return center; }
 
 	static const std::string type;
-	std::string get_type() const { return type; }
-private:
+	std::string get_type() const override { return type; }
+
+  private:
 	Point3 a;
 	Point3 b;
 	std::array<Quad, 6> sides;
@@ -335,10 +336,10 @@ private:
 };
 
 class RightPrism : public GeometricPrimitive {
-public:
-	RightPrism(const Vec3& base_center, T radius, T height, size_t order) :
-		upper_base(get_upper_base(base_center, radius, height, order)),
-		lower_base(get_lower_base(base_center, radius, height, order)) {
+  public:
+	RightPrism(const Vec3 &base_center, T radius, T height, size_t order)
+		: upper_base(get_upper_base(base_center, radius, height, order)),
+		  lower_base(get_lower_base(base_center, radius, height, order)) {
 
 		if (radius <= 0)
 			throw std::invalid_argument("Radius must be positive");
@@ -362,7 +363,7 @@ public:
 			T dx2 = std::cos(radians2);
 			T dy2 = std::sin(radians2);
 			Point3 q2 = base_center + Vec3(0, dx2, dy2) * radius + Vec3(height / 2, 0, 0);
-			
+
 			Vec3 u = q2 - q1;
 			Vec3 v(-height, 0, 0);
 			Quad side_face(q1, u, v);
@@ -370,16 +371,16 @@ public:
 		}
 	}
 
-	static Mesh get_upper_base(const Vec3& center, T radius, T height, size_t order) {
+	static Mesh get_upper_base(const Vec3 &center, T radius, T height, size_t order) {
 		return Mesh::get_base(center, radius, order, height / 2);
 	}
-	static Mesh get_lower_base(const Vec3& center, T radius, T height, size_t order) {
+	static Mesh get_lower_base(const Vec3 &center, T radius, T height, size_t order) {
 		return Mesh::get_base(center, radius, order, -height / 2);
 	}
 
 	Point3 get_base_center() const { return base_center; }
 
-	void set_base_center(const Point3& new_base_center) { *this = RightPrism(new_base_center, radius, height, order); }
+	void set_base_center(const Point3 &new_base_center) { *this = RightPrism(new_base_center, radius, height, order); }
 
 	T get_radius() const { return radius; }
 
@@ -393,10 +394,10 @@ public:
 
 	void set_order(size_t new_order) { *this = RightPrism(base_center, radius, height, new_order); }
 
-	bool hit(const Ray3& ray, HitRecord& hit_record) const override {
+	bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
 		T min_dist = std::numeric_limits<T>::max();
 		HitRecord temp_hit_record;
-		for (const auto& side : side_faces) {
+		for (const auto &side : side_faces) {
 			if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
 				min_dist = temp_hit_record.dist;
 				hit_record = temp_hit_record;
@@ -414,21 +415,23 @@ public:
 	}
 
 	static const std::string type;
-	std::string get_type() const { return type; }
-private:
+	std::string get_type() const override { return type; }
+
+  private:
 	Vec3 base_center;
 	T radius;
 	T height;
 	size_t order;
-	
+
 	std::vector<Quad> side_faces;
 	Mesh upper_base;
 	Mesh lower_base;
 };
 
 class RightPyramid : public GeometricPrimitive {
-public:
-	RightPyramid(const Point3& base_center, T radius, T height, size_t order) : base(Mesh::get_base(base_center, radius, order, 0)) {
+  public:
+	RightPyramid(const Point3 &base_center, T radius, T height, size_t order)
+		: base(Mesh::get_base(base_center, radius, order, 0)) {
 		if (radius <= 0)
 			throw std::invalid_argument("Radius must be positive");
 		if (height <= 0)
@@ -444,14 +447,14 @@ public:
 		const Point3 top = base_center - Vec3(height, 0, 0);
 		const std::vector<Point3> points = get_points_on_circle(base_center, radius, order);
 		for (size_t i = 0; i < points.size(); ++i) {
-			side_faces.push_back( {points[i], points[(i + 1) % order], top} );
+			side_faces.push_back({points[i], points[(i + 1) % order], top});
 		}
 	}
 
-	bool hit(const Ray3& ray, HitRecord& hit_record) const override {
+	bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
 		T min_dist = std::numeric_limits<T>::max();
 		HitRecord temp_hit_record;
-		for (const auto& side : side_faces) {
+		for (const auto &side : side_faces) {
 			if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
 				min_dist = temp_hit_record.dist;
 				hit_record = temp_hit_record;
@@ -466,7 +469,9 @@ public:
 
 	Point3 get_base_center() const { return base_center; }
 
-	void set_base_center(const Point3& new_base_center) { *this = RightPyramid(new_base_center, radius, height, order); }
+	void set_base_center(const Point3 &new_base_center) {
+		*this = RightPyramid(new_base_center, radius, height, order);
+	}
 
 	T get_radius() const { return radius; }
 
@@ -481,8 +486,9 @@ public:
 	void set_order(size_t new_order) { *this = RightPyramid(base_center, radius, height, new_order); }
 
 	static const std::string type;
-	std::string get_type() const { return type; }
-private:
+	std::string get_type() const override { return type; }
+
+  private:
 	Point3 base_center;
 	T radius;
 	T height;
@@ -493,9 +499,9 @@ private:
 };
 
 class Model : public GeometricPrimitive {
-public:
-	Model(const std::vector<Vec3>& vertices, const std::vector<std::vector<size_t>>& faces) {
-		for (const auto& face : faces) {
+  public:
+	Model(const std::vector<Vec3> &vertices, const std::vector<std::vector<size_t>> &faces) {
+		for (const auto &face : faces) {
 			std::vector<Vec3> coords;
 			for (size_t i : face) {
 				coords.push_back(vertices[i]);
@@ -510,7 +516,7 @@ public:
 		Interval x = Interval::empty;
 		Interval y = Interval::empty;
 		Interval z = Interval::empty;
-		for (const auto& vertex : vertices) {
+		for (const auto &vertex : vertices) {
 			x.stretch(vertex.x);
 			y.stretch(vertex.y);
 			z.stretch(vertex.z);
@@ -518,12 +524,12 @@ public:
 		bbox = AABB(x, y, z);
 	}
 
-	bool hit(const Ray3& ray, HitRecord& hit_record) const override {
+	bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
 		if (!bbox.hit(ray, Interval::universe))
 			return false;
 		T min_dist = std::numeric_limits<T>::max();
 		HitRecord temp_hit_record;
-		for (const auto& side : sides) {
+		for (const auto &side : sides) {
 			if (side->hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
 				min_dist = temp_hit_record.dist;
 				hit_record = temp_hit_record;
@@ -533,8 +539,9 @@ public:
 	}
 
 	static const std::string type;
-	std::string get_type() const { return type; }
-private:
+	std::string get_type() const override { return type; }
+
+  private:
 	std::vector<std::shared_ptr<Hittable>> sides;
 	AABB bbox;
 };

@@ -1,4 +1,4 @@
-#include "Interval.h"
+#include "Interval.hpp"
 
 const Interval Interval::empty = Interval(+infinity, -infinity);
 

@@ -1,5 +1,3 @@
-#include "Color.h"
+#include "Color.hpp"
 
-Color operator*(float k, const Color& color) {
-	return color * k;
-}
+Color operator*(float k, const Color &color) { return color * k; }
