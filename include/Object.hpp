@@ -11,6 +11,7 @@
 #include <numbers>
 #include <stdexcept>
 #include <vector>
+#include <memory>
 
 // ����� �������
 Vec3 compute_centroid(const std::vector<Vec3> &points);
