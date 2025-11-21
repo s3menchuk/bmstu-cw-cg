@@ -1,45 +1,50 @@
 cmake_minimum_required(VERSION 3.15)
-project(MyApp)
+project(GraphicsEngine)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SFML_DIR "/opt/homebrew/opt/sfml/lib/cmake/SFML")
-find_package(SFML 3 COMPONENTS Graphics Window System Audio REQUIRED)
+set(SFML_STATIC_LIBRARIES OFF CACHE BOOL "" FORCE)
 
-add_executable(MyApp
-    src/Main.cpp
-    src/Color.cpp
-    src/Interval.cpp
-    src/Math.cpp
-    src/Object.cpp
-    src/Renderer.cpp
-    src/Vec3.cpp
+include(FetchContent)
 
-    external/imgui/imgui.cpp
-    external/imgui-sfml/imgui-sfml.cpp
+# FetchContent_Declare(
+#     SFML
+#     GIT_REPOSITORY https://github.com/SFML/SFML.git
+#     GIT_TAG 3.0.2
+# )
+# FetchContent_MakeAvailable(SFML)
+
+# FetchContent_Declare(
+#     imgui
+#     GIT_REPOSITORY https://github.com/ocornut/imgui.git
+#     GIT_TAG v1.91.9b
+# )
+# FetchContent_MakeAvailable(imgui)
+
+FetchContent_Declare(
+    imgui-sfml
+    GIT_REPOSITORY https://github.com/SFML/imgui-sfml.git
+    GIT_TAG v3.0
+)
+FetchContent_MakeAvailable(imgui-sfml)
+
+target_link_libraries(GraphicsEngine PRIVATE
+    SFML
+    imgui
+    imgui-sfml
 )
 
-# Добавляем директории с заголовками
-target_include_directories(MyApp PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+target_include_directories(GraphicsEngine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    external/imgui
-    external/imgui-sfml
 )
 
-target_link_libraries(MyApp PRIVATE
-    SFML::Graphics
-    SFML::Window
-    SFML::System
-    SFML::Audio
+add_executable(GraphicsEngine
+    src/Main.cpp
+    src/Renderer.cpp
+    src/Object.cpp
+    src/Vec3.cpp
+    src/Color.cpp
+    src/Math.cpp
+    src/Interval.cpp
 )
-
-# Для macOS: фреймворки Cocoa и OpenGL
-if(APPLE)
-    find_library(COCOA Cocoa)
-    find_library(OpenGL OpenGL)
-    find_library(IOKIT IOKit)
-    find_library(COREVIDEO CoreVideo)
-    target_link_libraries(MyApp PRIVATE ${COCOA} ${OpenGL} ${IOKIT} ${COREVIDEO})
-endif()
