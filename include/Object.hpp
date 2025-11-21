@@ -13,18 +13,16 @@
 #include <vector>
 #include <memory>
 
-// ����� �������
+
 Vec3 compute_centroid(const std::vector<Vec3> &points);
 
-// ���������� ������ �� ����� � ���������
 void sort_vertices_ccw3d(std::vector<Vec3> &vertices);
 
 void move_points_by(std::vector<Point3> &points, const Vec3 &offset);
 
 std::vector<Point3> get_points_on_circle(const Vec3 &center, T radius, size_t order);
 
-class HitRecord {
-  public:
+struct HitRecord {
 	Vec3 point;
 	Vec3 normal;
 	T dist;

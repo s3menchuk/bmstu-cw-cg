@@ -35,24 +35,24 @@ TODO:
 */
 
 namespace Settings {
-constexpr float ASPECT = 1; // 16.0f / 9.0f
-constexpr unsigned int WIDTH = 600;
-constexpr unsigned int HEIGHT = WIDTH / ASPECT;
+	constexpr float ASPECT = 1; // 16.0f / 9.0f
+	constexpr unsigned int WIDTH = 600;
+	constexpr unsigned int HEIGHT = WIDTH / ASPECT;
 
-constexpr float FOV = std::numbers::pi / 2.0f; // std::numbers::pi * 2.0f / 3.0f;
-constexpr float NEAR = 1.0f;
-constexpr float FAR = 1000.0f;
+	constexpr float FOV = std::numbers::pi / 2.0f; // std::numbers::pi * 2.0f / 3.0f;
+	constexpr float NEAR = 1.0f;
+	constexpr float FAR = 1000.0f;
 
-constexpr float MAX_ZENITH_DEGREES = 75.0f;
-constexpr float MAX_ZENITH_RADIANS = std::numbers::pi / 2 * MAX_ZENITH_DEGREES / 90;
+	constexpr float MAX_ZENITH_DEGREES = 75.0f;
+	constexpr float MAX_ZENITH_RADIANS = std::numbers::pi / 2 * MAX_ZENITH_DEGREES / 90;
 
-constexpr Vec3 INIT_CAMERA_POS(-0.5, -0.25, 1);
-constexpr Vec3 INIT_CAMERA_DIR(0, 0, -1);
-constexpr float CAMERA_MOVEMENT_SPEED = 0.1;
-constexpr float CAMERA_ROTATION_SPEED = 0.15;
+	constexpr Vec3 INIT_CAMERA_POS(-0.5, -0.25, 1);
+	constexpr Vec3 INIT_CAMERA_DIR(0, 0, -1);
+	constexpr float CAMERA_MOVEMENT_SPEED = 0.1;
+	constexpr float CAMERA_ROTATION_SPEED = 0.15;
 
-size_t ray_tracing_depth = 2;
-} // namespace Settings
+	size_t ray_tracing_depth = 3;
+}
 
 struct AppContext {
 	SFML_Canvas &canvas;
@@ -430,6 +430,7 @@ bool process_key_input(Camera &camera) {
 	return is_key_pressed;
 }
 
+
 int main() {
 	sf::RenderWindow window(sf::VideoMode({Settings::WIDTH, Settings::HEIGHT}), "Graphics Engine");
 	window.setFramerateLimit(60);
@@ -437,30 +438,23 @@ int main() {
 		return -1;
 
 	auto canvas = std::make_unique<SFML_Canvas>(Settings::WIDTH, Settings::HEIGHT); // std::unique_ptr<Canvas>
-	Camera camera(Settings::INIT_CAMERA_POS, Settings::INIT_CAMERA_DIR, Settings::FOV, Settings::ASPECT, Settings::NEAR,
-				  Settings::FAR);
+	Camera camera(Settings::INIT_CAMERA_POS, Settings::INIT_CAMERA_DIR, Settings::FOV, Settings::ASPECT, Settings::NEAR, Settings::FAR);
 
 	Scene scene;
 	scene.ambient_color = WHITE;
 	scene.ambient_intensity = 0.2;
 
-	scene.add_object(
-		std::make_shared<Object>(std::make_shared<Box>(Vec3(0, -0.5, -0.5), Vec3(-1, -1.5, -1.5)), GlossyPlastic(RED)));
+	scene.add_object(std::make_shared<Object>(std::make_shared<Box>(Vec3(0, -0.5, -0.5), Vec3(-1, -1.5, -1.5)), GlossyPlastic(RED)));
 	scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(-5, 10, 0), 5), Metal(BLUE), false));
 	scene.add_object(std::make_shared<Object>(std::make_shared<Plane>(Vec3(-1, 0, 0), 0), GlossyPlastic(GRAY)));
-	/*scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(-0.5,
-	0.5, -0.75), 0.5), Metal(GREEN)));
-	scene.add_object(std::make_shared<Object>(std::make_shared<RightPrism>(Vec3(-8,
-	0, 0), 5, 6, 16), Glass(GREEN), false));
-	scene.add_object(std::make_shared<Object>(std::make_shared<RightPyramid>(Vec3(0,
-	10, 8), 5, 8, 3), MattePlastic(ORANGE), false));*/
+	scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(-0.5, 0.5, -0.75), 0.5), Metal(GREEN)));
+	scene.add_object(std::make_shared<Object>(std::make_shared<RightPrism>(Vec3(-8, 0, 0), 5, 6, 16), Glass(GREEN), false));
+	scene.add_object(std::make_shared<Object>(std::make_shared<RightPyramid>(Vec3(0, 10, 8), 5, 8, 3), MattePlastic(ORANGE), false));
 
-	/*std::unique_ptr<ModelLoader> loader = std::make_unique<ObjLoader>();
-	scene.add_object(std::make_shared<Object>(loader->load("pinguin.obj"),
-	Glass(ORANGE)));*/
+	//std::unique_ptr<ModelLoader> loader = std::make_unique<ObjLoader>();
+	//scene.add_object(std::make_shared<Object>(loader->load("D:\\Personal\\BMSTU\\5sem_2025\\bmstu-cw-cg\\models\\tree.obj"), Glass(ORANGE)));
 
-	// scene.add_light(std::make_shared<DirectionLight>(Vec3(1, -1, -1), WHITE,
-	// 0.5));
+	 scene.add_light(std::make_shared<DirectionLight>(Vec3(1, -1, -1), WHITE, 0.5));
 
 	auto renderer = std::make_unique<RayTracingRenderer>();
 
