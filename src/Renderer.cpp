@@ -44,35 +44,47 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
   HitRecord hit_record;
   (*closest_obj)->hit(ray, hit_record);
 
-  /*
-  uint8_t r = map(hit_record.normal.x, -1, 1, 0, 255);
-  uint8_t g = map(hit_record.normal.y, -1, 1, 0, 255);
-  uint8_t b = map(hit_record.normal.z, -1, 1, 0, 255);
-  return Color(r, g, b);
-  */
+  // float r = map(hit_record.normal.x, -1, 1, 0, 1);
+  // float g = map(hit_record.normal.y, -1, 1, 0, 1);
+  // float b = map(hit_record.normal.z, -1, 1, 0, 1);
+  // return Color(r, g, b);
 
-  Color ambient(closest_obj->material.ambient * scene.ambient_color * scene.ambient_intensity);
+  Color ambient = closest_obj->material.ambient * scene.ambient_color * scene.ambient_intensity;
+
   Color diffuse;
-  Color specular;
   for (const auto &light : scene.lights) {
     if (hit_record.normal.dot(light->get_direction(hit_record.point)) < 0 && !is_in_shadow(scene, closest_obj, hit_record.point, *light)) {
       Vec3 L = -light->get_direction(hit_record.point);
       Vec3 H = 2 * hit_record.normal.dot(L) * hit_record.normal - L;
       diffuse += closest_obj->material.diffuse * light->color * std::max(hit_record.normal.dot(L), 0.0f) * light->get_intensity(hit_record.point);
-      specular += closest_obj->material.specular * light->color *
-                  std::pow(std::max(hit_record.normal.dot(H), 0.0f), closest_obj->material.shininess) * light->get_intensity(hit_record.point);
     }
   }
-  Color phong_color = ambient + diffuse + specular;
-  Color final_color = phong_color * (1 - closest_obj->material.reflective);
 
-  if (depth > 1 && closest_obj->material.reflective > 0) {
-    Vec3 reflected_dir = ray.direction - 2 * hit_record.normal.dot(ray.direction) * hit_record.normal;
-    Ray3 reflected_ray = Ray3(hit_record.point + reflected_dir * EPSILON, reflected_dir);
-    Color reflective_color = trace_ray(scene, reflected_ray, depth - 1);
-    final_color += reflective_color * closest_obj->material.reflective;
-  }
+  Color final_color = ambient + diffuse;
   return final_color;
+
+  // Color ambient(closest_obj->material.ambient * scene.ambient_color * scene.ambient_intensity);
+  // Color diffuse;
+  // Color specular;
+  // for (const auto &light : scene.lights) {
+  //   if (hit_record.normal.dot(light->get_direction(hit_record.point)) < 0 && !is_in_shadow(scene, closest_obj, hit_record.point, *light)) {
+  //     Vec3 L = -light->get_direction(hit_record.point);
+  //     Vec3 H = 2 * hit_record.normal.dot(L) * hit_record.normal - L;
+  //     diffuse += closest_obj->material.diffuse * light->color * std::max(hit_record.normal.dot(L), 0.0f) *
+  //     light->get_intensity(hit_record.point); specular += closest_obj->material.specular * light->color *
+  //                 std::pow(std::max(hit_record.normal.dot(H), 0.0f), closest_obj->material.shininess) * light->get_intensity(hit_record.point);
+  //   }
+  // }
+  // Color phong_color = ambient + diffuse + specular;
+  // Color final_color = phong_color * (1 - closest_obj->material.reflective);
+
+  // if (depth > 1 && closest_obj->material.reflective > 0) {
+  //   Vec3 reflected_dir = ray.direction - 2 * hit_record.normal.dot(ray.direction) * hit_record.normal;
+  //   Ray3 reflected_ray = Ray3(hit_record.point + reflected_dir * EPSILON, reflected_dir);
+  //   Color reflective_color = trace_ray(scene, reflected_ray, depth - 1);
+  //   final_color += reflective_color * closest_obj->material.reflective;
+  // }
+  // return final_color;
 }
 
 void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth) {
