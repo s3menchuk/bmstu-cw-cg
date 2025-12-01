@@ -132,6 +132,9 @@ class Vec3 {
 
 using Point3 = Vec3;
 
-Vec3 operator*(T scalar, const Vec3 &vector);
+Vec3 inline operator*(T scalar, const Vec3 &vector) { return vector * scalar; }
 
-std::ostream &operator<<(std::ostream &out, const Vec3 &vector);
+std::ostream inline &operator<<(std::ostream &out, const Vec3 &vector) {
+	out << vector.x << " " << vector.y << " " << vector.z;
+	return out;
+}

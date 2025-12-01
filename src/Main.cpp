@@ -6,7 +6,6 @@
 
 #include "Camera.hpp"
 #include "Canvas.hpp"
-#include "Math.hpp"
 #include "ModelLoader.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"

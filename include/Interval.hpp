@@ -10,8 +10,8 @@ class Interval {
   public:
 	T min, max;
 
-	Interval(T min, T max) : min(min), max(max) {}
-	Interval() : min(-infinity), max(infinity) {}
+	constexpr Interval(T min, T max) : min(min), max(max) {}
+	constexpr Interval() : min(-infinity), max(infinity) {}
 
 	T size() const { return max - min; }
 
@@ -36,3 +36,6 @@ class Interval {
 
 	static const Interval empty, universe;
 };
+
+const inline Interval Interval::empty = Interval(+infinity, -infinity);
+const inline Interval Interval::universe = Interval(-infinity, +infinity);
