@@ -25,7 +25,8 @@ class SFML_Canvas : public Canvas {
 	size_t get_width() const override { return width; }
 	size_t get_height() const override { return height; }
 	void set_pixel(size_t row, size_t col, const Color &color) override {
-		pixels[row * width + col].color = sf::Color(color.R, color.G, color.B);
+		std::array<uint8_t, 3> rgb = color.as_rgb_array();
+		pixels[row * width + col].color = sf::Color(rgb[0], rgb[1], rgb[2]);
 	};
 
 	sf::VertexArray pixels;

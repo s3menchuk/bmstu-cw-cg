@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Types.hpp"
+
 #include <numbers>
 
-inline float map(float val, float cl, float cr, float tl, float tr) { return tl + (val - cl) / (cr - cl) * (tr - tl); }
+inline T map(T val, T cl, T cr, T tl, T tr) { return tl + (val - cl) / (cr - cl) * (tr - tl); }
 
 template <typename T> T radians2degrees(T radians) { return radians * 180 / std::numbers::pi; }
 

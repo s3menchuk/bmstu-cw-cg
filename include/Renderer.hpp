@@ -28,5 +28,5 @@ class RayTracingRenderer : public Renderer {
 	bool is_in_shadow(const Scene &scene, const std::shared_ptr<Object> &object, const Vec3 &point,
 					  const Light &light) const;
 
-	Color background_color(const Ray3 &ray) const;
+	Color background_color(const Scene &scene, const Ray3 &ray) const;
 };

@@ -13,6 +13,7 @@ class Scene {
 	std::vector<std::shared_ptr<Object>> objects;
 	std::vector<std::shared_ptr<Light>> lights;
 
+	Color background_color;
 	Color ambient_color;
 	float ambient_intensity;
 
