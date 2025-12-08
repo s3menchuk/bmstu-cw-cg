@@ -12,21 +12,21 @@ const float EPSILON = 1e-4;
 
 class Renderer {
   public:
-	virtual void render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth = 3) = 0;
+    virtual void render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth = 3) = 0;
 
-	virtual ~Renderer() {};
+    virtual ~Renderer() {};
 };
 
 class RayTracingRenderer : public Renderer {
   public:
-	void render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth = 3) override;
+    void render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth = 3) override;
 
-	Color trace_ray(const Scene &scene, const Ray3 &ray, size_t depth = 3);
+  private:
+    Color trace_ray(const Scene &scene, const Ray3 &ray, size_t depth = 3);
 
-	std::shared_ptr<Object> find_closest_obj(const Scene &scene, const Ray3 &ray) const;
+    std::shared_ptr<Object> find_closest_obj(const Scene &scene, const Ray3 &ray) const;
 
-	bool is_in_shadow(const Scene &scene, const std::shared_ptr<Object> &object, const Vec3 &point,
-					  const Light &light) const;
+    bool is_in_shadow(const Scene &scene, const Point3 &point, const Light &light) const;
 
-	Color background_color(const Scene &scene, const Ray3 &ray) const;
+    Color background_color(const Scene &scene, const Ray3 &ray) const;
 };

@@ -2,35 +2,14 @@
 
 #include "Color.hpp"
 
+// TODO: MattePlastic, GlossyPlastic, Metal, Glass
+
 class Material {
-public:
-  Material(const Color &ambient, const Color &diffuse, const Color &specular, float reflective, float shininess)
-      : ambient(ambient), diffuse(diffuse), specular(specular), reflective(reflective), shininess(shininess) {}
-  Color ambient;
-  Color diffuse;
-  Color specular;
-  float reflective;
-  float shininess;
-};
+  public:
+    Material(const Color &albedo, float metallic) : albedo(albedo), metallic(metallic) {}
 
-class MattePlastic : public Material {
-public:
-  MattePlastic(const Color &diffuse) : Material(diffuse / 6, diffuse, Color::WHITE * 0.3, 0.1, 20) {}
-};
-
-class GlossyPlastic : public Material {
-public:
-  GlossyPlastic(const Color &diffuse) : Material(diffuse / 4, diffuse, Color::WHITE * 0.8, 0.2, 75) {}
-};
-
-class Metal : public Material {
-public:
-  Metal(const Color &diffuse) : Material(diffuse / 4, diffuse, diffuse * 5 / 4, 0.7, 350) {}
-};
-
-class Glass : public Material {
-public:
-  Glass(const Color &diffuse) : Material(Color::BLACK, diffuse, diffuse * 10, 0.4, 750) {}
+    Color albedo;
+    float metallic;
 };
 
 // class BaseMaterial {
