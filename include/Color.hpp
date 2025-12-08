@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Interval.hpp"
-#include "Math.h"
+#include "Math.hpp"
 
 #include <algorithm>
 #include <array>

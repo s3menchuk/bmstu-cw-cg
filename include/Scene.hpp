@@ -14,8 +14,6 @@ class Scene {
     std::vector<std::shared_ptr<Light>> lights;
 
     Color background_color;
-    Color ambient_color;
-    float ambient_intensity;
 
     void add_object(const std::shared_ptr<Object> &object) {
         objects.push_back(object);

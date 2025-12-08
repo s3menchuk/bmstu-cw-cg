@@ -3,12 +3,14 @@
 #include <iostream>
 #include <memory>
 #include <numbers>
+#include <string>
 
 #include "Camera.hpp"
 #include "Canvas.hpp"
 #include "ModelLoader.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
+#include "SceneCreator.hpp"
 #include "imgui-SFML.h"
 #include "imgui.h"
 
@@ -33,6 +35,9 @@ TODO:
 */
 
 namespace Settings {
+const std::string APP_NAME = "Graphics Engine";
+const size_t FRAME_LIMIT = 60;
+
 const float ASPECT = 1;  // 16.0f / 9.0f
 const unsigned int WIDTH = 600;
 const unsigned int HEIGHT = WIDTH / ASPECT;
@@ -44,18 +49,14 @@ const float FAR = 1000.0f;
 const float MAX_ZENITH_DEGREES = 75.0f;
 const float MAX_ZENITH_RADIANS = std::numbers::pi / 2 * MAX_ZENITH_DEGREES / 90;
 
-const Vec3 INIT_CAMERA_POS(-1.5, 0, 5);
-const Vec3 INIT_CAMERA_DIR(0, 0, -1);
 const float CAMERA_MOVEMENT_SPEED = 0.1;
 const float CAMERA_ROTATION_SPEED = 0.15;
-
-Color BACKGROUND_COLOR(sRGB::SKY_BLUE);
 
 size_t ray_tracing_depth = 3;
 }  // namespace Settings
 
 struct AppContext {
-    SFML_Canvas &canvas;
+    SFML_Canvas &canvas;  // Not SFML_Canvas, just Canvas!
     Scene &scene;
     Camera &camera;
     Renderer &renderer;
@@ -433,39 +434,19 @@ bool process_key_input(Camera &camera) {
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode({Settings::WIDTH, Settings::HEIGHT}), "Graphics Engine");
-    window.setFramerateLimit(60);
+    sf::RenderWindow window(sf::VideoMode({Settings::WIDTH, Settings::HEIGHT}), Settings::APP_NAME);
+    window.setFramerateLimit(Settings::FRAME_LIMIT);
     if (!ImGui::SFML::Init(window))
         return -1;
 
-    auto canvas = std::make_unique<SFML_Canvas>(Settings::WIDTH, Settings::HEIGHT);  // std::unique_ptr<Canvas>
-    Camera camera(Settings::INIT_CAMERA_POS, Settings::INIT_CAMERA_DIR, Settings::FOV, Settings::ASPECT, Settings::NEAR, Settings::FAR);
+    std::shared_ptr<SFML_Canvas> canvas = std::make_unique<SFML_Canvas>(Settings::WIDTH, Settings::HEIGHT);  // std::unique_ptr<Canvas>
 
-    Scene scene;
-    scene.background_color = Settings::BACKGROUND_COLOR;
-    scene.ambient_color = Color(sRGB::WHITE);
-    scene.ambient_intensity = 1;
+    std::shared_ptr<SceneCreator> scene_creator = std::make_shared<TestScene>();
+    Scene scene = scene_creator->create_scene();
+    SceneView view = scene_creator->get_view();
+    Camera camera(view.pos, view.dir, Settings::FOV, Settings::ASPECT, Settings::NEAR, Settings::FAR);
 
-    // scene.add_light(std::make_shared<DirectionLight>(Vec3(1, -1, -1), Color(sRGB::WHITE), 1));
-    scene.add_light(std::make_shared<DirectionLight>(Vec3(1, -1, 0), Color(sRGB::RED), 1));
-    scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 1, 0), Color(sRGB::BLUE), 1));
-    scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 0, 0), Color(sRGB::GREEN), 1));
-    scene.add_light(std::make_shared<DirectionLight>(Vec3(-1, 0, 0), Color(sRGB::WHITE), 0.5));
-
-    // scene.add_object(std::make_shared<Object>(std::make_shared<Plane>(Vec3(-1, 0, 0), 0), Material(Color(sRGB::GRAY), 1)));
-    scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(-1, 0, 0), 1), Material(Color(sRGB::WHITE), 0)));
-    scene.add_object(std::make_shared<Object>(std::make_shared<Box>(Vec3(0, -1, 1.5), Vec3(-1, -2, 2.5)), Material(Color(sRGB::GREEN), 0.5)));
-
-    scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(-5, 10, 0), 5), Material(Color(sRGB::BLUE), 1), false));
-    scene.add_object(std::make_shared<Object>(std::make_shared<RightPrism>(Vec3(-8, 0, 0), 5, 6, 16), Material(Color(sRGB::GREEN), 0.7), false));
-    scene.add_object(std::make_shared<Object>(std::make_shared<RightPyramid>(Vec3(0, 10, 8), 5, 8, 3), Material(Color(sRGB::ORANGE), 0.25), false));
-
-    // std::unique_ptr<ModelLoader> loader =
-    // std::make_unique<ObjLoader>();
-    // scene.add_object(std::make_shared<Object>(loader->load("D:\\Personal\\BMSTU\\5sem_2025\\bmstu-cw-cg\\models\\tree.obj"),
-    // Glass(ORANGE)));
-
-    auto renderer = std::make_unique<RayTracingRenderer>();
+    std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();
 
     AppContext app = {*canvas, scene, camera, *renderer};
 

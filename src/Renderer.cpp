@@ -111,7 +111,7 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
             direction.normalize();
             Ray3 ray(camera.pos, direction);
             Color color = trace_ray(scene, ray, depth);
-            canvas.set_pixel(row, col, color);
+            canvas.set_pixel(row, col, color.as_srgb());
         }
     }
 }
