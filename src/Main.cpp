@@ -32,6 +32,8 @@ TODO:
                 - BVH (AABB) | KD-Tree
 
                 - Make Vec3 class template class
+
+                - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза)
 */
 
 namespace Settings {
@@ -441,10 +443,10 @@ int main() {
 
     std::shared_ptr<SFML_Canvas> canvas = std::make_unique<SFML_Canvas>(Settings::WIDTH, Settings::HEIGHT);  // std::unique_ptr<Canvas>
 
-    std::shared_ptr<SceneCreator> scene_creator = std::make_shared<TestScene>();
+    std::shared_ptr<SceneCreator> scene_creator = std::make_shared<SimpleSphere>();
     Scene scene = scene_creator->create_scene();
     SceneView view = scene_creator->get_view();
-    Camera camera(view.pos, view.dir, Settings::FOV, Settings::ASPECT, Settings::NEAR, Settings::FAR);
+    Camera camera(view.pos, view.dir, view.up, Settings::FOV, Settings::ASPECT, Settings::NEAR, Settings::FAR);
 
     std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();
 
