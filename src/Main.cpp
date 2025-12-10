@@ -1,5 +1,6 @@
 ﻿#include <SFML/Graphics.hpp>
 #include <array>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <numbers>
@@ -33,22 +34,23 @@ TODO:
 
                 - Make Vec3 class template class
 
-                - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза)
+                - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза) | Ok
 */
 
 namespace Settings {
 const std::string APP_NAME = "Graphics Engine";
 const size_t FRAME_LIMIT = 60;
 
-const float ASPECT = 1;  // 16.0f / 9.0f
-const unsigned int WIDTH = 600;
-const unsigned int HEIGHT = WIDTH / ASPECT;
+const float ASPECT = 16.0f / 9.0f;  // 16.0f / 9.0f
+const size_t WIDTH = 300;
+const size_t HEIGHT = WIDTH / ASPECT;
 
-const float FOV = std::numbers::pi / 2.0f;  // std::numbers::pi * 2.0f / 3.0f;
-const float NEAR = 1.0f;
-const float FAR = 1000.0f;
+const float FOV_Y = std::numbers::pi / 180 * 55;
 
-const float MAX_ZENITH_DEGREES = 75.0f;
+const float NEAR = 1;
+const float FAR = 1000;
+
+const float MAX_ZENITH_DEGREES = 75;
 const float MAX_ZENITH_RADIANS = std::numbers::pi / 2 * MAX_ZENITH_DEGREES / 90;
 
 const float CAMERA_MOVEMENT_SPEED = 0.1;
@@ -385,7 +387,7 @@ void draw_render_ui(const AppContext &app, bool is_key_pressed) {
     }
 }
 
-bool process_key_input(Camera &camera) {
+bool process_key_input(Camera &camera, const Scene &scene) {
     bool is_key_pressed = false;
 
     // Movement
@@ -406,29 +408,29 @@ bool process_key_input(Camera &camera) {
         is_key_pressed = true;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::PageUp)) {
-        camera.pos -= camera.up * Settings::CAMERA_MOVEMENT_SPEED;
+        camera.pos += camera.up * Settings::CAMERA_MOVEMENT_SPEED;
         is_key_pressed = true;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::PageDown)) {
-        camera.pos += camera.up * Settings::CAMERA_MOVEMENT_SPEED;
+        camera.pos -= camera.up * Settings::CAMERA_MOVEMENT_SPEED;
         is_key_pressed = true;
     }
 
     // Rotation
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) && camera.get_zenith() <= Settings::MAX_ZENITH_RADIANS) {
-        camera.rotate_vertically(-Settings::CAMERA_ROTATION_SPEED);
-        is_key_pressed = true;
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && camera.get_zenith() >= -Settings::MAX_ZENITH_RADIANS) {
         camera.rotate_vertically(Settings::CAMERA_ROTATION_SPEED);
         is_key_pressed = true;
     }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) && camera.get_zenith() >= -Settings::MAX_ZENITH_RADIANS) {
+        camera.rotate_vertically(-Settings::CAMERA_ROTATION_SPEED);
+        is_key_pressed = true;
+    }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
-        camera.rotate_horizontally(Settings::CAMERA_ROTATION_SPEED);
+        camera.rotate_by(scene.world_up, Settings::CAMERA_ROTATION_SPEED);
         is_key_pressed = true;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
-        camera.rotate_horizontally(-Settings::CAMERA_ROTATION_SPEED);
+        camera.rotate_by(scene.world_up, -Settings::CAMERA_ROTATION_SPEED);
         is_key_pressed = true;
     }
 
@@ -443,10 +445,10 @@ int main() {
 
     std::shared_ptr<SFML_Canvas> canvas = std::make_unique<SFML_Canvas>(Settings::WIDTH, Settings::HEIGHT);  // std::unique_ptr<Canvas>
 
-    std::shared_ptr<SceneCreator> scene_creator = std::make_shared<SimpleSphere>();
+    std::shared_ptr<SceneCreator> scene_creator = std::make_shared<CornellBox>();
     Scene scene = scene_creator->create_scene();
     SceneView view = scene_creator->get_view();
-    Camera camera(view.pos, view.dir, view.up, Settings::FOV, Settings::ASPECT, Settings::NEAR, Settings::FAR);
+    Camera camera(view.pos, view.dir, scene.world_up, Settings::FOV_Y, Settings::ASPECT, Settings::NEAR, Settings::FAR);
 
     std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();
 
@@ -461,7 +463,7 @@ int main() {
             ImGui::SFML::ProcessEvent(window, *event);
             if (event->is<sf::Event::Closed>())
                 window.close();
-            is_key_pressed = process_key_input(camera);
+            is_key_pressed = process_key_input(camera, scene);
         }
 
         ImGui::SFML::Update(window, deltaClock.restart());

@@ -105,10 +105,9 @@ class Sphere : public GeometricPrimitive {
             return false;
         hit_record.dist = t_min;
         hit_record.point = ray.at(t_min);
-        hit_record.normal = hit_record.point - center;
+        hit_record.normal = (hit_record.point - center).normalized();
         // if (hit_record.normal.length() + EPSILON < radius)
         //	hit_record.normal = -hit_record.normal;
-        hit_record.normal.normalize();
         return true;
     }
 
@@ -166,10 +165,9 @@ class Plane : public GeometricPrimitive {
 
 class Quad : public GeometricPrimitive {
   public:
-    Quad(const Vec3 &Q, const Vec3 &u, const Vec3 &v) : Q(Q), u(u), v(v) {
-        Vec3 n = u.cross(v);
-        normal = n;
-        normal.normalize();
+    Quad(const Point3 &Q, const Vec3 &u, const Vec3 &v) : Q(Q), u(u), v(v) {
+        auto n = u.cross(v);
+        normal = n.normalized();
         D = normal.dot(Q);
         w = n / n.dot(n);
     }
@@ -196,7 +194,7 @@ class Quad : public GeometricPrimitive {
 
         hit_record.dist = t;
         hit_record.point = intersection;
-        hit_record.normal = normal;
+        hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
 
         return true;
     }
@@ -230,7 +228,7 @@ class Triangle : public GeometricPrimitive {
         auto det = edge1.dot(h);
 
         if (std::abs(det) < EPSILON)
-            return false;  // ��� ���������� ��������� ������������
+            return false;
 
         auto inv_det = 1.0 / det;
         auto s = ray.origin - a;

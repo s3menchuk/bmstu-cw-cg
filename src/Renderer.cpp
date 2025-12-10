@@ -10,9 +10,10 @@
 bool RayTracingRenderer::is_in_shadow(const Scene &scene, const Point3 &point, const Light &light) const {
     Ray3 ray(point, -light.get_direction(point));
     ray.origin = ray.at(EPSILON);
+    const auto dist = light.get_distance(point);
     HitRecord hit_record;
     for (const auto &obj : scene.get_visible_objects())
-        if ((*obj)->hit(ray, hit_record))
+        if ((*obj)->hit(ray, hit_record) && hit_record.dist <= dist)
             return true;
     return false;
 }
@@ -92,24 +93,20 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
 }
 
 void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth) {
-    Vec3 view_center = camera.pos + camera.dir * camera.near;
-
-    float view_height = 2 * std::tan(camera.fov / 2) * camera.near;
-    float view_width = view_height * camera.aspect;
-
-    Vec3 left_bottom_corner_view = view_center - camera.right * (view_width / 2) - camera.up * (view_height / 2);
+    const float view_height = 2 * std::tan(camera.fov_y / 2) * camera.near;
+    const float view_width = view_height * camera.aspect;
 
     const size_t width = canvas.get_width();
     const size_t height = canvas.get_height();
 #pragma omp parallel for schedule(dynamic)
-    for (int row = 0; row < height; ++row) {
-        float dy = map(row, 0, height, 0, view_height);
-        for (int col = 0; col < width; ++col) {
-            float dx = map(col, 0, width, 0, view_width);
-            Vec3 point = left_bottom_corner_view + camera.right * dx + camera.up * dy;
-            Vec3 direction = point - camera.pos;
-            direction.normalize();
-            Ray3 ray(camera.pos, direction);
+    for (size_t row = 0; row < height; ++row) {
+        float ndc_y = 1 - (row + 0.5f) / height * 2;
+        float dy = ndc_y * view_height / 2;
+        for (size_t col = 0; col < width; ++col) {
+            float ndc_x = (col + 0.5f) / width * 2 - 1;
+            float dx = ndc_x * view_width / 2;
+            Vec3 ray_dir = (dx * camera.right + dy * camera.up + camera.dir).normalized();
+            Ray3 ray(camera.pos, ray_dir);
             Color color = trace_ray(scene, ray, depth);
             canvas.set_pixel(row, col, color.as_srgb());
         }

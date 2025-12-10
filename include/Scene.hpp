@@ -4,6 +4,7 @@
 #include "Light.hpp"
 #include "Object.hpp"
 #include "Ray.hpp"
+#include "Vec3.hpp"
 
 #include <memory>
 #include <vector>
@@ -13,7 +14,8 @@ class Scene {
     std::vector<std::shared_ptr<Object>> objects;
     std::vector<std::shared_ptr<Light>> lights;
 
-    Color background_color;
+    Color background_color = sRGB::SKY_BLUE;
+    Vec3 world_up = {0, 1, 0};
 
     void add_object(const std::shared_ptr<Object> &object) {
         objects.push_back(object);

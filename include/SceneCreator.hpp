@@ -7,9 +7,8 @@
 #include "Vec3.hpp"
 
 struct SceneView {
-    Vec3 pos;
-    Vec3 dir;
-    Vec3 up;
+    Vec3 pos = {0, 0, 0};
+    Vec3 dir = {0, 0, -1};
 };
 
 class SceneCreator {
@@ -22,15 +21,17 @@ class SimpleSphere : public SceneCreator {
   public:
     Scene create_scene() const override {
         Scene scene;
-        // scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(-1, 0, 0), 1), Material(Color(sRGB::RED), 0)));
+        scene.background_color = sRGB::SKY_BLUE;
+        scene.world_up = {0, 1, 0};
+        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 1, -1), Color(sRGB::WHITE), 1));
+        scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(0, 0, 0), 1), Material(Color(sRGB::RED), 0.1)));
         return scene;
     }
 
     SceneView get_view() const override {
         SceneView view;
-        view.pos = {-1.5, 0, 5};
+        view.pos = {0, 0, 3};
         view.dir = {0, 0, -1};
-        view.up = {1, 0, 0};
         return view;
     }
 };
@@ -39,6 +40,7 @@ class SpectreSphere : public SceneCreator {
   public:
     Scene create_scene() const override {
         Scene scene;
+        scene.world_up = {0, 1, 0};
         // scene.background_color = sRGB::SKY_BLUE;
 
         scene.add_light(std::make_shared<DirectionLight>(Vec3(1, -1, 0), Color(sRGB::RED), 1));
@@ -60,7 +62,6 @@ class SpectreSphere : public SceneCreator {
         SceneView view;
         view.pos = {-1.5, 0, 5};
         view.dir = {0, 0, -1};
-        view.up = {1, 0, 0};
         return view;
     }
 };
@@ -68,32 +69,66 @@ class SpectreSphere : public SceneCreator {
 class CornellBox : public SceneCreator {
   public:
     static constexpr float width = 4;
-    static constexpr float length = 6;
-    static constexpr float height = 8;
+    static constexpr float length = 4;
+    static constexpr float height = 3;
 
     Scene create_scene() const override {
         Scene scene;
-        // scene.background_color = sRGB::SKY_BLUE;
+        scene.world_up = {0, 1, 0};
+        scene.background_color = sRGB::BLACK;
+
+        // Lights
+        // scene.add_light(std::make_shared<PointLight>(Vec3(width / 2, height * 9 / 10, -length / 2), sRGB::WHITE, 5));
+        scene.add_light(std::make_shared<PointLight>(Vec3(0.1, 0.1, -length + 0.1), sRGB::WHITE, 5));
+        scene.add_light(std::make_shared<PointLight>(Vec3(width - 0.1, 0.1, -length + 0.1), sRGB::WHITE, 5));
+
         /*
         L - left, R - right
         B - bottom, T - top
         N - near, F - far
         */
-        scene.add_light(std::make_shared<DirectionLight>(Vec3(-1, -1, -1), Color(sRGB::WHITE), 1));
+        Vec3 LBN(0, 0, 0);
+        Vec3 LTN(0, height, 0);
+        Vec3 LBF(0, 0, -length);
+        Vec3 LTF(0, height, -length);
 
-        Vec3 LBN = Vec3(0, 0, 0);
-        Vec3 LTN = Vec3(0, 0, height);
-        Vec3 LBF = Vec3(0, length, 0);
-        Vec3 LTF = Vec3(0, length, height);
-        scene.add_object(std::make_shared<Object>(std::make_shared<Quad>(LBN, LTN - LBN, LBF - LBN), Material(Color(sRGB::RED), 0.2)));
+        Vec3 RBN(width, 0, 0);
+        Vec3 RTN(width, height, 0);
+        Vec3 RBF(width, 0, -length);
+        Vec3 RTF(width, height, -length);
+
+        // Red Left Wall
+        auto left_wall = std::make_shared<Quad>(LBN, LTN - LBN, LBF - LBN);
+        scene.add_object(std::make_shared<Object>(left_wall, Material(sRGB::RED, 0.1)));
+
+        // Green Right Wall
+        auto right_wall = std::make_shared<Quad>(RBN, RTN - RBN, RBF - RBN);
+        scene.add_object(std::make_shared<Object>(right_wall, Material(sRGB::GREEN, 0.1)));
+
+        // White Back Wall
+        auto back_wall = std::make_shared<Quad>(LBF, LTF - LBF, RBF - LBF);
+        scene.add_object(std::make_shared<Object>(back_wall, Material(sRGB::WHITE, 0)));
+
+        // White Floor
+        auto floor = std::make_shared<Quad>(LBN, LBF - LBN, RBN - LBN);
+        scene.add_object(std::make_shared<Object>(floor, Material(sRGB::WHITE, 0)));
+
+        // White Ceiling
+        auto ceiling = std::make_shared<Quad>(LTN, LTF - LTN, RTN - LTN);
+        scene.add_object(std::make_shared<Object>(ceiling, Material(sRGB::WHITE, 0)));
+
+        // Sphere
+        T radius = 0.75;
+        auto sphere = std::make_shared<Sphere>(Vec3(width / 2, radius, -length + radius), radius);
+        scene.add_object(std::make_shared<Object>(sphere, Material(sRGB::BLUE, 0.3)));
+
         return scene;
     }
 
     SceneView get_view() const override {
         SceneView view;
-        view.pos = {width / 2, 0, height / 2};
-        view.dir = {0, 1, 0};
-        view.up = {0, 0, 1};
+        view.pos = {width / 2, height / 2, 3};
+        view.dir = {0, 0, -1};
         return view;
     }
 };

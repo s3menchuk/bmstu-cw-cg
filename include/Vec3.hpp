@@ -27,6 +27,12 @@ class Vec3 {
         z /= len;
     }
 
+    Vec3 normalized() const {
+        Vec3 copy = *this;
+        copy.normalize();
+        return copy;
+    }
+
     T dot(const Vec3 &other) const {
         return x * other.x + y * other.y + z * other.z;
     }

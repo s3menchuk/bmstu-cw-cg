@@ -8,24 +8,13 @@
 
 class Camera {
   public:
-    Camera(const Point3 &pos, const Vec3 &dir, const Vec3 &up, T fov, T aspect, T near, T far)
-        : pos(pos), dir(dir), up(up), fov(fov), aspect(aspect), near(near), far(far) {
-        this->dir.normalize();
-        this->up.normalize();
-        // if (this->dir == Vec3(0, 1, 0)) {
-        //     this->up = this->dir.cross(Vec3(1, 0, 0));
-        // }
-        // Vec3 world_up = this->dir == Vec3(0, 1, 0) ? Vec3(0, 0, 1) : Vec3(0, 1, 0);
-        // this->up = this->dir.cross(world_up);
-        // this->up.normalize();
+    Camera(const Point3 &pos, const Vec3 &dir, const Vec3 &world_up, T fov_y, T aspect, T near, T far)
+        : pos(pos), fov_y(fov_y), aspect(aspect), near(near), far(far) {
+        this->dir = dir.normalized();
+        this->right = this->dir.cross(world_up.normalized());
+        this->up = this->right.cross(this->dir);
 
-        this->right = this->dir.cross(up);
-
-        /*if (std::abs(dir.z) >= std::abs(dir.y))
-            up = Vector(-dir.z, 0, dir.x);
-        else
-            up = Vector(dir.y, -dir.x, 0);
-        right = dir.cross(up);*/
+        this->fov_x = 2 * std::atan(std::tan(fov_y / 2) * aspect);
     };
 
     void rotate_vertically(T radians) {
@@ -36,6 +25,12 @@ class Camera {
         dir.rotate_x(radians);
         up.rotate_x(radians);
         right.rotate_x(radians);
+    }
+
+    void rotate_by(const Vec3 &axis, T radians) {
+        dir.rotate(axis, radians);
+        up.rotate(axis, radians);
+        right.rotate(axis, radians);
     }
 
     T get_azimuth() const {
@@ -58,7 +53,8 @@ class Camera {
     Vec3 dir;
     Vec3 up;
     Vec3 right;
-    T fov;
+    T fov_y;
+    T fov_x;
     T aspect;
     T near;
     T far;
