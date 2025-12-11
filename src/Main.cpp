@@ -1,19 +1,21 @@
-﻿#include <SFML/Graphics.hpp>
+﻿#include "Camera.hpp"
+#include "Canvas.hpp"
+#include "CanvasExporter.hpp"
+#include "ModelLoader.hpp"
+#include "Renderer.hpp"
+#include "Scene.hpp"
+#include "SceneCreator.hpp"
+
+#include "imgui-SFML.h"
+#include "imgui.h"
+#include <SFML/Graphics.hpp>
+
 #include <array>
 #include <cstddef>
 #include <iostream>
 #include <memory>
 #include <numbers>
 #include <string>
-
-#include "Camera.hpp"
-#include "Canvas.hpp"
-#include "ModelLoader.hpp"
-#include "Renderer.hpp"
-#include "Scene.hpp"
-#include "SceneCreator.hpp"
-#include "imgui-SFML.h"
-#include "imgui.h"
 
 /*
 TODO:
@@ -42,7 +44,7 @@ const std::string APP_NAME = "Graphics Engine";
 const size_t FRAME_LIMIT = 60;
 
 const float ASPECT = 16.0f / 9.0f;  // 16.0f / 9.0f
-const size_t WIDTH = 300;
+const size_t WIDTH = 600;
 const size_t HEIGHT = WIDTH / ASPECT;
 
 const float FOV_Y = std::numbers::pi / 180 * 55;
@@ -384,6 +386,11 @@ void draw_render_ui(const AppContext &app, bool is_key_pressed) {
 
     if (ImGui::Button("Render") || is_key_pressed) {
         render_frame(app);
+    }
+
+    if (ImGui::Button("Save image")) {
+        std::shared_ptr<CanvasExporter> canvas_exporter = std::make_shared<CanvasPPMBinaryExporter>();
+        canvas_exporter->save(app.canvas, "image.ppm");
     }
 }
 

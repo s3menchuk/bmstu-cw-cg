@@ -12,6 +12,9 @@ class Canvas {
     virtual size_t get_width() const = 0;
     virtual size_t get_height() const = 0;
     virtual void set_pixel(size_t row, size_t col, const sRGB &color) = 0;
+    virtual sRGB get_pixel(size_t row, size_t col) const = 0;
+
+    virtual ~Canvas() = default;
 };
 
 class SFML_Canvas : public Canvas {
@@ -30,6 +33,11 @@ class SFML_Canvas : public Canvas {
     void set_pixel(size_t row, size_t col, const sRGB &color) override {
         pixels[row * width + col].color = sf::Color(color.r, color.g, color.b);
     };
+
+    sRGB get_pixel(size_t row, size_t col) const {
+        sf::Color color = pixels[row * width + col].color;
+        return {color.r, color.g, color.b};
+    }
 
     sf::VertexArray pixels;
 

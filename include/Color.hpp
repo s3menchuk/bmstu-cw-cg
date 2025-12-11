@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <fstream>
 
 struct sRGB {
     uint8_t r, g, b;

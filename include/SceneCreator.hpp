@@ -15,6 +15,8 @@ class SceneCreator {
   public:
     virtual Scene create_scene() const = 0;
     virtual SceneView get_view() const = 0;
+
+    virtual ~SceneCreator() = default;
 };
 
 class SimpleSphere : public SceneCreator {
