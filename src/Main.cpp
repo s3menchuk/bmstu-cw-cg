@@ -44,7 +44,7 @@ const std::string APP_NAME = "Graphics Engine";
 const size_t FRAME_LIMIT = 60;
 
 const float ASPECT = 16.0f / 9.0f;  // 16.0f / 9.0f
-const size_t WIDTH = 1920;
+const size_t WIDTH = 600;
 const size_t HEIGHT = WIDTH / ASPECT;
 
 const float FOV_Y = std::numbers::pi / 180 * 55;
@@ -59,6 +59,8 @@ const float CAMERA_MOVEMENT_SPEED = 0.1;
 const float CAMERA_ROTATION_SPEED = 0.15;
 
 size_t ray_tracing_depth = 3;
+
+std::shared_ptr<SceneCreator> scene_creator = std::make_shared<SimpleSphere>();
 }  // namespace Settings
 
 struct AppContext {
@@ -445,16 +447,16 @@ bool process_key_input(Camera &camera, const Scene &scene) {
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode({Settings::WIDTH, Settings::HEIGHT}), Settings::APP_NAME);
+    sf::RenderWindow window(sf::VideoMode({static_cast<unsigned int>(Settings::WIDTH), static_cast<unsigned int>(Settings::HEIGHT)}),
+                            Settings::APP_NAME);
     window.setFramerateLimit(Settings::FRAME_LIMIT);
     if (!ImGui::SFML::Init(window))
         return -1;
 
     std::shared_ptr<SFML_Canvas> canvas = std::make_unique<SFML_Canvas>(Settings::WIDTH, Settings::HEIGHT);  // std::unique_ptr<Canvas>
 
-    std::shared_ptr<SceneCreator> scene_creator = std::make_shared<CornellBox>();
-    Scene scene = scene_creator->create_scene();
-    SceneView view = scene_creator->get_view();
+    Scene scene = Settings::scene_creator->create_scene();
+    SceneView view = Settings::scene_creator->get_view();
     Camera camera(view.pos, view.dir, scene.world_up, Settings::FOV_Y, Settings::ASPECT, Settings::NEAR, Settings::FAR);
 
     std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();

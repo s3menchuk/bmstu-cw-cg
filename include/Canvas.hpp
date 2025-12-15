@@ -34,7 +34,7 @@ class SFML_Canvas : public Canvas {
         pixels[row * width + col].color = sf::Color(color.r, color.g, color.b);
     };
 
-    sRGB get_pixel(size_t row, size_t col) const {
+    sRGB get_pixel(size_t row, size_t col) const override {
         sf::Color color = pixels[row * width + col].color;
         return {color.r, color.g, color.b};
     }
