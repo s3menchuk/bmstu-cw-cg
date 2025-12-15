@@ -106,8 +106,6 @@ class Sphere : public GeometricPrimitive {
         hit_record.dist = t_min;
         hit_record.point = ray.at(t_min);
         hit_record.normal = (hit_record.point - center).normalized();
-        // if (hit_record.normal.length() + EPSILON < radius)
-        //	hit_record.normal = -hit_record.normal;
         return true;
     }
 
@@ -148,9 +146,9 @@ class Plane : public GeometricPrimitive {
         T t = -N / D;
         if (t < 0)
             return false;
-        hit_record.normal = normal;
         hit_record.dist = t;
         hit_record.point = ray.at(t);
+        hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
         return true;
     }
 
@@ -245,8 +243,8 @@ class Triangle : public GeometricPrimitive {
         if (t > EPSILON) {
             hit_record.dist = t;
             hit_record.point = ray.at(t);
-            hit_record.normal = edge1.cross(edge2);
-            hit_record.normal.normalize();
+            auto normal = edge1.cross(edge2).normalized();
+            hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
             return true;
         }
 

@@ -2,6 +2,7 @@
 
 #include "Camera.hpp"
 #include "Light.hpp"
+#include "ModelLoader.hpp"
 #include "Object.hpp"
 #include "Scene.hpp"
 #include "Vec3.hpp"
@@ -77,12 +78,15 @@ class CornellBox : public SceneCreator {
     Scene create_scene() const override {
         Scene scene;
         scene.world_up = {0, 1, 0};
-        scene.background_color = sRGB::BLACK;
+        scene.background_color = sRGB::SKY_BLUE;
 
         // Lights
         // scene.add_light(std::make_shared<PointLight>(Vec3(width / 2, height * 9 / 10, -length / 2), sRGB::WHITE, 5));
-        scene.add_light(std::make_shared<PointLight>(Vec3(0.1, 0.1, -length + 0.1), sRGB::WHITE, 5));
-        scene.add_light(std::make_shared<PointLight>(Vec3(width - 0.1, 0.1, -length + 0.1), sRGB::WHITE, 5));
+        float d = 0.1;
+        scene.add_light(std::make_shared<PointLight>(Vec3(d, d, -length + d), sRGB::WHITE, 5));
+        scene.add_light(std::make_shared<PointLight>(Vec3(width - d, d, -length + d), sRGB::WHITE, 5));
+        // scene.add_light(std::make_shared<PointLight>(Vec3(d, height - d, -length + d), sRGB::WHITE, 5));
+        // scene.add_light(std::make_shared<PointLight>(Vec3(width - d, height - d, -length + d), sRGB::WHITE, 5));
 
         /*
         L - left, R - right
@@ -122,7 +126,7 @@ class CornellBox : public SceneCreator {
         // Sphere
         T radius = 0.75;
         auto sphere = std::make_shared<Sphere>(Vec3(width / 2, radius, -length + radius), radius);
-        scene.add_object(std::make_shared<Object>(sphere, Material(sRGB::BLUE, 0.3)));
+        scene.add_object(std::make_shared<Object>(sphere, Material(sRGB::BLUE, 0.2)));
 
         return scene;
     }
@@ -131,6 +135,46 @@ class CornellBox : public SceneCreator {
         SceneView view;
         view.pos = {width / 2, height / 2, 3};
         view.dir = {0, 0, -1};
+        return view;
+    }
+};
+
+class Tree : public SceneCreator {
+  public:
+    Scene create_scene() const {
+        Scene scene;
+        scene.world_up = {-1, 0, 0};
+        auto loader = std::make_shared<ObjLoader>();
+        auto model = loader->load("models/tree.obj");
+        scene.add_object(std::make_shared<Object>(model, Material(sRGB::GREEN, 0.2)));
+        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 1, 1), Color(sRGB::WHITE), 1));
+        return scene;
+    }
+
+    SceneView get_view() const {
+        SceneView view;
+        view.pos = {-0.5, -0.5, 1};
+        view.dir = {0, 0, -1};
+        return view;
+    }
+};
+
+class UtahTeapot : public SceneCreator {
+  public:
+    Scene create_scene() const {
+        Scene scene;
+        scene.world_up = {0, -1, 0};
+        auto loader = std::make_shared<ObjLoader>();
+        auto model = loader->load("models/utah_teapot.obj");
+        scene.add_object(std::make_shared<Object>(model, Material(sRGB::GRAY, 0.2)));
+        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 1, 1), Color(sRGB::WHITE), 1));
+        return scene;
+    }
+
+    SceneView get_view() const {
+        SceneView view;
+        view.pos = {-1.5, -0.3, -0.5};
+        view.dir = {1, 0, 0};
         return view;
     }
 };

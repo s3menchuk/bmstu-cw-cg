@@ -111,4 +111,16 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
             canvas.set_pixel(row, col, color.as_srgb());
         }
     }
+    // #pragma omp parallel for schedule(dynamic)
+    //     for (size_t row = 1; row + 1 < height; ++row) {
+    //         for (size_t col = 1; col + 1 < width; ++col) {
+    //             Color left = canvas.get_pixel(row, col - 1);
+    //             Color bottom = canvas.get_pixel(row - 1, col);
+    //             Color right = canvas.get_pixel(row, col + 1);
+    //             Color top = canvas.get_pixel(row + 1, col);
+    //             Color centre = canvas.get_pixel(row, col);
+    //             Color c = (left + bottom + right + top + centre) / 5;
+    //             canvas.set_pixel(row, col, c.as_srgb());
+    //         }
+    //     }
 }
