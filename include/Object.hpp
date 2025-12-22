@@ -52,6 +52,10 @@ class Object {
     std::shared_ptr<const Hittable> operator->() const {
         return hittable;
     }
+    // bool hit(const Ray3 &ray, HitRecord &hit_record) const {
+    //     return hittable->hit(ray, hit_record);
+    // }
+
     Material material;
     bool visible;
 

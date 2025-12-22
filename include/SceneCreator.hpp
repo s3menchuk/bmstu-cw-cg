@@ -2,6 +2,7 @@
 
 #include "Camera.hpp"
 #include "Light.hpp"
+#include "MeshLight.hpp"
 #include "ModelLoader.hpp"
 #include "Object.hpp"
 #include "Scene.hpp"
@@ -74,6 +75,7 @@ class CornellBox : public SceneCreator {
     static constexpr float width = 4;
     static constexpr float length = 4;
     static constexpr float height = 3;
+    static constexpr float radius = 0.5;
 
     Scene create_scene() const override {
         Scene scene;
@@ -101,11 +103,11 @@ class CornellBox : public SceneCreator {
 
         // Red Left Wall
         auto left_wall = std::make_shared<Quad>(LBN, LTN - LBN, LBF - LBN);
-        scene.add_object(std::make_shared<Object>(left_wall, Material(sRGB::RED, 0.1)));
+        scene.add_object(std::make_shared<Object>(left_wall, Material(sRGB::RED, 0.25)));
 
         // Green Right Wall
         auto right_wall = std::make_shared<Quad>(RBN, RTN - RBN, RBF - RBN);
-        scene.add_object(std::make_shared<Object>(right_wall, Material(sRGB::BLUE, 0.1)));
+        scene.add_object(std::make_shared<Object>(right_wall, Material(sRGB::BLUE, 0.25)));
 
         // White Back Wall
         auto back_wall = std::make_shared<Quad>(LBF, LTF - LBF, RBF - LBF);
@@ -121,20 +123,22 @@ class CornellBox : public SceneCreator {
 
         // Front Wall
         auto front_wall = std::make_shared<Quad>(LBN, LTN - LBN, RBN - LBN);
-        scene.add_object(std::make_shared<Object>(front_wall, Material(sRGB::WHITE, 0)));
+        scene.add_object(std::make_shared<Object>(front_wall, Material(sRGB::WHITE, 0.5)));
 
         // Sphere
-        T radius = 0.75;
-        auto sphere = std::make_shared<Sphere>(Vec3(width / 2, radius, -length + radius), radius);
+        auto sphere = std::make_shared<Sphere>(Vec3(width / 2, height * 0.4, -length / 2), radius);
         scene.add_object(std::make_shared<Object>(sphere, Material(sRGB::WHITE, 0.5)));
+
+        // auto light_sphere = std::make_shared<Sphere>(Vec3(width / 2, radius, -length + radius), radius + 0.1);
+        // scene.add_light(std::make_shared<SphereLight>(*light_sphere, sRGB::WHITE, 0.35));
 
         return scene;
     }
 
     SceneView get_view() const override {
         SceneView view;
-        view.pos = {width / 2, height / 2, -0.1};
-        view.dir = {0, 0, -1};
+        view.pos = {width * 0.75, height / 2, -0.1};
+        view.dir = {-0.25, 0, -1};
         return view;
     }
 };
