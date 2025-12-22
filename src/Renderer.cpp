@@ -51,12 +51,12 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
 
     for (const auto &light : scene.lights) {
         if (!is_in_shadow(scene, hit_record.point, *light)) {
-            Vec3 L = -light->get_direction(hit_record.point);
+            const Vec3 L = -light->get_direction(hit_record.point);
             diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(hit_record.point);
 
-            Vec3 R = 2 * N.dot(L) * N - L;
+            const Vec3 R = 2 * N.dot(L) * N - L;
             // Vec3 H = (L + V).normalized();
-            specular_intensity += std::pow(std::max(R.dot(V), 0.0f), 200) * light->get_color() * light->get_intensity(hit_record.point);
+            specular_intensity += std::pow(std::max(R.dot(V), 0.0f), 100) * light->get_color() * light->get_intensity(hit_record.point);
         }
     }
 
@@ -72,11 +72,11 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
 }
 
 void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth) {
-    const float view_height = 2 * std::tan(camera.fov_y / 2) * camera.near;
-    const float view_width = view_height * camera.aspect;
+    float view_height = 2 * std::tan(camera.fov_y / 2) * camera.near;
+    float view_width = view_height * camera.aspect;
 
-    const size_t width = canvas.get_width();
-    const size_t height = canvas.get_height();
+    size_t width = canvas.get_width();
+    size_t height = canvas.get_height();
 #pragma omp parallel for schedule(dynamic)
     for (size_t row = 0; row < height; ++row) {
         float ndc_y = 1 - (row + 0.5f) / height * 2;

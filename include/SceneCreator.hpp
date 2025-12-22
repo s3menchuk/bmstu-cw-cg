@@ -27,7 +27,7 @@ class SimpleSphere : public SceneCreator {
         Scene scene;
         scene.background_color = sRGB::SKY_BLUE;
         scene.world_up = {0, 1, 0};
-        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 1, -1), Color(sRGB::WHITE), 1));
+        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 1, -1), Color(sRGB::WHITE), 10));
         scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(0, 0, 0), 1), Material(Color(sRGB::RED), 0.1)));
         return scene;
     }
@@ -103,15 +103,15 @@ class CornellBox : public SceneCreator {
 
         // Red Left Wall
         auto left_wall = std::make_shared<Quad>(LBN, LTN - LBN, LBF - LBN);
-        scene.add_object(std::make_shared<Object>(left_wall, Material(sRGB::RED, 0.25)));
+        scene.add_object(std::make_shared<Object>(left_wall, Material(sRGB::RED, 0.5)));
 
         // Green Right Wall
         auto right_wall = std::make_shared<Quad>(RBN, RTN - RBN, RBF - RBN);
-        scene.add_object(std::make_shared<Object>(right_wall, Material(sRGB::BLUE, 0.25)));
+        scene.add_object(std::make_shared<Object>(right_wall, Material(sRGB::BLUE, 0.5)));
 
         // White Back Wall
         auto back_wall = std::make_shared<Quad>(LBF, LTF - LBF, RBF - LBF);
-        scene.add_object(std::make_shared<Object>(back_wall, Material(sRGB::WHITE, 0.5)));
+        scene.add_object(std::make_shared<Object>(back_wall, Material(sRGB::WHITE, 0.75)));
 
         // White Floor
         auto floor = std::make_shared<Quad>(LBN, LBF - LBN, RBN - LBN);
@@ -123,11 +123,11 @@ class CornellBox : public SceneCreator {
 
         // Front Wall
         auto front_wall = std::make_shared<Quad>(LBN, LTN - LBN, RBN - LBN);
-        scene.add_object(std::make_shared<Object>(front_wall, Material(sRGB::WHITE, 0.5)));
+        scene.add_object(std::make_shared<Object>(front_wall, Material(sRGB::WHITE, 0.75)));
 
         // Sphere
         auto sphere = std::make_shared<Sphere>(Vec3(width / 2, height * 0.4, -length / 2), radius);
-        scene.add_object(std::make_shared<Object>(sphere, Material(sRGB::WHITE, 0.5)));
+        scene.add_object(std::make_shared<Object>(sphere, Material(sRGB::WHITE, 1)));
 
         // auto light_sphere = std::make_shared<Sphere>(Vec3(width / 2, radius, -length + radius), radius + 0.1);
         // scene.add_light(std::make_shared<SphereLight>(*light_sphere, sRGB::WHITE, 0.35));

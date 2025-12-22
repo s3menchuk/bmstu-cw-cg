@@ -63,7 +63,7 @@ const float CAMERA_ROTATION_SPEED = 0.15;
 
 size_t ray_tracing_depth = 3;
 
-std::shared_ptr<SceneCreator> scene_creator = std::make_shared<CornellBox>();
+std::shared_ptr<SceneCreator> scene_creator = std::make_shared<SimpleSphere>();
 }  // namespace Settings
 
 struct AppContext {
