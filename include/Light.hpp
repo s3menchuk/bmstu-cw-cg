@@ -1,34 +1,54 @@
 #pragma once
 
 #include "Color.hpp"
+#include "Types.hpp"
 #include "Vec3.hpp"
 
-using T = float;
+// TODO: More types of light sources
 
 class Light {
   public:
     Light(const Color &color, T intensity) : color(color), intensity(intensity) {}
 
-    Color color;
+    Color get_color() const {
+        return color;
+    }
+    virtual T get_intensity(const Point3 &point) const = 0;
     virtual Vec3 get_direction(const Point3 &point) const = 0;
     virtual T get_distance(const Point3 &point) const = 0;
-    virtual T get_intensity(const Point3 &point) const = 0;
-    void set_intensity(T value) {
-        // throw exception with value < 0
-        if (value >= 0)
-            intensity = value;
-    }
 
     virtual ~Light() = default;
 
   protected:
+    Color color;
     T intensity;
 };
 
-class PointLight : public Light {
+class AttenuationLight : public Light {
   public:
-    Vec3 pos;
-    PointLight(const Point3 &pos, const Color &color, T intensity) : pos(pos), Light(color, intensity) {}
+    AttenuationLight(const Color &color, T intensity, T kq = 1, T kl = 0, T kc = 0) : Light(color, intensity), kq(kq), kl(kl), kc(kc) {}
+
+    T get_intensity(const Point3 &point) const override {
+        T dist = get_distance(point);
+        return this->intensity / (kq * dist * dist + kl * dist + kc);
+    }
+
+  private:
+    T kq, kl, kc;
+};
+
+class NonAttenuationLight : public Light {
+  public:
+    NonAttenuationLight(const Color &color, T intensity) : Light(color, intensity) {}
+
+    T get_intensity(const Point3 &point) const override {
+        return this->intensity;
+    }
+};
+
+class PointLight : public AttenuationLight {
+  public:
+    PointLight(const Point3 &pos, const Color &color, T intensity) : pos(pos), AttenuationLight(color, intensity) {}
 
     Vec3 get_direction(const Point3 &point) const override {
         return (point - pos).normalized();
@@ -38,16 +58,13 @@ class PointLight : public Light {
         return (point - pos).length();
     }
 
-    T get_intensity(const Point3 &point) const override {
-        T dist = get_distance(point);
-        return this->intensity / (dist * dist);
-    }
+  private:
+    Vec3 pos;
 };
 
-class DirectionLight : public Light {
+class DirectionLight : public NonAttenuationLight {
   public:
-    Vec3 dir;
-    DirectionLight(const Vec3 &dir, const Color &color, T intensity) : dir(dir.normalized()), Light(color, intensity) {}
+    DirectionLight(const Vec3 &dir, const Color &color, T intensity) : dir(dir.normalized()), NonAttenuationLight(color, intensity) {}
 
     Vec3 get_direction(const Point3 &point) const override {
         return dir;
@@ -57,9 +74,6 @@ class DirectionLight : public Light {
         return std::numeric_limits<T>::infinity();
     }
 
-    T get_intensity(const Point3 &point) const override {
-        return this->intensity;
-    }
+  private:
+    Vec3 dir;
 };
-
-// More types of light sources

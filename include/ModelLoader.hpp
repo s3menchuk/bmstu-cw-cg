@@ -12,13 +12,13 @@
 
 class ModelLoader {
   public:
-    virtual std::shared_ptr<GeometricPrimitive> load(const std::string &path) const = 0;
+    virtual std::shared_ptr<Hittable> load(const std::string &path) const = 0;
     virtual ~ModelLoader() = default;
 };
 
 class ObjLoader : public ModelLoader {
   public:
-    std::shared_ptr<GeometricPrimitive> load(const std::string &path) const override {
+    std::shared_ptr<Hittable> load(const std::string &path) const override {
         std::ifstream file(path);
 
         if (!file)

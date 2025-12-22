@@ -1,31 +1,12 @@
 #pragma once
 
 #include "Color.hpp"
-
-// TODO: MattePlastic, GlossyPlastic, Metal, Glass
+#include "Types.hpp"
 
 class Material {
   public:
-    Material(const Color &albedo, float metallic) : albedo(albedo), metallic(metallic) {}
+    Material(const Color &color, T reflectance) : color(color), reflectance(reflectance) {}
 
-    Color albedo;
-    float metallic;
+    Color color;
+    T reflectance;
 };
-
-// class BaseMaterial {
-// public:
-//     virtual Color shade(const Ray& ray, const HitRecord& hit_record, const Light& light) const = 0;
-//     virtual ~BaseMaterial() = default;
-// };
-//
-// class DiffuseMaterial : public BaseMaterial {
-//     // albedo
-// };
-//
-// class SpecularMaterial : public BaseMaterial {
-//     // reflectivity
-// };
-//
-// class EmissiveMaterial : public BaseMaterial {
-//     // intensity
-// };

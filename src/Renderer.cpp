@@ -2,7 +2,7 @@
 #include "Color.hpp"
 #include "Light.hpp"
 #include "Math.hpp"
-#include "Ray.hpp"
+#include "Ray3.hpp"
 #include "Vec3.hpp"
 
 #include <iostream>
@@ -31,64 +31,43 @@ std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(const Scene &scene,
     return closest_obj;
 }
 
-Color RayTracingRenderer::background_color(const Scene &scene, const Ray3 &ray) const {
-    // return scene.background_color;
-    float k = map(ray.direction.x, -1, 1, 0, 1);
-    return 1.75 * scene.background_color * (1.0f - k);
-}
-
-Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t depth) {
+Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t depth) const {
     if (depth == 0)
         return Color();
 
     auto closest_obj = find_closest_obj(scene, ray);
     if (!closest_obj) {
-        return background_color(scene, ray);
+        return scene.get_background_color(ray);
     }
 
     HitRecord hit_record;
     (*closest_obj)->hit(ray, hit_record);
 
-    // float r = map(hit_record.normal.x, -1, 1, 0, 1);
-    // float g = map(hit_record.normal.y, -1, 1, 0, 1);
-    // float b = map(hit_record.normal.z, -1, 1, 0, 1);
-    // return Color(r, g, b);
-
-    // Color ambient = scene.ambient_color * scene.ambient_intensity;
-
     const Vec3 N = hit_record.normal;
+    const Vec3 V = -ray.direction;
 
     Color diffuse_intensity;
-    for (const auto &light : scene.lights) {
-        if (!is_in_shadow(scene, hit_record.point, *light)) {
-            Vec3 L = -light->get_direction(hit_record.point);
-            diffuse_intensity += std::max(N.dot(L), 0.0f) * light->color * light->get_intensity(hit_record.point);
-        }
-    }
-    Color diffuse_color = (1 - closest_obj->material.metallic) * closest_obj->material.albedo;
-    Color diffuse_total = diffuse_intensity * diffuse_color;
-
-    const Vec3 V = -ray.direction;
     Color specular_intensity;
+
     for (const auto &light : scene.lights) {
         if (!is_in_shadow(scene, hit_record.point, *light)) {
             Vec3 L = -light->get_direction(hit_record.point);
-            // Vec3 R = 2 * N.dot(L) * N - L;
-            Vec3 H = L + V;
-            H.normalize();
-            specular_intensity += std::pow(std::max(N.dot(H), 0.0f), 200) * light->color * light->get_intensity(hit_record.point);
+            diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(hit_record.point);
+
+            Vec3 R = 2 * N.dot(L) * N - L;
+            // Vec3 H = (L + V).normalized();
+            specular_intensity += std::pow(std::max(R.dot(V), 0.0f), 200) * light->get_color() * light->get_intensity(hit_record.point);
         }
     }
-    Color F0 = Color::lerp(Color(0.04), closest_obj->material.albedo, closest_obj->material.metallic);
-    Color specular_color = closest_obj->material.metallic * F0;
-    Color specular_total = specular_intensity * closest_obj->material.metallic;
 
-    Color reflective_color;
+    Color diffuse_total = diffuse_intensity * (1 - closest_obj->material.reflectance) * closest_obj->material.color;
+    Color specular_total = specular_intensity * closest_obj->material.reflectance;
+
     Vec3 reflected_dir = ray.direction - 2 * N.dot(ray.direction) * N;
     Ray3 reflected_ray(hit_record.point + reflected_dir * EPSILON, reflected_dir);
-    reflective_color = trace_ray(scene, reflected_ray, depth - 1);
+    Color reflective_color = trace_ray(scene, reflected_ray, depth - 1) * closest_obj->material.reflectance;
 
-    Color final_color = diffuse_total + specular_total + reflective_color * closest_obj->material.metallic;
+    Color final_color = diffuse_total + specular_total + reflective_color;
     return final_color;
 }
 
@@ -111,16 +90,4 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
             canvas.set_pixel(row, col, color.as_srgb());
         }
     }
-    // #pragma omp parallel for schedule(dynamic)
-    //     for (size_t row = 1; row + 1 < height; ++row) {
-    //         for (size_t col = 1; col + 1 < width; ++col) {
-    //             Color left = canvas.get_pixel(row, col - 1);
-    //             Color bottom = canvas.get_pixel(row - 1, col);
-    //             Color right = canvas.get_pixel(row, col + 1);
-    //             Color top = canvas.get_pixel(row + 1, col);
-    //             Color centre = canvas.get_pixel(row, col);
-    //             Color c = (left + bottom + right + top + centre) / 5;
-    //             canvas.set_pixel(row, col, c.as_srgb());
-    //         }
-    //     }
 }

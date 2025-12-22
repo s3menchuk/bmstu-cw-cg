@@ -3,7 +3,7 @@
 #include "AABB.hpp"
 #include "Interval.hpp"
 #include "Material.hpp"
-#include "Ray.hpp"
+#include "Ray3.hpp"
 #include "Types.hpp"
 #include "Vec3.hpp"
 
@@ -21,6 +21,13 @@ void move_points_by(std::vector<Point3> &points, const Vec3 &offset);
 
 std::vector<Point3> get_points_on_circle(const Vec3 &center, T radius, size_t order);
 
+// class Movable {
+// public:
+//	virtual void set_pos(const Vec3& new_pos) = 0;
+//	virtual Vec3 get_pos() const = 0;
+//	virtual ~Movable() = default;
+// };
+
 struct HitRecord {
     Vec3 point;
     Vec3 normal;
@@ -34,38 +41,25 @@ class Hittable {
     virtual ~Hittable() = default;
 };
 
-// class Movable {
-// public:
-//	virtual void set_pos(const Vec3& new_pos) = 0;
-//	virtual Vec3 get_pos() const = 0;
-//	virtual ~Movable() = default;
-// };
-
-class GeometricPrimitive : public Hittable {
-  public:
-    virtual std::string get_type() const = 0;
-    virtual ~GeometricPrimitive() = default;
-};
-
 class Object {
   public:
-    Object(const std::shared_ptr<GeometricPrimitive> &primitive, const Material &material, bool visible = true)
-        : primitive(primitive), material(material), visible(visible) {}
+    Object(const std::shared_ptr<Hittable> &hittable, const Material &material, bool visible = true)
+        : hittable(hittable), material(material), visible(visible) {}
 
-    std::shared_ptr<GeometricPrimitive> operator->() {
-        return primitive;
+    std::shared_ptr<Hittable> operator->() {
+        return hittable;
     }
-    std::shared_ptr<const GeometricPrimitive> operator->() const {
-        return primitive;
+    std::shared_ptr<const Hittable> operator->() const {
+        return hittable;
     }
     Material material;
     bool visible;
 
   private:
-    std::shared_ptr<GeometricPrimitive> primitive;
+    std::shared_ptr<Hittable> hittable;
 };
 
-class Sphere : public GeometricPrimitive {
+class Sphere : public Hittable {
   public:
     Sphere(const Point3 &center, T radius) : center(center) {
         set_radius(radius);
@@ -109,16 +103,11 @@ class Sphere : public GeometricPrimitive {
         return true;
     }
 
-    static const std::string type;
-    std::string get_type() const override {
-        return type;
-    }
-
   private:
     float radius;
 };
 
-class Plane : public GeometricPrimitive {
+class Plane : public Hittable {
   public:
     T offset;
 
@@ -152,16 +141,11 @@ class Plane : public GeometricPrimitive {
         return true;
     }
 
-    static const std::string type;
-    std::string get_type() const override {
-        return type;
-    }
-
   private:
     Vec3 normal;
 };
 
-class Quad : public GeometricPrimitive {
+class Quad : public Hittable {
   public:
     Quad(const Point3 &Q, const Vec3 &u, const Vec3 &v) : Q(Q), u(u), v(v) {
         auto n = u.cross(v);
@@ -197,11 +181,6 @@ class Quad : public GeometricPrimitive {
         return true;
     }
 
-    static const std::string type;
-    std::string get_type() const override {
-        return type;
-    }
-
   private:
     Vec3 Q;
     Vec3 u, v;
@@ -210,7 +189,7 @@ class Quad : public GeometricPrimitive {
     T D;
 };
 
-class Triangle : public GeometricPrimitive {
+class Triangle : public Hittable {
   public:
     Triangle(const Point3 &a, const Point3 &b, const Point3 &c) : a(a), b(b), c(c) {
         const auto v = (b - a).cross(c - a);
@@ -251,17 +230,12 @@ class Triangle : public GeometricPrimitive {
         return false;
     }
 
-    static const std::string type;
-    std::string get_type() const {
-        return type;
-    }
-
   private:
     Point3 a, b, c;
     Vec3 normal;
 };
 
-class Mesh : public GeometricPrimitive {
+class Mesh : public Hittable {
   public:
     Mesh(const std::vector<Triangle> &triangles) : triangles(triangles) {
         if (triangles.empty())
@@ -290,16 +264,11 @@ class Mesh : public GeometricPrimitive {
         return Mesh(triangles);
     }
 
-    static const std::string type;
-    std::string get_type() const override {
-        return type;
-    }
-
   private:
     std::vector<Triangle> triangles;
 };
 
-class Box : public GeometricPrimitive {
+class Box : public Hittable {
   public:
     Box(const Point3 &a, const Point3 &b) : a(a), b(b), sides(get_sides(a, b)), center((a + b) / 2.0f) {}
 
@@ -344,11 +313,6 @@ class Box : public GeometricPrimitive {
         return center;
     }
 
-    static const std::string type;
-    std::string get_type() const override {
-        return type;
-    }
-
   private:
     Point3 a;
     Point3 b;
@@ -356,7 +320,7 @@ class Box : public GeometricPrimitive {
     Point3 center;
 };
 
-class RightPrism : public GeometricPrimitive {
+class RightPrism : public Hittable {
   public:
     RightPrism(const Vec3 &base_center, T radius, T height, size_t order)
         : upper_base(get_upper_base(base_center, radius, height, order)), lower_base(get_lower_base(base_center, radius, height, order)) {
@@ -450,11 +414,6 @@ class RightPrism : public GeometricPrimitive {
         return min_dist != std::numeric_limits<T>::max();
     }
 
-    static const std::string type;
-    std::string get_type() const override {
-        return type;
-    }
-
   private:
     Vec3 base_center;
     T radius;
@@ -466,7 +425,7 @@ class RightPrism : public GeometricPrimitive {
     Mesh lower_base;
 };
 
-class RightPyramid : public GeometricPrimitive {
+class RightPyramid : public Hittable {
   public:
     RightPyramid(const Point3 &base_center, T radius, T height, size_t order) : base(Mesh::get_base(base_center, radius, order, 0)) {
         if (radius <= 0)
@@ -536,11 +495,6 @@ class RightPyramid : public GeometricPrimitive {
         *this = RightPyramid(base_center, radius, height, new_order);
     }
 
-    static const std::string type;
-    std::string get_type() const override {
-        return type;
-    }
-
   private:
     Point3 base_center;
     T radius;
@@ -551,7 +505,7 @@ class RightPyramid : public GeometricPrimitive {
     Mesh base;
 };
 
-class Model : public GeometricPrimitive {
+class Model : public Hittable {
   public:
     Model(const std::vector<Vec3> &vertices, const std::vector<std::vector<size_t>> &faces) {
         for (const auto &face : faces) {
@@ -589,11 +543,6 @@ class Model : public GeometricPrimitive {
             }
         }
         return min_dist != std::numeric_limits<T>::max();
-    }
-
-    static const std::string type;
-    std::string get_type() const override {
-        return type;
     }
 
   private:

@@ -3,7 +3,7 @@
 #include "Color.hpp"
 #include "Light.hpp"
 #include "Object.hpp"
-#include "Ray.hpp"
+#include "Ray3.hpp"
 #include "Vec3.hpp"
 
 #include <memory>
@@ -30,5 +30,10 @@ class Scene {
             if (obj->visible)
                 visible_objects.push_back(obj);
         return visible_objects;
+    }
+
+    Color get_background_color(const Ray3 &ray) const {
+        float k = map(ray.direction.x, -1, 1, 0, 1);
+        return 1.75 * background_color * (1.0f - k);
     }
 };

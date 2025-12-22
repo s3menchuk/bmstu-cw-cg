@@ -80,13 +80,9 @@ class CornellBox : public SceneCreator {
         scene.world_up = {0, 1, 0};
         scene.background_color = sRGB::SKY_BLUE;
 
-        // Lights
-        // scene.add_light(std::make_shared<PointLight>(Vec3(width / 2, height * 9 / 10, -length / 2), sRGB::WHITE, 5));
         float d = 0.1;
         scene.add_light(std::make_shared<PointLight>(Vec3(d, d, -length + d), sRGB::WHITE, 5));
         scene.add_light(std::make_shared<PointLight>(Vec3(width - d, d, -length + d), sRGB::WHITE, 5));
-        // scene.add_light(std::make_shared<PointLight>(Vec3(d, height - d, -length + d), sRGB::WHITE, 5));
-        // scene.add_light(std::make_shared<PointLight>(Vec3(width - d, height - d, -length + d), sRGB::WHITE, 5));
 
         /*
         L - left, R - right
@@ -109,31 +105,35 @@ class CornellBox : public SceneCreator {
 
         // Green Right Wall
         auto right_wall = std::make_shared<Quad>(RBN, RTN - RBN, RBF - RBN);
-        scene.add_object(std::make_shared<Object>(right_wall, Material(sRGB::GREEN, 0.1)));
+        scene.add_object(std::make_shared<Object>(right_wall, Material(sRGB::BLUE, 0.1)));
 
         // White Back Wall
         auto back_wall = std::make_shared<Quad>(LBF, LTF - LBF, RBF - LBF);
-        scene.add_object(std::make_shared<Object>(back_wall, Material(sRGB::WHITE, 0)));
+        scene.add_object(std::make_shared<Object>(back_wall, Material(sRGB::WHITE, 0.5)));
 
         // White Floor
         auto floor = std::make_shared<Quad>(LBN, LBF - LBN, RBN - LBN);
-        scene.add_object(std::make_shared<Object>(floor, Material(sRGB::WHITE, 0)));
+        scene.add_object(std::make_shared<Object>(floor, Material(sRGB::GREEN, 0)));
 
         // White Ceiling
         auto ceiling = std::make_shared<Quad>(LTN, LTF - LTN, RTN - LTN);
         scene.add_object(std::make_shared<Object>(ceiling, Material(sRGB::WHITE, 0)));
 
+        // Front Wall
+        auto front_wall = std::make_shared<Quad>(LBN, LTN - LBN, RBN - LBN);
+        scene.add_object(std::make_shared<Object>(front_wall, Material(sRGB::WHITE, 0)));
+
         // Sphere
         T radius = 0.75;
         auto sphere = std::make_shared<Sphere>(Vec3(width / 2, radius, -length + radius), radius);
-        scene.add_object(std::make_shared<Object>(sphere, Material(sRGB::BLUE, 0.2)));
+        scene.add_object(std::make_shared<Object>(sphere, Material(sRGB::WHITE, 0.5)));
 
         return scene;
     }
 
     SceneView get_view() const override {
         SceneView view;
-        view.pos = {width / 2, height / 2, 3};
+        view.pos = {width / 2, height / 2, -0.1};
         view.dir = {0, 0, -1};
         return view;
     }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Interval.hpp"
-#include "Ray.hpp"
+#include "Ray3.hpp"
 #include "Types.hpp"
 #include "Vec3.hpp"
 
