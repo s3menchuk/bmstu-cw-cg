@@ -13,20 +13,23 @@ bool RayTracingRenderer::is_in_shadow(const Scene &scene, const Point3 &point, c
     const auto dist = light.get_distance(point);
     HitRecord hit_record;
     for (const auto &obj : scene.get_visible_objects())
-        if ((*obj)->hit(ray, hit_record) && hit_record.dist <= dist)
+        if ((*obj)->hit(ray, hit_record) && hit_record.dist < dist)
             return true;
     return false;
 }
 
-std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(const Scene &scene, const Ray3 &ray) const {
+std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(HitRecord &closest_hit, const Scene &scene, const Ray3 &ray) const {
+    HitRecord closest, current;
+    closest.dist = std::numeric_limits<T>::infinity();
     std::shared_ptr<Object> closest_obj = nullptr;
-    float closest_dist = FLT_MAX;
-    HitRecord hit_record;
     for (const auto &obj : scene.get_visible_objects()) {
-        if ((*obj)->hit(ray, hit_record) && hit_record.dist < closest_dist) {
-            closest_dist = hit_record.dist;
+        if ((*obj)->hit(ray, current) && current.dist < closest.dist) {
+            closest = current;
             closest_obj = obj;
         }
+    }
+    if (closest_obj) {
+        closest_hit = closest;
     }
     return closest_obj;
 }
@@ -35,28 +38,26 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
     if (depth == 0)
         return Color();
 
-    auto closest_obj = find_closest_obj(scene, ray);
+    HitRecord closest_hit;
+    auto closest_obj = find_closest_obj(closest_hit, scene, ray);
     if (!closest_obj) {
         return scene.get_background_color(ray);
     }
 
-    HitRecord hit_record;
-    (*closest_obj)->hit(ray, hit_record);
-
-    const Vec3 N = hit_record.normal;
+    const Vec3 N = closest_hit.normal;
     const Vec3 V = -ray.direction;
 
     Color diffuse_intensity;
     Color specular_intensity;
 
     for (const auto &light : scene.lights) {
-        if (!is_in_shadow(scene, hit_record.point, *light)) {
-            const Vec3 L = -light->get_direction(hit_record.point);
-            diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(hit_record.point);
+        if (!is_in_shadow(scene, closest_hit.point, *light)) {
+            const Vec3 L = -light->get_direction(closest_hit.point);
+            diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(closest_hit.point);
 
-            const Vec3 R = 2 * N.dot(L) * N - L;
-            // Vec3 H = (L + V).normalized();
-            specular_intensity += std::pow(std::max(R.dot(V), 0.0f), 100) * light->get_color() * light->get_intensity(hit_record.point);
+            // const Vec3 R = 2 * N.dot(L) * N - L;
+            Vec3 H = (L + V).normalized();
+            specular_intensity += std::pow(std::max(N.dot(H), 0.0f), 100) * light->get_color() * light->get_intensity(closest_hit.point);
         }
     }
 
@@ -64,7 +65,7 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
     Color specular_total = specular_intensity * closest_obj->material.reflectance;
 
     Vec3 reflected_dir = ray.direction - 2 * N.dot(ray.direction) * N;
-    Ray3 reflected_ray(hit_record.point + reflected_dir * EPSILON, reflected_dir);
+    Ray3 reflected_ray(closest_hit.point + reflected_dir * EPSILON, reflected_dir);
     Color reflective_color = trace_ray(scene, reflected_ray, depth - 1) * closest_obj->material.reflectance;
 
     Color final_color = diffuse_total + specular_total + reflective_color;

@@ -160,6 +160,9 @@ class Quad : public Hittable {
         w = n / n.dot(n);
     }
 
+    Vec3 Q;
+    Vec3 u, v;
+
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
         auto denom = normal.dot(ray.direction);
 
@@ -188,8 +191,6 @@ class Quad : public Hittable {
     }
 
   private:
-    Vec3 Q;
-    Vec3 u, v;
     Vec3 w;
     Vec3 normal;
     T D;

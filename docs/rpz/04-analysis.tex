@@ -29,10 +29,10 @@
 
 \begin{tabular}{|c|c|c|}
 	\hline
-	Алгоритм & Быстродействие & Реалистичность \\ 
+	Алгоритм                   & Быстродействие & Реалистичность \\
 	\hline
-	Прямая трассировка лучей & Низкое & Высокая \\ 
-	Обратная трассировка лучей & Среднее & Среднее \\ 
+	Прямая трассировка лучей   & Низкое         & Высокая        \\
+	Обратная трассировка лучей & Среднее        & Среднее        \\
 	\hline
 \end{tabular}
 
@@ -58,8 +58,8 @@
 
 Пусть:
 \begin{itemize}
-	\item $\vec{N}$ --- вектор нормали к поверхности;
-	\item $\vec{L}$ --- вектор от точки до источника;
+	\item $\overrightarrow{N}$ --- вектор нормали к поверхности;
+	\item $\overrightarrow{L}$ --- вектор от точки до источника;
 	\item $K_d$ --- коэффициент диффузного освещения;
 	\item $I_0$ --- интенсивность источника;
 	\item $I$ --- результирующая интенсивность света в точке.
@@ -68,7 +68,7 @@
 Тогда формула рассчета освещенности будеи иметь следующий вид:
 \begin{equation}
 	I = I_0 \cdot K_d \cdot (\overrightarrow{L} \cdot \overrightarrow{N})
-\label{eq:lambert}
+	\label{eq:lambert}
 \end{equation}
 
 Из формулы \eqref{eq:lambert} следует главный недостаток модели Ламберта - одинаковая интенсивность всех точек, принадлежащих одной грани.
@@ -87,11 +87,11 @@
 	\label{fig:phong}
 	{\small
 		\begin{itemize}
-			\item $\vec{N}$ --- вектор нормали к поверхности;
-			\item $\vec{V}$ --- вектор от точки до наблюдателя;
-			\item $\vec{L}$ --- вектор падающего света;
-			\item $\vec{R}$ --- вектор отраженного света;
-			\item $\vec{H}$ --- срединный вектор между вектором наблюдения и источником.
+			\item $\overrightarrow{N}$ --- вектор нормали к поверхности;
+			\item $\overrightarrow{V}$ --- вектор от точки до наблюдателя;
+			\item $\overrightarrow{L}$ --- вектор падающего света;
+			\item $\overrightarrow{R}$ --- вектор отраженного света;
+			\item $\overrightarrow{H}$ --- срединный вектор между вектором наблюдения и источником.
 		\end{itemize}
 	}
 \end{figure}
@@ -100,29 +100,29 @@
 \begin{itemize}
 	\item $K_s$ --- коэффициент зеркального отражения;
 	\item $I_0$ --- интенсивность источника;
-	\item $\alpha$ --- коэффициент блеска.
+	\item $\alpha$ --- коэффициент резкости блика;
 	\item $I_s$ --- результирующая зеркальная составляющая света в точке.
 \end{itemize}
 
 Тогда зеркальная составляющая в модели Фонга рассчитывается следующим образом:
 \begin{equation}
 	I_s = I_0 \cdot K_s \cdot (\overrightarrow{R} \cdot \overrightarrow{V})^\alpha
-\label{eq:specular}
+	\label{eq:specular_phong}
 \end{equation}
 
 Согласно модели Фонга интенсивность в точке будет рассчитываться по формуле:
 \begin{align}
-	I &= I_a + I_d + I_s, \quad \text{где } \\
-	I_a &\text{ — фоновая составляющая, } \nonumber \\
-	I_d &\text{ — диффузная составляющая, } \nonumber \\
-	I_s &\text{ — зеркальная составляющая} \nonumber
-\label{eq:short_phong}
+	I   & = I_a + I_d + I_s, \quad \text{где }         \\
+	I_a & \text{ — фоновая составляющая, } \nonumber   \\
+	I_d & \text{ — диффузная составляющая, } \nonumber \\
+	I_s & \text{ — зеркальная составляющая} \nonumber
+	\label{eq:short_phong}
 \end{align}
 
 Подставив уравнение каждой из трех составляющих, получим следующую формулу:
 \begin{equation}
 	I = I_0 \cdot K_a + I_0 \cdot K_d \cdot (\overrightarrow{L} \cdot \overrightarrow{N}) + I_0 \cdot K_s \cdot (\overrightarrow{R} \cdot \overrightarrow{V})^\alpha
-\label{eq:long_phong}
+	\label{eq:long_phong}
 \end{equation}
 
 \begin{figure}[H]
@@ -132,10 +132,26 @@
 \end{figure}
 
 \subsection{Модель освещения Блинна-Фонга}
-\subsection{Выбор модели освещения}
+Модель освщения Блинна-Фонга является модификацией модели Фонга, в которой зеркальная составляющая расчиывается следующим способом:
+\begin{equation}
+	I_s = I_0 \cdot K_s \cdot (\overrightarrow{N} \cdot \overrightarrow{H})^\beta
+	\label{eq:specular_blinn}
+\end{equation}
 
+Вектор $\overrightarrow{H}$ является нормализованной суммой векторов направления на источник $\overrightarrow{L}$ и направления на наблюдателя $\overrightarrow{V}$, его также называют полувектором.
+\begin{equation}
+	\overrightarrow{H} = \frac{\overrightarrow{L} + \overrightarrow{V}}{\|\overrightarrow{L} + \overrightarrow{V}\|}
+	\label{eq:halfvector_blinn}
+\end{equation}
+
+Основным преимуществом модификации Блинна-Фонга является лучшая производительность за счет упрощенного вычисления зеркальной составляющей, т.к. полувектор $\overrightarrow{H}$ вычисляется проще вектора отраженного света $\overrightarrow{R}$. Фоновая и диффузная составляющая данной модели расчитываются аналогично модели Фонга.
+
+\subsection{Выбор модели освещения}
+В данной работе будет использована модель освещения Фонга, так как она максимально реалистично описывает диффузное и зеркальное отражение света.
 
 \section{Обзор геометрических примитивов}
+В данном разделе будут описаны способы задания рассматриваемых геометрических примитивов, а также способы пересечения луча с ними.
+
 \subsection{Сфера}
 \subsection{Плоскость}
 \subsection{Треугольник}

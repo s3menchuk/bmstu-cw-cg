@@ -19,4 +19,20 @@ class SphereLight : public AttenuationLight {
     Sphere sphere;
 };
 
-// TODO: QuadLight
+class QuadLight : public AttenuationLight {
+  public:
+    QuadLight(const Quad &quad, const Color &color, float intensity) : quad(quad), AttenuationLight(color, intensity) {}
+
+    Vec3 get_direction(const Point3 &point) const {
+        auto center = quad.Q + (quad.u + quad.v) / 2.0f;
+        return (point - center).normalized();
+    }
+
+    virtual T get_distance(const Point3 &point) const {
+        auto center = quad.Q + (quad.u + quad.v) / 2.0f;
+        return (point - center).length();
+    }
+
+  private:
+    Quad quad;
+};
