@@ -13,7 +13,7 @@ bool RayTracingRenderer::is_in_shadow(const Scene &scene, const Point3 &point, c
     const auto dist = light.get_distance(point);
     HitRecord hit_record;
     for (const auto &obj : scene.get_visible_objects())
-        if ((*obj)->hit(ray, hit_record) && hit_record.dist < dist)
+        if (obj->hit(ray, hit_record) && hit_record.dist < dist)
             return true;
     return false;
 }
@@ -23,7 +23,7 @@ std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(HitRecord &closest_
     closest.dist = std::numeric_limits<T>::infinity();
     std::shared_ptr<Object> closest_obj = nullptr;
     for (const auto &obj : scene.get_visible_objects()) {
-        if ((*obj)->hit(ray, current) && current.dist < closest.dist) {
+        if (obj->hit(ray, current) && current.dist < closest.dist) {
             closest = current;
             closest_obj = obj;
         }

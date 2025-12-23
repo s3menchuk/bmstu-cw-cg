@@ -11,6 +11,7 @@ class Vec3 {
     Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
     Vec3() : Vec3(0, 0, 0) {}
     Vec3(const std::array<T, 3> &a) : Vec3(a[0], a[1], a[2]) {}
+    Vec3(const T a[3]) : Vec3(a[0], a[1], a[2]) {}
 
     T x, y, z;
 
