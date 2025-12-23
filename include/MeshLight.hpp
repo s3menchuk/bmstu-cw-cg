@@ -12,9 +12,11 @@ class SphereLight : public AttenuationLight {
     }
 
     virtual T get_distance(const Point3 &point) const {
-        return (point - sphere.center).length();
+        return (point - sphere.center).length() - sphere.get_radius();
     }
 
   private:
     Sphere sphere;
 };
+
+// TODO: QuadLight
