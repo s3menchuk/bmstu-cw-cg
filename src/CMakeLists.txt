@@ -3,6 +3,7 @@ add_executable(app
     Renderer.cpp
     Object.cpp
     Color.cpp
+    GUI.cpp
 )
 
 target_include_directories(app PRIVATE ${CMAKE_SOURCE_DIR}/include)
