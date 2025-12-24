@@ -20,12 +20,20 @@ class Vec3 {
     }
 
     void normalize() {
+        // TODO: FIX!
+
+        // auto len = length();
+        // if (len == 0)
+        //     throw std::runtime_error("Cannot normalize a zero-length vector");
+        // x /= len;
+        // y /= len;
+        // z /= len;
         auto len = length();
-        if (len == 0)
-            throw std::runtime_error("Cannot normalize a zero-length vector");
-        x /= len;
-        y /= len;
-        z /= len;
+        if (len != 0) {
+            x /= len;
+            y /= len;
+            z /= len;
+        }
     }
 
     Vec3 normalized() const {

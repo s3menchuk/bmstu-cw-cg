@@ -236,8 +236,12 @@ class UtahTeapot : public SceneCreator {
         Scene scene;
         scene.world_up = {0, -1, 0};
         auto loader = std::make_shared<ObjLoader>();
-        auto model = loader->load("models/utah_teapot.obj");
+        auto model = loader->load("models/utah_teapot-108.obj");
         scene.add_object(std::make_shared<Object>(model, Material(sRGB::GRAY, 0.2)));
+
+        auto plane = std::make_shared<Plane>(scene.world_up, 0);
+        scene.add_object(std::make_shared<Object>(plane, Material(sRGB::GRAY, 0.2)));
+
         scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 1, 1), Color(sRGB::WHITE), 1));
         return scene;
     }

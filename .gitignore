@@ -4,3 +4,4 @@ __pycache__
 .vscode
 imgui.ini
 .vs
+.DS_Store

@@ -5,6 +5,7 @@
 #include "Ray3.hpp"
 #include "Vec3.hpp"
 
+// #include "omp.h"
 #include <iostream>
 
 bool RayTracingRenderer::is_in_shadow(const Scene &scene, const Point3 &point, const Light &light) const {
@@ -78,8 +79,10 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
 
     size_t width = canvas.get_width();
     size_t height = canvas.get_height();
+
 #pragma omp parallel for schedule(dynamic)
     for (size_t row = 0; row < height; ++row) {
+        // std::cout << "row=" << row << " thread=" << omp_get_thread_num() << "\n";
         float ndc_y = 1 - (row + 0.5f) / height * 2;
         float dy = ndc_y * view_height / 2;
         for (size_t col = 0; col < width; ++col) {
