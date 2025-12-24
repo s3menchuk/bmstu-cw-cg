@@ -51,13 +51,3 @@ void sort_vertices_ccw3d(std::vector<Vec3> &vertices) {
         return angleA < angleB;
     });
 }
-
-const std::string Sphere::type = "Sphere";
-const std::string Plane::type = "Plane";
-const std::string Quad::type = "Quad";
-const std::string Triangle::type = "Triangle";
-const std::string Mesh::type = "Mesh";
-const std::string Box::type = "Box";
-const std::string RightPrism::type = "Right Prism";
-const std::string RightPyramid::type = "Right Pyramid";
-const std::string Model::type = "Model";
