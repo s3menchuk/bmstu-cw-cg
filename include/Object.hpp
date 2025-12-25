@@ -41,6 +41,21 @@ class Hittable {
     virtual ~Hittable() = default;
 };
 
+template <typename Iter> bool hit(HitRecord &hit_record, const Ray3 &ray, Iter begin, Iter end) {
+    HitRecord closest, current;
+    closest.dist = std::numeric_limits<T>::max();
+    for (Iter it = begin; it != end; ++it) {
+        if (it.hit(ray, current) && current.dist < closest.dist) {
+            closest = current;
+        }
+    }
+    if (closest.dist == std::numeric_limits<T>::max()) {
+        return false;
+    }
+    hit_record = closest;
+    return true;
+}
+
 class Object {
   public:
     Object(const std::shared_ptr<Hittable> &hittable, const Material &material, bool visible = true)
@@ -325,7 +340,7 @@ class Box : public Hittable {
 
 class RightPrism : public Hittable {
   public:
-    RightPrism(const Vec3 &base_center, T radius, T height, size_t order)
+    RightPrism(const Point3 &base_center, T radius, T height, size_t order)
         : upper_base(get_upper_base(base_center, radius, height, order)), lower_base(get_lower_base(base_center, radius, height, order)) {
 
         if (radius <= 0)

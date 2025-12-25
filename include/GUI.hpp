@@ -38,4 +38,4 @@ void draw_camera_ui(Camera &camera, CameraSettings &settings);
 void draw_lights_ui();
 
 void draw_render_ui(const AppContext &app);
-bool process_key_input(const AppContext &app);
+void process_key_input(AppContext &app);

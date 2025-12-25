@@ -299,7 +299,7 @@ void draw_render_ui(AppContext &app) {
     }
 }
 
-bool process_key_input(const AppContext &app) {
+void process_key_input(AppContext &app) {
     auto &camera = app.camera;
     auto &scene = app.scene;
     auto &camera_movement_speed = app.camera_settings.camera_movement_speed;
@@ -352,7 +352,8 @@ bool process_key_input(const AppContext &app) {
         is_key_pressed = true;
     }
 
-    return is_key_pressed;
+    if (is_key_pressed)
+        app.keys_state.is_key_pressed = is_key_pressed;
 }
 
 void draw_settings_iu(AppContext &app) {

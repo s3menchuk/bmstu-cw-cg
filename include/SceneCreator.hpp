@@ -40,6 +40,25 @@ class SimpleSphere : public SceneCreator {
     }
 };
 
+class SimplePrism : public SceneCreator {
+  public:
+    Scene create_scene() const override {
+        Scene scene;
+        scene.background_color = sRGB::SKY_BLUE;
+        scene.world_up = {0, 1, 0};
+        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 1, -1), Color(sRGB::WHITE), 10));
+        scene.add_object(std::make_shared<Object>(std::make_shared<RightPrism>(Vec3(0, 0, 0), 2, 5, 6), Material(Color(sRGB::RED), 0.1)));
+        return scene;
+    }
+
+    SceneView get_view() const override {
+        SceneView view;
+        view.pos = {0, 0, 6};
+        view.dir = {0, 0, -1};
+        return view;
+    }
+};
+
 class SpectreSphere : public SceneCreator {
   public:
     Scene create_scene() const override {

@@ -71,7 +71,7 @@ int main() {
             ImGui::SFML::ProcessEvent(window, *event);
             if (event->is<sf::Event::Closed>())
                 window.close();
-            keys_state.is_key_pressed = process_key_input(app);
+            process_key_input(app);
         }
 
         ImGui::SFML::Update(window, deltaClock.restart());
