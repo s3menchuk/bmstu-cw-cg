@@ -7,7 +7,7 @@ const std::string APP_NAME = "Graphics Engine";
 const size_t FRAME_LIMIT = 60;
 
 const float ASPECT = 16.0f / 9.0f;
-const size_t WIDTH = 1280;
+const size_t WIDTH = 600;
 const size_t HEIGHT = WIDTH / ASPECT;
 
 const float FOV_Y = std::numbers::pi / 180 * 55;

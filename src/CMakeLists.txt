@@ -7,26 +7,24 @@ add_executable(app
     Benchmark.cpp
 )
 
-# if(APPLE)
-#     set(CMAKE_C_COMPILER /opt/homebrew/opt/llvm/bin/clang)
-#     set(CMAKE_CXX_COMPILER /opt/homebrew/opt/llvm/bin/clang++)
-
-#     target_include_directories(app PRIVATE /opt/homebrew/opt/libomp/include)
-#     target_link_directories(app PRIVATE /opt/homebrew/opt/libomp/lib)
-
-#     target_compile_options(app PRIVATE -Xpreprocessor -fopenmp)
-#     target_link_libraries(app PRIVATE omp)
-# endif()
-
-# target_compile_options(app PRIVATE -stdlib=libc++)
-# target_link_libraries(app PRIVATE c++)
-
-find_package(OpenMP REQUIRED)
-
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(app PRIVATE OpenMP::OpenMP_CXX)
-    message(STATUS "OpenMP found: ${OpenMP_CXX_VERSION}")
+if(APPLE)
+    set(LIBOMP_PREFIX "/opt/homebrew/opt/libomp")
+    target_compile_options(app PRIVATE -Xpreprocessor -fopenmp)
+    target_include_directories(app PRIVATE "${LIBOMP_PREFIX}/include")
+    target_link_directories(app PRIVATE "${LIBOMP_PREFIX}/lib")
+    target_link_libraries(app PRIVATE omp)
 endif()
+
+# find_package(OpenMP REQUIRED)
+
+# if(WINDOWS AND OpenMP_CXX_FOUND)
+#     target_link_libraries(app PRIVATE OpenMP::OpenMP_CXX)
+#     message(STATUS "OpenMP found: ${OpenMP_CXX_VERSION}")
+# elif(APPLE)
+#     include_directories("${LIBOMP_PREFIX}/include")
+#     link_directories("${LIBOMP_PREFIX}/lib")
+#     target_link_libraries(app PRIVATE OpenMP::OpenMP_CXX)
+# endif()
 
 target_include_directories(app PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(app PRIVATE ImGui-SFML::ImGui-SFML)

@@ -1,4 +1,4 @@
-#include "TimeTest.hpp"
+#include "Benchmark.hpp"
 
 #include "Camera.hpp"
 #include "Canvas.hpp"
