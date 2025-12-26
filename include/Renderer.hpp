@@ -8,16 +8,21 @@
 
 #include <cfloat>
 
+struct RenderSettings {
+    size_t max_ray_bounces;
+    size_t count_threads;
+};
+
 class Renderer {
   public:
-    virtual void render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth) = 0;
+    virtual void render(Canvas &canvas, const Scene &scene, const Camera &camera, const RenderSettings &settings) = 0;
 
     virtual ~Renderer() {};
 };
 
 class RayTracingRenderer : public Renderer {
   public:
-    void render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth) override;
+    void render(Canvas &canvas, const Scene &scene, const Camera &camera, const RenderSettings &settings) override;
 
   private:
     const float EPSILON = 1e-5;

@@ -7,7 +7,7 @@
 void render_frame(const AppContext &app) {
     auto start = std::chrono::high_resolution_clock::now();
 
-    app.renderer.render(app.canvas, app.scene, app.camera, app.render_settings.ray_tracing_depth);
+    app.renderer.render(app.canvas, app.scene, app.camera, app.render_settings);
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
@@ -285,13 +285,13 @@ void draw_lights_ui() {
 void draw_render_ui(AppContext &app) {
     ImGui::Text("RT Depth");
     ImGui::SameLine();
-    static int rt_depth = app.render_settings.ray_tracing_depth;
-    ImGui::SliderInt("##RT-Depth", &rt_depth, 1, 5);
-    app.render_settings.ray_tracing_depth = rt_depth;
+    static int max_ray_bounces = app.render_settings.max_ray_bounces;
+    ImGui::SliderInt("##RT-Depth", &max_ray_bounces, 1, 5);
+    app.render_settings.max_ray_bounces = max_ray_bounces;
 
-    if (ImGui::Button("Render") || app.keys_state.is_key_pressed) {
+    if (ImGui::Button("Render") || app.scene_updated) {
         render_frame(app);
-        app.keys_state.is_key_pressed = false;
+        app.scene_updated = false;
     }
 
     if (ImGui::Button("Save image")) {
@@ -354,7 +354,7 @@ void process_key_input(AppContext &app) {
     }
 
     if (is_key_pressed)
-        app.keys_state.is_key_pressed = is_key_pressed;
+        app.scene_updated = is_key_pressed;
 }
 
 void draw_settings_iu(AppContext &app) {

@@ -1,12 +1,8 @@
 ﻿#include "Camera.hpp"
 #include "Canvas.hpp"
-#include "CanvasExporter.hpp"
 #include "GUI.hpp"
-#include "ModelLoader.hpp"
-#include "PrimitiveTypes.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
-#include "SceneCreator.hpp"
 #include "Settings.hpp"
 
 #include "imgui-SFML.h"
@@ -17,6 +13,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <omp.h>
 #include <string>
 #include <typeindex>
 #include <typeinfo>
@@ -59,12 +56,9 @@ int main() {
 
     std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();
 
-    RenderSettings render_settings = {Settings::ray_tracing_depth};
+    RenderSettings render_settings = {Settings::max_ray_bounces, 12};
     CameraSettings camera_settings = {Settings::CAMERA_MOVEMENT_SPEED, Settings::CAMERA_ROTATION_SPEED, Settings::MAX_ZENITH_RADIANS};
-    KeysState keys_state = {false};
-    AppContext app = {*canvas, scene, camera, *renderer, render_settings, camera_settings};
-
-    render_frame(app);
+    AppContext app = {*canvas, scene, camera, *renderer, render_settings, camera_settings, true};
 
     sf::Clock deltaClock;
     while (window.isOpen()) {

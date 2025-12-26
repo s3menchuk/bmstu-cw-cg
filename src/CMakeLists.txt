@@ -4,6 +4,7 @@ add_executable(app
     Object.cpp
     Color.cpp
     GUI.cpp
+    Benchmark.cpp
 )
 
 # if(APPLE)

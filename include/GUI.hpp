@@ -11,14 +11,6 @@ struct CameraSettings {
     float max_zenith_radians;
 };
 
-struct RenderSettings {
-    size_t ray_tracing_depth;
-};
-
-struct KeysState {
-    bool is_key_pressed;
-};
-
 struct AppContext {
     SFML_Canvas &canvas;  // TODO: Not SFML_Canvas, just Canvas!
     Scene &scene;
@@ -26,7 +18,7 @@ struct AppContext {
     Renderer &renderer;
     RenderSettings render_settings;
     CameraSettings camera_settings;
-    KeysState keys_state;
+    bool scene_updated;
 };
 
 void draw_settings_iu(AppContext &app);

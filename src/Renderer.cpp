@@ -5,8 +5,8 @@
 #include "Ray3.hpp"
 #include "Vec3.hpp"
 
-#include "omp.h"
 #include <iostream>
+#include <omp.h>
 
 bool RayTracingRenderer::is_in_shadow(const Scene &scene, const Point3 &point, const Light &light) const {
     Ray3 ray(point, -light.get_direction(point));
@@ -73,14 +73,14 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
     return final_color;
 }
 
-void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth) {
+void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, const RenderSettings &settings) {
     float view_height = 2 * std::tan(camera.fov_y / 2) * camera.near;
     float view_width = view_height * camera.aspect;
 
     size_t width = canvas.get_width();
     size_t height = canvas.get_height();
 
-    omp_set_num_threads(omp_get_max_threads());
+    omp_set_num_threads(settings.count_threads);
 
 #pragma omp parallel for schedule(dynamic)
     for (int row = 0; row < height; ++row) {
@@ -91,7 +91,7 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
             float dx = ndc_x * view_width / 2;
             Vec3 ray_dir = (dx * camera.right + dy * camera.up + camera.dir).normalized();
             Ray3 ray(camera.pos, ray_dir);
-            Color color = trace_ray(scene, ray, depth);
+            Color color = trace_ray(scene, ray, settings.max_ray_bounces);
             canvas.set_pixel(row, col, color.as_srgb());
         }
     }

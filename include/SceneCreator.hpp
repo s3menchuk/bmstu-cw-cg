@@ -8,6 +8,8 @@
 #include "Scene.hpp"
 #include "Vec3.hpp"
 
+#include <format>
+
 struct SceneView {
     Vec3 pos = {0, 0, 0};
     Vec3 dir = {0, 0, -1};
@@ -153,7 +155,7 @@ class CornellBox : public SceneCreator {
         // scene.add_object(std::make_shared<Object>(quad, Material(sRGB::WHITE, 0.1)));
 
         // Light source
-        auto light_quad = std::make_shared<Quad>(LTN * 0.98f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
+        auto light_quad = std::make_shared<Quad>(LTN * 0.99f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
         scene.add_light(std::make_shared<QuadLight>(*light_quad, sRGB::WHITE, 0.5));
         return scene;
     }
@@ -280,15 +282,16 @@ class UtahTeapot : public SceneCreator {
 
 class UtahTeapotInCornellBox : public SceneCreator {
   public:
-    UtahTeapotInCornellBox(float width, float length, float height)
-        : width(width), length(length), height(height), scene_creator(width, length, height) {}
+    UtahTeapotInCornellBox(float width, float length, float height, size_t utah_res)
+        : width(width), length(length), height(height), scene_creator(width, length, height), utah_res(utah_res) {}
 
     Scene create_scene() const {
         Scene scene = scene_creator.create_scene();
         scene.background_color = sRGB::BLACK;
 
         auto loader = std::make_shared<ObjLoader>();
-        auto model = loader->load("assets/models/utah_teapot-532.obj");
+
+        auto model = loader->load(std::format("assets/models/utah_teapot-res{}.obj", utah_res));
         model = std::make_shared<Scale>(model, Vec3(2, 2, 2));
         model = std::make_shared<Rotate>(model, scene.world_up, -std::numbers::pi / 2);
         model = std::make_shared<Rotate>(model, scene_creator.get_view().dir, std::numbers::pi);
@@ -306,4 +309,5 @@ class UtahTeapotInCornellBox : public SceneCreator {
   private:
     CornellBox scene_creator;
     float width, length, height;
+    size_t utah_res;
 };

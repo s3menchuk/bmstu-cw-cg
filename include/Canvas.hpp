@@ -24,12 +24,15 @@ class SFML_Canvas : public Canvas {
             for (size_t col = 0; col < width; ++col)
                 pixels[row * width + col].position = {static_cast<float>(col), static_cast<float>(row + 1)};
     }
+
     size_t get_width() const override {
         return width;
     }
+
     size_t get_height() const override {
         return height;
     }
+
     void set_pixel(size_t row, size_t col, const sRGB &color) override {
         pixels[row * width + col].color = sf::Color(color.r, color.g, color.b);
     };
@@ -44,4 +47,30 @@ class SFML_Canvas : public Canvas {
   private:
     size_t width;
     size_t height;
+};
+
+class SimpleCanvas : public Canvas {
+  public:
+    SimpleCanvas(size_t width, size_t height) : width(width), height(height), pixels(height, std::vector<sRGB>(width)) {}
+
+    size_t get_width() const override {
+        return width;
+    }
+
+    size_t get_height() const override {
+        return height;
+    }
+
+    void set_pixel(size_t row, size_t col, const sRGB &color) override {
+        pixels[row][col] = color;
+    };
+
+    sRGB get_pixel(size_t row, size_t col) const override {
+        return pixels[row][col];
+    }
+
+  private:
+    size_t width;
+    size_t height;
+    std::vector<std::vector<sRGB>> pixels;
 };
