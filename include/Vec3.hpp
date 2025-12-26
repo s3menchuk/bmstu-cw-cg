@@ -76,30 +76,6 @@ class Vec3 {
     }
 
     void rotate(const Vec3 &axis, T angle) {
-        // T c = std::cos(angle);
-        // T s = std::sin(angle);
-
-        // T m00 = c + (1 - c) * axis.x * axis.x;
-        // T m01 = (1 - c) * axis.x * axis.y - s * axis.z;
-        // T m02 = (1 - c) * axis.x * axis.z + s * axis.y;
-
-        // T m10 = (1 - c) * axis.y * axis.x + s * axis.z;
-        // T m11 = c + (1 - c) * axis.y * axis.y;
-        // T m12 = (1 - c) * axis.y * axis.z - s * axis.x;
-
-        // T m20 = (1 - c) * axis.z * axis.x - s * axis.y;
-        // T m21 = (1 - c) * axis.z * axis.y + s * axis.x;
-        // T m22 = c + (1 - c) * axis.z * axis.z;
-
-        //
-        // T new_x = m00 * x + m01 * y + m02 * z;
-        // T new_y = m10 * x + m11 * y + m12 * z;
-        // T new_z = m20 * x + m21 * y + m22 * z;
-
-        // x = new_x;
-        // y = new_y;
-        // z = new_z;
-
         *this = *this * std::cos(angle) + axis.cross(*this) * std::sin(angle) + axis * axis.dot(*this) * (1 - std::cos(angle));
     }
 
@@ -170,6 +146,14 @@ using Point3 = Vec3;
 
 Vec3 inline operator*(T scalar, const Vec3 &vector) {
     return vector * scalar;
+}
+
+Vec3 inline operator*(const Vec3 &a, const Vec3 &b) {
+    return Vec3(a.x * b.x, a.y * b.y, a.z * b.z);
+}
+
+Vec3 inline operator/(const Vec3 &a, const Vec3 &b) {
+    return Vec3(a.x / b.x, a.y / b.y, a.z / b.z);
 }
 
 std::ostream inline &operator<<(std::ostream &out, const Vec3 &vector) {

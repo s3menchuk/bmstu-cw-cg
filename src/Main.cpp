@@ -23,24 +23,25 @@
 
 /*
 TODO:
-                - GUI MUST BE OUTSIDE MAIN!
-                - GUI | Ok
-                - Добавить реализацию оставшихся объектов | Ok
-                - Reorganization object class hierarchy (Object, GeometricPrimitive, ...) | Ok???
-                - Object rotation
-                - Emission materials
-                - Performce
+    - Затенение (Shading)
+    - GUI MUST BE OUTSIDE MAIN! | Ok
+    - GUI | Ok
+    - Добавить реализацию оставшихся объектов | Ok
+    - Reorganization object class hierarchy (Object, GeometricPrimitive, ...) | Ok???
+    - Object rotation
+    - Emission materials
+    - Performce
 
-                - Reorganization method hit
+    - Reorganization method hit
 
-                - Antialiasing (several rays per pixel)
-                - Real diffuse (cancel - too much expensive)
+    - Antialiasing (several rays per pixel)
+    - Real diffuse (cancel - too much expensive)
 
-                - BVH (AABB) | KD-Tree
+    - BVH (AABB) | KD-Tree
 
-                - Make Vec3 class template class
+    - Make Vec3 class template class
 
-                - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза) | Ok
+    - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза) | Ok
 */
 
 int main() {

@@ -291,6 +291,7 @@ void draw_render_ui(AppContext &app) {
 
     if (ImGui::Button("Render") || app.keys_state.is_key_pressed) {
         render_frame(app);
+        app.keys_state.is_key_pressed = false;
     }
 
     if (ImGui::Button("Save image")) {

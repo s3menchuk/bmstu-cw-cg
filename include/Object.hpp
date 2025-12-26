@@ -567,3 +567,65 @@ class Model : public Hittable {
     std::vector<std::shared_ptr<Hittable>> sides;
     AABB bbox;
 };
+
+class Translate : public Hittable {
+  public:
+    Translate(std::shared_ptr<Hittable> hittable, const Vec3 &offset) : hittable(hittable), offset(offset) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
+        Ray3 local_ray(ray.origin - offset, ray.direction);
+        bool is_hit = hittable->hit(local_ray, hit_record);
+        if (is_hit) {
+            hit_record.point += offset;
+        }
+        return is_hit;
+    }
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+    Vec3 offset;
+};
+
+class Rotate : public Hittable {
+  public:
+    Rotate(std::shared_ptr<Hittable> hittable, const Vec3 &axis, float angle) : hittable(hittable), axis(axis), angle(angle) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
+        Ray3 local_ray(ray);
+        local_ray.origin.rotate(axis, -angle);
+        local_ray.direction.rotate(axis, -angle);
+        local_ray.direction.normalize();
+        bool is_hit = hittable->hit(local_ray, hit_record);
+        if (is_hit) {
+            hit_record.point.rotate(axis, angle);
+            hit_record.normal.rotate(axis, angle);
+            hit_record.normal.normalized();
+        }
+        return is_hit;
+    }
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+    Vec3 axis;
+    float angle;
+};
+
+class Scale : public Hittable {
+  public:
+    Scale(std::shared_ptr<Hittable> hittable, const Vec3 &factor) : hittable(hittable), factor(factor) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
+        Ray3 local_ray(ray.origin / factor, (ray.direction / factor).normalized());
+        bool is_hit = hittable->hit(local_ray, hit_record);
+        if (is_hit) {
+            hit_record.point = factor * hit_record.point;
+            hit_record.normal = (factor * hit_record.normal).normalized();
+            hit_record.dist *= factor;
+        }
+        return is_hit;
+    }
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+    Vec3 factor;
+};

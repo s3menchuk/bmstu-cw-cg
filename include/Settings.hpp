@@ -27,5 +27,5 @@ const float CAMERA_ROTATION_SPEED = 0.15;
 
 size_t ray_tracing_depth = 3;
 
-std::shared_ptr<SceneCreator> scene_creator = std::make_shared<SimplePrism>();
+std::shared_ptr<SceneCreator> scene_creator = std::make_shared<UtahTeapotInCornellBox>(3, 3, 1.5);
 }  // namespace Settings
