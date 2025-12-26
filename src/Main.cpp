@@ -20,24 +20,21 @@
 
 /*
 TODO:
-    - Затенение (Shading)
-    - GUI MUST BE OUTSIDE MAIN! | Ok
-    - GUI | Ok
-    - Добавить реализацию оставшихся объектов | Ok
-    - Reorganization object class hierarchy (Object, GeometricPrimitive, ...) | Ok???
-    - Object rotation
-    - Emission materials
-    - Performce
+At first:
+    - GUI
+    - Transforms (canonical forms of primitives (sphere at (0, 0, 0) and r=1))
+    - Shading
 
-    - Reorganization method hit
-
+    - GPU (OpenGL, Vulkan)
+    - Real diffuse
     - Antialiasing (several rays per pixel)
-    - Real diffuse (cancel - too much expensive)
+    - Emmision materials
 
     - BVH (AABB) | KD-Tree
 
     - Make Vec3 class template class
 
+    - Добавить реализацию оставшихся объектов | Ok
     - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза) | Ok
 */
 
