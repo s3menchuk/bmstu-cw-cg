@@ -162,7 +162,7 @@ class Quad : public Hittable {
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
         auto denom = normal.dot(ray.direction);
 
-        if (std::abs(denom) < std::numeric_limits<T>::epsilon())  // 1e-8
+        if (std::abs(denom) < std::numeric_limits<T>::epsilon())
             return false;
 
         auto t = (D - normal.dot(ray.origin)) / denom;
@@ -200,7 +200,7 @@ class Triangle : public Hittable {
     }
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const {
-        constexpr T EPSILON = std::numeric_limits<T>::epsilon();  // 1e-6f
+        constexpr T EPSILON = std::numeric_limits<T>::epsilon();
         auto edge1 = b - a;
         auto edge2 = c - a;
 
