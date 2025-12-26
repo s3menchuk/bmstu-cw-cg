@@ -1,12 +1,8 @@
 ﻿#include "Camera.hpp"
 #include "Canvas.hpp"
-#include "CanvasExporter.hpp"
 #include "GUI.hpp"
-#include "ModelLoader.hpp"
-#include "PrimitiveTypes.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
-#include "SceneCreator.hpp"
 #include "Settings.hpp"
 
 #include "imgui-SFML.h"
@@ -17,30 +13,32 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <omp.h>
 #include <string>
 #include <typeindex>
 #include <typeinfo>
 
 /*
 TODO:
-                - GUI MUST BE OUTSIDE MAIN!
-                - GUI | Ok
-                - Добавить реализацию оставшихся объектов | Ok
-                - Reorganization object class hierarchy (Object, GeometricPrimitive, ...) | Ok???
-                - Object rotation
-                - Emission materials
-                - Performce
+    - Затенение (Shading)
+    - GUI MUST BE OUTSIDE MAIN! | Ok
+    - GUI | Ok
+    - Добавить реализацию оставшихся объектов | Ok
+    - Reorganization object class hierarchy (Object, GeometricPrimitive, ...) | Ok???
+    - Object rotation
+    - Emission materials
+    - Performce
 
-                - Reorganization method hit
+    - Reorganization method hit
 
-                - Antialiasing (several rays per pixel)
-                - Real diffuse (cancel - too much expensive)
+    - Antialiasing (several rays per pixel)
+    - Real diffuse (cancel - too much expensive)
 
-                - BVH (AABB) | KD-Tree
+    - BVH (AABB) | KD-Tree
 
-                - Make Vec3 class template class
+    - Make Vec3 class template class
 
-                - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза) | Ok
+    - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза) | Ok
 */
 
 int main() {
@@ -58,12 +56,9 @@ int main() {
 
     std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();
 
-    RenderSettings render_settings = {Settings::ray_tracing_depth};
+    RenderSettings render_settings = {Settings::max_ray_bounces, 12};
     CameraSettings camera_settings = {Settings::CAMERA_MOVEMENT_SPEED, Settings::CAMERA_ROTATION_SPEED, Settings::MAX_ZENITH_RADIANS};
-    KeysState keys_state = {false};
-    AppContext app = {*canvas, scene, camera, *renderer, render_settings, camera_settings};
-
-    render_frame(app);
+    AppContext app = {*canvas, scene, camera, *renderer, render_settings, camera_settings, true};
 
     sf::Clock deltaClock;
     while (window.isOpen()) {
@@ -71,7 +66,7 @@ int main() {
             ImGui::SFML::ProcessEvent(window, *event);
             if (event->is<sf::Event::Closed>())
                 window.close();
-            keys_state.is_key_pressed = process_key_input(app);
+            process_key_input(app);
         }
 
         ImGui::SFML::Update(window, deltaClock.restart());

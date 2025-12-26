@@ -5,16 +5,16 @@
 #include "Ray3.hpp"
 #include "Vec3.hpp"
 
-// #include "omp.h"
 #include <iostream>
+#include <omp.h>
 
 bool RayTracingRenderer::is_in_shadow(const Scene &scene, const Point3 &point, const Light &light) const {
     Ray3 ray(point, -light.get_direction(point));
     ray.origin = ray.at(EPSILON);
     const auto dist = light.get_distance(point);
     HitRecord hit_record;
-    for (const auto &obj : scene.get_visible_objects())
-        if (obj->hit(ray, hit_record) && hit_record.dist < dist)
+    for (const auto &obj : scene.objects)
+        if (obj->visible && obj->hit(ray, hit_record) && hit_record.dist < dist)
             return true;
     return false;
 }
@@ -23,8 +23,8 @@ std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(HitRecord &closest_
     HitRecord closest, current;
     closest.dist = std::numeric_limits<T>::infinity();
     std::shared_ptr<Object> closest_obj = nullptr;
-    for (const auto &obj : scene.get_visible_objects()) {
-        if (obj->hit(ray, current) && current.dist < closest.dist) {
+    for (const auto &obj : scene.objects) {
+        if (obj->visible && obj->hit(ray, current) && current.dist < closest.dist) {
             closest = current;
             closest_obj = obj;
         }
@@ -73,24 +73,25 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
     return final_color;
 }
 
-void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, size_t depth) {
+void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, const RenderSettings &settings) {
     float view_height = 2 * std::tan(camera.fov_y / 2) * camera.near;
     float view_width = view_height * camera.aspect;
 
     size_t width = canvas.get_width();
     size_t height = canvas.get_height();
 
+    omp_set_num_threads(settings.count_threads);
+
 #pragma omp parallel for schedule(dynamic)
-    for (size_t row = 0; row < height; ++row) {
-        // std::cout << "row=" << row << " thread=" << omp_get_thread_num() << "\n";
+    for (int row = 0; row < height; ++row) {
         float ndc_y = 1 - (row + 0.5f) / height * 2;
         float dy = ndc_y * view_height / 2;
-        for (size_t col = 0; col < width; ++col) {
+        for (int col = 0; col < width; ++col) {
             float ndc_x = (col + 0.5f) / width * 2 - 1;
             float dx = ndc_x * view_width / 2;
             Vec3 ray_dir = (dx * camera.right + dy * camera.up + camera.dir).normalized();
             Ray3 ray(camera.pos, ray_dir);
-            Color color = trace_ray(scene, ray, depth);
+            Color color = trace_ray(scene, ray, settings.max_ray_bounces);
             canvas.set_pixel(row, col, color.as_srgb());
         }
     }

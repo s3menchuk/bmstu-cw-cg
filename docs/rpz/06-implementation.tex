@@ -2,7 +2,7 @@
 
 \section{Требования к ПО}
 
-Разрабатываемое ПО должно обладать следующим функционалом:
+\noindent Разрабатываемое ПО должно обладать следующим функционалом:
 \begin{itemize}
     \item добавление и удаление объектов;
     \item изменение положения, ориентации, масштаба и цвета объектов;
@@ -11,7 +11,7 @@
     \item изменение положения, ориентации и цвета источников освещения;
 \end{itemize}
 
-Разрабатываемое ПО должно соответствовать следующим требованиями:
+\noindent Разрабатываемое ПО должно соответствовать следующим требованиями:
 \begin{itemize}
     \item при запуске программы должна создаваться камера;
 \end{itemize}
@@ -26,29 +26,199 @@
 
 В качестве графической библиотеке была выбрана SFML. Выбор графический библиотеке был обусловлен следующими факторами:
 \begin{itemize}
-    \item объектная модель (в отличие от glfw, sdl).
+    \item объектная модель (в отличие от GLFW, SDL).
 \end{itemize}
 
 Для реализация графического интефейса пользователя был использован ImGui по причине легковесности, быстродействия и интеграции со всеми известными библиотекам.
 Для генерации файлов сборки проекта был использован CMake.
 
-\section{Типы и структуры данных}
+\section{Диаграмма классов}
 
-\begin{itemize}
-    \item Renderer;
-    \item Scene;
-    \item Camera;
-    \item Object;
-    \item Vec3;
-    \item Ray3;
-    \item Material.
-\end{itemize}
+Диаграмма классов в нотации UML приведена на рисунке \ref{fig:UML}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{UML.pdf}
+    \caption{Диаграмма классов приложения}
+    \label{fig:UML}
+\end{figure}
+
+\section{Типы и структуры данных}
+Основные типы и структуры данных, используемые в программе.
+
+\textbf{RayTracingRenderer::render}
+
+\begin{lstlisting}
+void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, const RenderSettings &settings) override {
+    float view_height = 2 * std::tan(camera.fov_y / 2) * camera.near;
+    float view_width = view_height * camera.aspect;
+
+    size_t width = canvas.get_width();
+    size_t height = canvas.get_height();
+
+    omp_set_num_threads(settings.count_threads);
+
+#pragma omp parallel for schedule(dynamic)
+    for (int row = 0; row < height; ++row) {
+        float ndc_y = 1 - (row + 0.5f) / height * 2;
+        float dy = ndc_y * view_height / 2;
+        for (int col = 0; col < width; ++col) {
+            float ndc_x = (col + 0.5f) / width * 2 - 1;
+            float dx = ndc_x * view_width / 2;
+            Vec3 ray_dir = (dx * camera.right + dy * camera.up + camera.dir).normalized();
+            Ray3 ray(camera.pos, ray_dir);
+            Color color = trace_ray(scene, ray, settings.max_ray_bounces);
+            canvas.set_pixel(row, col, color.as_srgb());
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Листинг функции трассировки луча}
+
+\begin{lstlisting}
+Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t depth) const {
+    if (depth == 0)
+        return Color();
+
+    HitRecord closest_hit;
+    auto closest_obj = find_closest_obj(closest_hit, scene, ray);
+    if (!closest_obj) {
+        return scene.get_background_color(ray);
+    }
+
+    const Vec3 N = closest_hit.normal;
+    const Vec3 V = -ray.direction;
+
+    Color diffuse_intensity;
+    Color specular_intensity;
+
+    for (const auto &light : scene.lights) {
+        if (!is_in_shadow(scene, closest_hit.point, *light)) {
+            const Vec3 L = -light->get_direction(closest_hit.point);
+            diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(closest_hit.point);
+
+            // const Vec3 R = 2 * N.dot(L) * N - L;
+            Vec3 H = (L + V).normalized();
+            specular_intensity += std::pow(std::max(N.dot(H), 0.0f), 100) * light->get_color() * light->get_intensity(closest_hit.point);
+        }
+    }
+
+    Color diffuse_total = diffuse_intensity * (1 - closest_obj->material.reflectance) * closest_obj->material.color;
+    Color specular_total = specular_intensity * closest_obj->material.reflectance;
+
+    Vec3 reflected_dir = ray.direction - 2 * N.dot(ray.direction) * N;
+    Ray3 reflected_ray(closest_hit.point + reflected_dir * EPSILON, reflected_dir);
+    Color reflective_color = trace_ray(scene, reflected_ray, depth - 1) * closest_obj->material.reflectance;
+
+    Color final_color = diffuse_total + specular_total + reflective_color;
+    return final_color;
+}
+\end{lstlisting}
+
+\textbf{Hittable и Object}
+
+\begin{lstlisting}
+class Hittable {
+  public:
+    virtual bool hit(const Ray3 &ray, HitRecord &hit_record) const = 0;
+    virtual ~Hittable() = default;
+};
+
+class Object {
+  public:
+    Object(const std::shared_ptr<Hittable> &hittable, const Material &material, bool visible = true)
+        : hittable(hittable), material(material), visible(visible) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const {
+        return hittable->hit(ray, hit_record);
+    }
+
+    std::shared_ptr<Hittable> get() {
+        return hittable;
+    }
+
+    Material material;
+    bool visible;
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+};
+\end{lstlisting}
 
 \section{Алгоритмы}
 
 Листинги программ нахождения пересечения луча с примитивами
 
+\textbf{Пересечение луча со сферой}
+
+\begin{lstlisting}
+bool Sphere::hit(const Ray3 &ray, HitRecord &hit_record) const override {
+    Vec3 co = ray.origin - center;
+
+    auto a = ray.direction.sqr();
+    auto b = 2 * ray.direction.dot(co);
+    auto c = co.sqr() - std::pow(radius, 2);
+
+    auto D = b * b - 4 * a * c;
+    if (D < 0)
+        return false;
+    auto t1 = (-b - std::sqrt(D)) / (2 * a);
+    auto t2 = (-b + std::sqrt(D)) / (2 * a);
+
+    auto t_min = std::numeric_limits<T>::max();
+    if (t1 >= 0)
+        t_min = t1;
+    if (t2 >= 0 && t2 < t_min)
+        t_min = t2;
+    if (t_min == std::numeric_limits<T>::max())
+        return false;
+    hit_record.dist = t_min;
+    hit_record.point = ray.at(t_min);
+    hit_record.normal = (hit_record.point - center).normalized();
+    return true;
+}
+\end{lstlisting}
+
+\textbf{Пересечение луча с треугольником}
+
+\begin{lstlisting}
+bool Triangle::hit(const Ray3 &ray, HitRecord &hit_record) const {
+    constexpr T EPSILON = std::numeric_limits<T>::epsilon();
+    auto edge1 = b - a;
+    auto edge2 = c - a;
+
+    auto h = ray.direction.cross(edge2);
+    auto det = edge1.dot(h);
+
+    if (std::abs(det) < EPSILON)
+        return false;
+
+    auto inv_det = 1.0 / det;
+    auto s = ray.origin - a;
+    auto u = inv_det * s.dot(h);
+    if (u < 0.0 || u > 1.0)
+        return false;
+
+    auto q = s.cross(edge1);
+    auto v = inv_det * ray.direction.dot(q);
+    if (v < 0.0 || u + v > 1.0)
+        return false;
+
+    auto t = inv_det * edge2.dot(q);
+    if (t > EPSILON) {
+        hit_record.dist = t;
+        hit_record.point = ray.at(t);
+        auto normal = edge1.cross(edge2).normalized();
+        hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
+        return true;
+    }
+
+    return false;
+}
+\end{lstlisting}
+
 \section{Графический интерфейс пользователя}
-ImGui
+Несколько скриншотов и инструкция по использованию
 
 % Многопоточность

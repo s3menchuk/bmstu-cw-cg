@@ -13,6 +13,7 @@ class CanvasExporter {
 };
 
 class CanvasPPMTextExporter : public CanvasExporter {
+  public:
     bool save(const Canvas &canvas, const std::string &filename) const {
         std::ofstream fout(filename);
         if (!fout.is_open())
@@ -32,6 +33,7 @@ class CanvasPPMTextExporter : public CanvasExporter {
 };
 
 class CanvasPPMBinaryExporter : public CanvasExporter {
+  public:
     bool save(const Canvas &canvas, const std::string &filename) const {
         std::ofstream fout(filename, std::ios::binary);
         if (!fout.is_open())

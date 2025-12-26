@@ -24,13 +24,8 @@ class Scene {
         lights.push_back(light);
     }
 
-    std::vector<std::shared_ptr<Object>> get_visible_objects() const {
-        std::vector<std::shared_ptr<Object>> visible_objects;
-        for (const auto &obj : objects)
-            if (obj->visible)
-                visible_objects.push_back(obj);
-        return visible_objects;
-    }
+    // TODO: VIA ITERATORS
+    // ??? get_visible_objects() const {}
 
     Color get_background_color(const Ray3 &ray) const {
         float k = map(ray.direction.x, -1, 1, 0, 1);

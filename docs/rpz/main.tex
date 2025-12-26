@@ -7,6 +7,25 @@
 
 \usepackage{float}
 
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18} % версия пакета
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    language=C++,        % Язык
+    basicstyle=\ttfamily\small, % Шрифт
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    commentstyle=\color{gray},
+    numbers=left,           % Нумерация строк
+    numberstyle=\tiny\color{gray},
+    breaklines=true,        % Перенос строк
+    frame=single,           % Рамка вокруг кода
+    tabsize=4
+}
+
 \bibliography{biblio}
 
 \begin{document}

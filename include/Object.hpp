@@ -41,6 +41,21 @@ class Hittable {
     virtual ~Hittable() = default;
 };
 
+template <typename Iter> bool hit(HitRecord &hit_record, const Ray3 &ray, Iter begin, Iter end) {
+    HitRecord closest, current;
+    closest.dist = std::numeric_limits<T>::max();
+    for (Iter it = begin; it != end; ++it) {
+        if (it.hit(ray, current) && current.dist < closest.dist) {
+            closest = current;
+        }
+    }
+    if (closest.dist == std::numeric_limits<T>::max()) {
+        return false;
+    }
+    hit_record = closest;
+    return true;
+}
+
 class Object {
   public:
     Object(const std::shared_ptr<Hittable> &hittable, const Material &material, bool visible = true)
@@ -325,7 +340,7 @@ class Box : public Hittable {
 
 class RightPrism : public Hittable {
   public:
-    RightPrism(const Vec3 &base_center, T radius, T height, size_t order)
+    RightPrism(const Point3 &base_center, T radius, T height, size_t order)
         : upper_base(get_upper_base(base_center, radius, height, order)), lower_base(get_lower_base(base_center, radius, height, order)) {
 
         if (radius <= 0)
@@ -551,4 +566,66 @@ class Model : public Hittable {
   private:
     std::vector<std::shared_ptr<Hittable>> sides;
     AABB bbox;
+};
+
+class Translate : public Hittable {
+  public:
+    Translate(std::shared_ptr<Hittable> hittable, const Vec3 &offset) : hittable(hittable), offset(offset) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
+        Ray3 local_ray(ray.origin - offset, ray.direction);
+        bool is_hit = hittable->hit(local_ray, hit_record);
+        if (is_hit) {
+            hit_record.point += offset;
+        }
+        return is_hit;
+    }
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+    Vec3 offset;
+};
+
+class Rotate : public Hittable {
+  public:
+    Rotate(std::shared_ptr<Hittable> hittable, const Vec3 &axis, float angle) : hittable(hittable), axis(axis), angle(angle) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
+        Ray3 local_ray(ray);
+        local_ray.origin.rotate(axis, -angle);
+        local_ray.direction.rotate(axis, -angle);
+        local_ray.direction.normalize();
+        bool is_hit = hittable->hit(local_ray, hit_record);
+        if (is_hit) {
+            hit_record.point.rotate(axis, angle);
+            hit_record.normal.rotate(axis, angle);
+            hit_record.normal.normalized();
+        }
+        return is_hit;
+    }
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+    Vec3 axis;
+    float angle;
+};
+
+class Scale : public Hittable {
+  public:
+    Scale(std::shared_ptr<Hittable> hittable, const Vec3 &factor) : hittable(hittable), factor(factor) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
+        Ray3 local_ray(ray.origin / factor, (ray.direction / factor).normalized());
+        bool is_hit = hittable->hit(local_ray, hit_record);
+        if (is_hit) {
+            hit_record.point = factor * hit_record.point;
+            hit_record.normal = (factor * hit_record.normal).normalized();
+            hit_record.dist *= factor;
+        }
+        return is_hit;
+    }
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+    Vec3 factor;
 };
