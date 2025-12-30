@@ -13,14 +13,11 @@ if(APPLE)
     target_include_directories(app PRIVATE "${LIBOMP_PREFIX}/include")
     target_link_directories(app PRIVATE "${LIBOMP_PREFIX}/lib")
     target_link_libraries(app PRIVATE omp)
-endif()
-
-# find_package(OpenMP REQUIRED)
-
-if(WINDOWS AND OpenMP_CXX_FOUND)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    find_package(OpenMP REQUIRED)
     target_link_libraries(app PRIVATE OpenMP::OpenMP_CXX)
-    message(STATUS "OpenMP found: ${OpenMP_CXX_VERSION}")
 endif()
+
 
 target_include_directories(app PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(app PRIVATE ImGui-SFML::ImGui-SFML)

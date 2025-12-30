@@ -8,10 +8,11 @@
 #include <iostream>
 #include <omp.h>
 
-bool RayTracingRenderer::is_in_shadow(const Scene &scene, const Point3 &point, const Light &light) const {
-    Ray3 ray(point, -light.get_direction(point));
-    ray.origin = ray.at(EPSILON);
-    const auto dist = light.get_distance(point);
+bool RayTracingRenderer::is_in_shadow(const Scene &scene, const HitRecord &hit, const Light &light) const {
+    Ray3 ray(hit.point, -light.get_direction(hit.point));
+    // ray.origin = ray.at(EPSILON);
+    ray.origin += hit.normal * EPSILON;
+    const auto dist = light.get_distance(hit.point);
     HitRecord hit_record;
     for (const auto &obj : scene.objects)
         if (obj->visible && obj->hit(ray, hit_record) && hit_record.dist < dist)
@@ -52,7 +53,7 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
     Color specular_intensity;
 
     for (const auto &light : scene.lights) {
-        if (!is_in_shadow(scene, closest_hit.point, *light)) {
+        if (!is_in_shadow(scene, closest_hit, *light)) {
             const Vec3 L = -light->get_direction(closest_hit.point);
             diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(closest_hit.point);
 

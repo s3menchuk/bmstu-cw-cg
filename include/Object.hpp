@@ -84,6 +84,8 @@ class Sphere : public Hittable {
 
     Point3 center;
 
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
+
     T get_radius() const {
         return radius;
     }
@@ -92,32 +94,6 @@ class Sphere : public Hittable {
         if (value <= 0)
             throw std::invalid_argument("Radius must be positive");
         radius = value;
-    }
-
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        Vec3 co = ray.origin - center;
-
-        auto a = ray.direction.sqr();
-        auto b = 2 * ray.direction.dot(co);
-        auto c = co.sqr() - std::pow(radius, 2);
-
-        auto D = b * b - 4 * a * c;
-        if (D < 0)
-            return false;
-        auto t1 = (-b - std::sqrt(D)) / (2 * a);
-        auto t2 = (-b + std::sqrt(D)) / (2 * a);
-
-        auto t_min = std::numeric_limits<T>::max();
-        if (t1 >= 0)
-            t_min = t1;
-        if (t2 >= 0 && t2 < t_min)
-            t_min = t2;
-        if (t_min == std::numeric_limits<T>::max())
-            return false;
-        hit_record.dist = t_min;
-        hit_record.point = ray.at(t_min);
-        hit_record.normal = (hit_record.point - center).normalized();
-        return true;
     }
 
   private:
@@ -144,19 +120,7 @@ class Plane : public Hittable {
         this->normal.normalize();
     }
 
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        float N = normal.dot(ray.origin) + offset;
-        float D = normal.dot(ray.direction);
-        if (D == 0)
-            return false;
-        T t = -N / D;
-        if (t < 0)
-            return false;
-        hit_record.dist = t;
-        hit_record.point = ray.at(t);
-        hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
-        return true;
-    }
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
   private:
     Vec3 normal;
@@ -174,32 +138,7 @@ class Quad : public Hittable {
     Vec3 Q;
     Vec3 u, v;
 
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        auto denom = normal.dot(ray.direction);
-
-        if (std::abs(denom) < std::numeric_limits<T>::epsilon())
-            return false;
-
-        auto t = (D - normal.dot(ray.origin)) / denom;
-
-        if (t < 0)
-            return false;
-
-        auto intersection = ray.at(t);
-        Vec3 planar_hitpt_vector = intersection - Q;
-        auto alpha = w.dot(planar_hitpt_vector.cross(v));
-        auto beta = w.dot(u.cross(planar_hitpt_vector));
-
-        Interval interval(0, 1);
-        if (!(interval.contains(alpha) && interval.contains(beta)))
-            return false;
-
-        hit_record.dist = t;
-        hit_record.point = intersection;
-        hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
-
-        return true;
-    }
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
   private:
     Vec3 w;
@@ -214,39 +153,7 @@ class Triangle : public Hittable {
         normal = v / v.length();
     }
 
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const {
-        constexpr T EPSILON = std::numeric_limits<T>::epsilon();
-        auto edge1 = b - a;
-        auto edge2 = c - a;
-
-        auto h = ray.direction.cross(edge2);
-        auto det = edge1.dot(h);
-
-        if (std::abs(det) < EPSILON)
-            return false;
-
-        auto inv_det = 1.0 / det;
-        auto s = ray.origin - a;
-        auto u = inv_det * s.dot(h);
-        if (u < 0.0 || u > 1.0)
-            return false;
-
-        auto q = s.cross(edge1);
-        auto v = inv_det * ray.direction.dot(q);
-        if (v < 0.0 || u + v > 1.0)
-            return false;
-
-        auto t = inv_det * edge2.dot(q);
-        if (t > EPSILON) {
-            hit_record.dist = t;
-            hit_record.point = ray.at(t);
-            auto normal = edge1.cross(edge2).normalized();
-            hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
-            return true;
-        }
-
-        return false;
-    }
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
   private:
     Point3 a, b, c;
@@ -260,17 +167,7 @@ class Mesh : public Hittable {
             throw std::invalid_argument("Must be at least 1 triangle");
     }
 
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        T min_dist = std::numeric_limits<T>::max();
-        HitRecord temp_hit_record;
-        for (const auto &t : triangles) {
-            if (t.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-                min_dist = temp_hit_record.dist;
-                hit_record = temp_hit_record;
-            }
-        }
-        return min_dist != std::numeric_limits<T>::max();
-    }
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
     static Mesh get_base(const Vec3 &center, T radius, size_t order, T offset) {
         std::vector<Point3> points = get_points_on_circle(center, radius, order);
@@ -310,17 +207,7 @@ class Box : public Hittable {
         return res;
     }
 
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        T min_dist = std::numeric_limits<T>::max();
-        HitRecord temp_hit_record;
-        for (const auto &side : sides) {
-            if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-                min_dist = temp_hit_record.dist;
-                hit_record = temp_hit_record;
-            }
-        }
-        return min_dist != std::numeric_limits<T>::max();
-    }
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
     void set_center(const Vec3 &new_center) {
         const Vec3 offset = new_center - center;
@@ -412,25 +299,7 @@ class RightPrism : public Hittable {
         *this = RightPrism(base_center, radius, height, new_order);
     }
 
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        T min_dist = std::numeric_limits<T>::max();
-        HitRecord temp_hit_record;
-        for (const auto &side : side_faces) {
-            if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-                min_dist = temp_hit_record.dist;
-                hit_record = temp_hit_record;
-            }
-        }
-        if (upper_base.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-            min_dist = temp_hit_record.dist;
-            hit_record = temp_hit_record;
-        }
-        if (lower_base.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-            min_dist = temp_hit_record.dist;
-            hit_record = temp_hit_record;
-        }
-        return min_dist != std::numeric_limits<T>::max();
-    }
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
   private:
     Vec3 base_center;
@@ -465,21 +334,7 @@ class RightPyramid : public Hittable {
         }
     }
 
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        T min_dist = std::numeric_limits<T>::max();
-        HitRecord temp_hit_record;
-        for (const auto &side : side_faces) {
-            if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-                min_dist = temp_hit_record.dist;
-                hit_record = temp_hit_record;
-            }
-        }
-        if (base.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-            min_dist = temp_hit_record.dist;
-            hit_record = temp_hit_record;
-        }
-        return min_dist != std::numeric_limits<T>::max();
-    }
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
     Point3 get_base_center() const {
         return base_center;
@@ -549,19 +404,7 @@ class Model : public Hittable {
         bbox = AABB(x, y, z);
     }
 
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        if (!bbox.hit(ray, Interval::universe))
-            return false;
-        T min_dist = std::numeric_limits<T>::max();
-        HitRecord temp_hit_record;
-        for (const auto &side : sides) {
-            if (side->hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-                min_dist = temp_hit_record.dist;
-                hit_record = temp_hit_record;
-            }
-        }
-        return min_dist != std::numeric_limits<T>::max();
-    }
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
   private:
     std::vector<std::shared_ptr<Hittable>> sides;
