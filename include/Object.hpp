@@ -155,9 +155,18 @@ class Triangle : public Hittable {
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
-  private:
+    float calc_area() const {
+        auto l1 = (b - a).length();
+        auto l2 = (c - b).length();
+        auto l3 = (a - c).length();
+        auto p = (l1 + l2 + l3) / 2;
+        return std::sqrt(p * (p - l1) * (p - l2) * (p - l3));
+    }
+
     Point3 a, b, c;
     Vec3 normal;
+
+  private:
 };
 
 class Mesh : public Hittable {

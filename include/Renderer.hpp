@@ -32,4 +32,6 @@ class RayTracingRenderer : public Renderer {
     std::shared_ptr<Object> find_closest_obj(HitRecord &closest_hit, const Scene &scene, const Ray3 &ray) const;
 
     bool is_in_shadow(const Scene &scene, const HitRecord &hit, const Light &light) const;
+
+    Color calc_diffuse(const Scene &scene, const Point3 &origin, const Point3 &point, const Vec3 &normal) const;
 };

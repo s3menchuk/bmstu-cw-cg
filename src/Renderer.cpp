@@ -2,6 +2,7 @@
 #include "Color.hpp"
 #include "Light.hpp"
 #include "Math.hpp"
+#include "PrimitiveTypes.hpp"
 #include "Ray3.hpp"
 #include "Vec3.hpp"
 
@@ -63,7 +64,27 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
         }
     }
 
-    Color diffuse_total = diffuse_intensity * (1 - closest_obj->material.reflectance) * closest_obj->material.color;
+    Color diffuse_color = {1, 1, 1};
+    Primitive primitive_type = PRIMITIVE_TYPES.at(typeid(*closest_obj->get()));
+    if (primitive_type == Primitive::Model) {
+        std::cout << "guro\n";
+        auto t = std::dynamic_pointer_cast<Triangle>(closest_obj->get());
+        auto area = t->calc_area();
+        Triangle t_a(closest_hit.point, t->b, t->c);
+        Triangle t_b(closest_hit.point, t->a, t->c);
+        Triangle t_c(closest_hit.point, t->a, t->b);
+        auto k_a = t_a.calc_area() / area;
+        auto k_b = t_b.calc_area() / area;
+        auto k_c = t_c.calc_area() / area;
+        auto color_a = calc_diffuse(scene, ray.origin, t->a, t->normal);
+        auto color_b = calc_diffuse(scene, ray.origin, t->b, t->normal);
+        auto color_c = calc_diffuse(scene, ray.origin, t->c, t->normal);
+        diffuse_color = k_a * color_a + k_b * color_b + k_c * color_c;
+    } else {
+        diffuse_color = {1, 1, 1};
+    }
+
+    Color diffuse_total = diffuse_intensity * (1 - closest_obj->material.reflectance) * diffuse_color * closest_obj->material.color;
     Color specular_total = specular_intensity * closest_obj->material.reflectance;
 
     Vec3 reflected_dir = ray.direction - 2 * N.dot(ray.direction) * N;
@@ -83,7 +104,7 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
 
     omp_set_num_threads(settings.count_threads);
 
-#pragma omp parallel for schedule(dynamic)
+    // #pragma omp parallel for schedule(dynamic)
     for (int row = 0; row < height; ++row) {
         float ndc_y = 1 - (row + 0.5f) / height * 2;
         float dy = ndc_y * view_height / 2;
@@ -96,4 +117,22 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
             canvas.set_pixel(row, col, color.as_srgb());
         }
     }
+}
+
+Color RayTracingRenderer::calc_diffuse(const Scene &scene, const Point3 &origin, const Point3 &point, const Vec3 &normal) const {
+    Ray3 ray(origin, (point - origin).normalized());
+    const Vec3 N = normal;
+    const Vec3 V = -ray.direction;
+    HitRecord hit_record;
+    hit_record.point = point;
+    hit_record.normal = normal;
+    hit_record.dist = (point - origin).length();
+    Color diffuse_intensity;
+    for (const auto &light : scene.lights) {
+        if (!RayTracingRenderer::is_in_shadow(scene, hit_record, *light)) {
+            const Vec3 L = -light->get_direction(hit_record.point);
+            diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(hit_record.point);
+        }
+    }
+    return diffuse_intensity;
 }
