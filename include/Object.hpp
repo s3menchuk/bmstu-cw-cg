@@ -21,6 +21,9 @@ void move_points_by(std::vector<Point3> &points, const Vec3 &offset);
 
 std::vector<Point3> get_points_on_circle(const Vec3 &center, T radius, size_t order);
 
+class Triangle;
+Vec3 barycentric(const Triangle &t, const Point3 &p);
+
 // class Movable {
 // public:
 //	virtual void set_pos(const Vec3& new_pos) = 0;
@@ -387,37 +390,45 @@ class RightPyramid : public Hittable {
     Mesh base;
 };
 
+struct VertexIndex {
+    int v;
+    int vn;
+    int vt;
+};
+
+struct TriangleIndex {
+    VertexIndex a, b, c;
+};
+
+struct Vertex {
+    Vec3 pos;
+    Vec3 norm;
+    // Vec3 text;
+};
+
 class Model : public Hittable {
   public:
-    Model(const std::vector<Vec3> &vertices, const std::vector<std::vector<size_t>> &faces) {
+    Model(const std::vector<Vec3> &coords, const std::vector<std::vector<VertexIndex>> &faces, const std::vector<Vec3> &normals)
+        : coords(coords), normals(normals), faces(faces), bbox(coords) {
         for (const auto &face : faces) {
-            std::vector<Vec3> coords;
-            for (size_t i : face) {
-                coords.push_back(vertices[i]);
-            }
-            sort_vertices_ccw3d(coords);
-            for (size_t i = 1; i < coords.size() - 1; ++i) {
-                Triangle t(coords[0], coords[i], coords[i + 1]);
-                sides.push_back(std::make_shared<Triangle>(t));
+            for (size_t i = 1; i + 1 < face.size(); ++i) {
+                auto t = std::make_shared<Triangle>(coords[face[0].v], coords[face[i].v], coords[face[i + 1].v]);
+                triangles.push_back(t);
+                index_triangles.push_back({face[0], face[i], face[i + 1]});
             }
         }
-
-        Interval x = Interval::empty;
-        Interval y = Interval::empty;
-        Interval z = Interval::empty;
-        for (const auto &vertex : vertices) {
-            x.stretch(vertex.x);
-            y.stretch(vertex.y);
-            z.stretch(vertex.z);
-        }
-        bbox = AABB(x, y, z);
     }
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
   private:
-    std::vector<std::shared_ptr<Hittable>> sides;
+    std::vector<std::shared_ptr<Triangle>> triangles;
+    std::vector<TriangleIndex> index_triangles;
     AABB bbox;
+
+    std::vector<Vec3> coords;
+    std::vector<Vec3> normals;
+    std::vector<std::vector<VertexIndex>> faces;
 };
 
 class Translate : public Hittable {

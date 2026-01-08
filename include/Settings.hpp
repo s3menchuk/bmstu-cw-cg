@@ -23,7 +23,7 @@ const float CAMERA_ROTATION_SPEED = 0.15;
 
 inline size_t max_ray_bounces = 3;
 
-// inline std::shared_ptr<SceneCreator> scene_creator = std::make_shared<UtahTeapotInCornellBox>(3, 3, 1.5, 1);
-inline std::shared_ptr<SceneCreator> scene_creator = std::make_shared<UtahTeapot>();
+inline std::shared_ptr<SceneCreator> scene_creator = std::make_shared<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
+// inline std::shared_ptr<SceneCreator> scene_creator = std::make_shared<UtahTeapot>();
 // inline std::shared_ptr<SceneCreator> scene_creator = std::make_shared<SimpleSphere>();
 }  // namespace Settings

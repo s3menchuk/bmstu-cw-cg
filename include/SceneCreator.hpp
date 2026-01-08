@@ -260,22 +260,18 @@ class UtahTeapot : public SceneCreator {
   public:
     Scene create_scene() const {
         Scene scene;
-        scene.world_up = {0, -1, 0};
+        scene.world_up = {0, 1, 0};
         auto loader = std::make_shared<ObjLoader>();
-        auto model = loader->load("assets/models/utah_teapot-res1.obj");
-        scene.add_object(std::make_shared<Object>(model, Material(sRGB::GRAY, 0.2)));
-
-        auto plane = std::make_shared<Plane>(scene.world_up, 0);
-        scene.add_object(std::make_shared<Object>(plane, Material(sRGB::GRAY, 0)));
-
-        scene.add_light(std::make_shared<DirectionLight>(Vec3(-1, 1, 1), Color(sRGB::WHITE), 1));
+        auto model = loader->load("assets/models/utah_teapot-res2.obj");
+        scene.add_object(std::make_shared<Object>(model, Material(sRGB::ORANGE, 0)));
+        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, -1, -1), Color(sRGB::WHITE), 1));
         return scene;
     }
 
     SceneView get_view() const {
         SceneView view;
-        view.pos = {0.75, -0.3, -0.5};
-        view.dir = {-1, 0, 0};
+        view.pos = {0, 1.5, 5};
+        view.dir = {0, 0, -1};
         return view;
     }
 };
@@ -292,13 +288,9 @@ class UtahTeapotInCornellBox : public SceneCreator {
         auto loader = std::make_shared<ObjLoader>();
 
         auto model = loader->load(std::format("assets/models/utah_teapot-res{}.obj", utah_res));
-        model = std::make_shared<Scale>(model, Vec3(2, 2, 2));
-        model = std::make_shared<Rotate>(model, scene.world_up, -std::numbers::pi / 2);
-        model = std::make_shared<Rotate>(model, scene_creator.get_view().dir, std::numbers::pi);
-        model = std::make_shared<Translate>(model, scene_creator.get_view().pos + Vec3(0.9, -0.75, -1.9));
-
-        scene.add_object(std::make_shared<Object>(model, Material(sRGB::BLUE, 0.5)));
-
+        model = std::make_shared<Scale>(model, Vec3(0.35, 0.35, 0.35));
+        model = std::make_shared<Translate>(model, Vec3(width / 2, 0, -length * 0.7));
+        scene.add_object(std::make_shared<Object>(model, Material(sRGB::BLUE, 0.25)));
         return scene;
     }
 

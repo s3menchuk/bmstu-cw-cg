@@ -65,24 +65,6 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
     }
 
     Color diffuse_color = {1, 1, 1};
-    Primitive primitive_type = PRIMITIVE_TYPES.at(typeid(*closest_obj->get()));
-    if (primitive_type == Primitive::Model) {
-        std::cout << "guro\n";
-        auto t = std::dynamic_pointer_cast<Triangle>(closest_obj->get());
-        auto area = t->calc_area();
-        Triangle t_a(closest_hit.point, t->b, t->c);
-        Triangle t_b(closest_hit.point, t->a, t->c);
-        Triangle t_c(closest_hit.point, t->a, t->b);
-        auto k_a = t_a.calc_area() / area;
-        auto k_b = t_b.calc_area() / area;
-        auto k_c = t_c.calc_area() / area;
-        auto color_a = calc_diffuse(scene, ray.origin, t->a, t->normal);
-        auto color_b = calc_diffuse(scene, ray.origin, t->b, t->normal);
-        auto color_c = calc_diffuse(scene, ray.origin, t->c, t->normal);
-        diffuse_color = k_a * color_a + k_b * color_b + k_c * color_c;
-    } else {
-        diffuse_color = {1, 1, 1};
-    }
 
     Color diffuse_total = diffuse_intensity * (1 - closest_obj->material.reflectance) * diffuse_color * closest_obj->material.color;
     Color specular_total = specular_intensity * closest_obj->material.reflectance;

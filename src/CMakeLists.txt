@@ -22,6 +22,10 @@ endif()
 target_include_directories(app PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(app PRIVATE ImGui-SFML::ImGui-SFML)
 
+if (MSVC)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/FS>)
+endif()
+
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "Compiler path: ${CMAKE_CXX_COMPILER}")
 message(STATUS "Compiler version: ${CMAKE_CXX_COMPILER_VERSION}")

@@ -52,6 +52,17 @@ void sort_vertices_ccw3d(std::vector<Vec3> &vertices) {
     });
 }
 
+Vec3 barycentric(const Triangle &t, const Point3 &p) {
+    auto area = t.calc_area();
+    Triangle t_a(p, t.b, t.c);
+    Triangle t_b(p, t.a, t.c);
+    Triangle t_c(p, t.a, t.b);
+    auto a = t_a.calc_area() / area;
+    auto b = t_b.calc_area() / area;
+    auto c = t_c.calc_area() / area;
+    return {a, b, c};
+}
+
 // Classic
 // bool Sphere::hit(const Ray3 &ray, HitRecord &hit_record) const{
 //     Vec3 co = ray.origin - center;
@@ -225,16 +236,41 @@ bool RightPyramid::hit(const Ray3 &ray, HitRecord &hit_record) const {
     return min_dist != std::numeric_limits<T>::max();
 }
 
+// bool Model::hit(const Ray3 &ray, HitRecord &hit_record) const {
+//     if (!bbox.hit(ray, Interval::universe))
+//         return false;
+//     T min_dist = std::numeric_limits<T>::max();
+//     HitRecord temp_hit_record;
+//     for (const auto &side : sides) {
+//         if (side->hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
+//             min_dist = temp_hit_record.dist;
+//             hit_record = temp_hit_record;
+//         }
+//     }
+//     return min_dist != std::numeric_limits<T>::max();
+// }
+
 bool Model::hit(const Ray3 &ray, HitRecord &hit_record) const {
     if (!bbox.hit(ray, Interval::universe))
         return false;
     T min_dist = std::numeric_limits<T>::max();
     HitRecord temp_hit_record;
-    for (const auto &side : sides) {
-        if (side->hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
+    int triangle_index = -1;
+    for (size_t i = 0; i < triangles.size(); ++i) {
+        const auto &t = triangles[i];
+        if (t->hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
             min_dist = temp_hit_record.dist;
             hit_record = temp_hit_record;
+            triangle_index = i;
         }
     }
-    return min_dist != std::numeric_limits<T>::max();
+    if (min_dist == std::numeric_limits<T>::max())
+        return false;
+    const TriangleIndex &info = index_triangles[triangle_index];
+    const Vertex va = {coords[info.a.v], normals[info.a.vn]};
+    const Vertex vb = {coords[info.b.v], normals[info.b.vn]};
+    const Vertex vc = {coords[info.c.v], normals[info.c.vn]};
+    Vec3 coeffs = barycentric({va.pos, vb.pos, vc.pos}, hit_record.point);
+    hit_record.normal = (va.norm * coeffs.x + vb.norm * coeffs.y + vc.norm * coeffs.z).normalized();
+    return true;
 }
