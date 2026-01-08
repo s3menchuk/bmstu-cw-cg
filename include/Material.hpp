@@ -5,8 +5,8 @@
 
 class Material {
   public:
-    Material(const Color &color, T reflectance) : color(color), reflectance(reflectance) {}
+    Material(const Color &color, Real reflectance) : color(color), reflectance(reflectance) {}
 
     Color color;
-    T reflectance;
+    Real reflectance;
 };

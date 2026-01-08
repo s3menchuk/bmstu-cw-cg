@@ -1,3 +1,3 @@
 #pragma once
 
-using T = float;
+using Real = float;

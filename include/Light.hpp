@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Color.hpp"
-#include "Vec3.hpp"
+#include "Vec.hpp"
 
 // TODO: More types of light sources
 
@@ -25,7 +25,8 @@ class Light {
 
 class AttenuationLight : public Light {
   public:
-    AttenuationLight(const Color &color, float intensity, float kq = 1, float kl = 0, float kc = 0) : Light(color, intensity), kq(kq), kl(kl), kc(kc) {}
+    AttenuationLight(const Color &color, float intensity, float kq = 1, float kl = 0, float kc = 0)
+        : Light(color, intensity), kq(kq), kl(kl), kc(kc) {}
 
     float get_intensity(const Point3 &point) const override {
         float dist = get_distance(point);

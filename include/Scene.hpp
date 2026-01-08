@@ -3,8 +3,8 @@
 #include "Color.hpp"
 #include "Light.hpp"
 #include "Object.hpp"
-#include "Ray3.hpp"
-#include "Vec3.hpp"
+#include "Ray.hpp"
+#include "Vec.hpp"
 
 #include <memory>
 #include <vector>

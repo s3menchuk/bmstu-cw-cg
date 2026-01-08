@@ -3,8 +3,9 @@
 #include "Light.hpp"
 #include "Math.hpp"
 #include "PrimitiveTypes.hpp"
-#include "Ray3.hpp"
-#include "Vec3.hpp"
+#include "Ray.hpp"
+#include "Types.hpp"
+#include "Vec.hpp"
 
 #include <iostream>
 #include <omp.h>
@@ -23,7 +24,7 @@ bool RayTracingRenderer::is_in_shadow(const Scene &scene, const HitRecord &hit, 
 
 std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(HitRecord &closest_hit, const Scene &scene, const Ray3 &ray) const {
     HitRecord closest, current;
-    closest.dist = std::numeric_limits<T>::infinity();
+    closest.dist = std::numeric_limits<Real>::infinity();
     std::shared_ptr<Object> closest_obj = nullptr;
     for (const auto &obj : scene.objects) {
         if (obj->visible && obj->hit(ray, current) && current.dist < closest.dist) {
@@ -78,21 +79,21 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
 }
 
 void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, const RenderSettings &settings) {
-    float view_height = 2 * std::tan(camera.fov_y / 2) * camera.near;
-    float view_width = view_height * camera.aspect;
+    Real view_height = 2 * std::tan(camera.fov_y / 2) * camera.near;
+    Real view_width = view_height * camera.aspect;
 
-    size_t width = canvas.get_width();
-    size_t height = canvas.get_height();
+    int width = canvas.get_width();
+    int height = canvas.get_height();
 
     omp_set_num_threads(settings.count_threads);
 
-    // #pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic)
     for (int row = 0; row < height; ++row) {
-        float ndc_y = 1 - (row + 0.5f) / height * 2;
-        float dy = ndc_y * view_height / 2;
+        Real ndc_y = 1 - (row + 0.5) / height * 2;
+        Real dy = ndc_y * view_height / 2;
         for (int col = 0; col < width; ++col) {
-            float ndc_x = (col + 0.5f) / width * 2 - 1;
-            float dx = ndc_x * view_width / 2;
+            Real ndc_x = (col + 0.5) / width * 2 - 1;
+            Real dx = ndc_x * view_width / 2;
             Vec3 ray_dir = (dx * camera.right + dy * camera.up + camera.dir).normalized();
             Ray3 ray(camera.pos, ray_dir);
             Color color = trace_ray(scene, ray, settings.max_ray_bounces);

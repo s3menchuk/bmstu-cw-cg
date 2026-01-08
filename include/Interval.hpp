@@ -4,28 +4,28 @@
 
 #include <limits>
 
-constexpr T infinity = std::numeric_limits<T>::infinity();
+constexpr Real infinity = std::numeric_limits<Real>::infinity();
 
 class Interval {
   public:
-    T min, max;
+    Real min, max;
 
-    Interval(T min, T max) : min(min), max(max) {}
+    Interval(Real min, Real max) : min(min), max(max) {}
     Interval() : min(-infinity), max(infinity) {}
 
-    T size() const {
+    Real size() const {
         return max - min;
     }
 
-    bool contains(T x) const {
+    bool contains(Real x) const {
         return min <= x && x <= max;
     }
 
-    bool surrounds(T x) const {
+    bool surrounds(Real x) const {
         return min < x && x < max;
     }
 
-    T clamp(T x) const {
+    Real clamp(Real x) const {
         if (x < min)
             return min;
         if (x > max)
@@ -33,7 +33,7 @@ class Interval {
         return x;
     }
 
-    void stretch(T x) {
+    void stretch(Real x) {
         if (x < min)
             min = x;
         else if (x > max)

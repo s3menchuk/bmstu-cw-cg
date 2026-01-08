@@ -7,3 +7,4 @@ PointerAlignment: Right
 ColumnLimit: 150
 SpacesBeforeTrailingComments: 2
 SpaceBeforeParens: ControlStatements
+AlwaysBreakTemplateDeclarations: true

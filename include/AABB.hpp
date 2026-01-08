@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Interval.hpp"
-#include "Ray3.hpp"
+#include "Ray.hpp"
 #include "Types.hpp"
-#include "Vec3.hpp"
+#include "Vec.hpp"
 
 #include <vector>
 

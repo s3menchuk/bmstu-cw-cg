@@ -11,7 +11,7 @@ class SphereLight : public AttenuationLight {
         return (point - sphere.center).normalized();
     }
 
-    virtual T get_distance(const Point3 &point) const {
+    virtual Real get_distance(const Point3 &point) const {
         return (point - sphere.center).length() - sphere.get_radius();
     }
 
@@ -28,7 +28,7 @@ class QuadLight : public AttenuationLight {
         return (point - center).normalized();
     }
 
-    virtual T get_distance(const Point3 &point) const {
+    virtual Real get_distance(const Point3 &point) const {
         auto center = quad.Q + (quad.u + quad.v) / 2.0f;
         return (point - center).length();
     }

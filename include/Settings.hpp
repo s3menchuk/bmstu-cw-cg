@@ -1,29 +1,30 @@
 #pragma once
 
+#include "Math.hpp"
 #include "SceneCreator.hpp"
+#include "Types.hpp"
 
 namespace Settings {
 const std::string APP_NAME = "Graphics Engine";
-const size_t FRAME_LIMIT = 60;
+const int FRAME_LIMIT = 60;
 
-const float ASPECT = 16.0f / 9.0f;
-const size_t WIDTH = 600;
-const size_t HEIGHT = WIDTH / ASPECT;
+const Real ASPECT = 16.0f / 9.0f;
+const int WIDTH = 600;
+const int HEIGHT = WIDTH / ASPECT;
 
-const float FOV_Y = std::numbers::pi / 180 * 55;
+const Real FOV_Y = degrees2radians(55.0f);
 
-const float NEAR = 1;
-const float FAR = 1000;
+const Real NEAR = 1;
+const Real FAR = 1000;
 
-const float MAX_ZENITH_DEGREES = 75;
-const float MAX_ZENITH_RADIANS = std::numbers::pi / 2 * MAX_ZENITH_DEGREES / 90;
+const Real MAX_ZENITH_RADIANS = degrees2radians(75.0f);
 
-const float CAMERA_MOVEMENT_SPEED = 0.1;
-const float CAMERA_ROTATION_SPEED = 0.15;
+const Real CAMERA_MOVEMENT_SPEED = 0.1;
+const Real CAMERA_ROTATION_SPEED = 0.15;
 
-inline size_t max_ray_bounces = 3;
+const int max_ray_bounces = 3;
 
-inline std::shared_ptr<SceneCreator> scene_creator = std::make_shared<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
-// inline std::shared_ptr<SceneCreator> scene_creator = std::make_shared<UtahTeapot>();
-// inline std::shared_ptr<SceneCreator> scene_creator = std::make_shared<SimpleSphere>();
+const auto scene_creator = std::make_unique<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
+// const auto scene_creator = std::make_unique<UtahTeapot>();
+// const auto scene_creator = std::make_unique<SimpleSphere>();
 }  // namespace Settings

@@ -2,8 +2,7 @@
 
 #include "Object.hpp"
 #include "Types.hpp"
-#include "Vec2.hpp"
-#include "Vec3.hpp"
+#include "Vec.hpp"
 
 #include <fstream>
 #include <memory>

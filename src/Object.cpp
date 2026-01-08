@@ -8,10 +8,10 @@ void move_points_by(std::vector<Point3> &points, const Vec3 &offset) {
         p += offset;
 }
 
-std::vector<Point3> get_points_on_circle(const Vec3 &center, T radius, size_t order) {
+std::vector<Point3> get_points_on_circle(const Vec3 &center, Real radius, size_t order) {
     std::vector<Point3> res;
     for (size_t i = 0; i < order; ++i) {
-        auto radians = static_cast<T>(i) / order * (2 * std::numbers::pi);
+        auto radians = static_cast<Real>(i) / order * (2 * std::numbers::pi);
         auto dx = std::cos(radians);
         auto dy = std::sin(radians);
         Point3 point = center + Vec3(0, dx, dy) * radius;
@@ -24,7 +24,7 @@ Vec3 compute_centroid(const std::vector<Vec3> &points) {
     Vec3 c(0, 0, 0);
     for (const auto &p : points)
         c += p;
-    return c / static_cast<T>(points.size());
+    return c / static_cast<Real>(points.size());
 }
 
 void sort_vertices_ccw3d(std::vector<Vec3> &vertices) {
@@ -52,11 +52,11 @@ void sort_vertices_ccw3d(std::vector<Vec3> &vertices) {
     });
 }
 
-Vec3 barycentric(const Triangle &t, const Point3 &p) {
-    auto area = t.calc_area();
-    Triangle t_a(p, t.b, t.c);
-    Triangle t_b(p, t.a, t.c);
-    Triangle t_c(p, t.a, t.b);
+Vec3 Triangle::barycentric(const Point3 &p) const {
+    auto area = calc_area();
+    Triangle t_a(p, b, c);
+    Triangle t_b(p, a, c);
+    Triangle t_c(p, a, b);
     auto a = t_a.calc_area() / area;
     auto b = t_b.calc_area() / area;
     auto c = t_c.calc_area() / area;
@@ -106,7 +106,7 @@ bool Plane::hit(const Ray3 &ray, HitRecord &hit_record) const {
     float D = normal.dot(ray.direction);
     if (D == 0)
         return false;
-    T t = -N / D;
+    Real t = -N / D;
     if (t < 0)
         return false;
     hit_record.dist = t;
@@ -118,7 +118,7 @@ bool Plane::hit(const Ray3 &ray, HitRecord &hit_record) const {
 bool Quad::hit(const Ray3 &ray, HitRecord &hit_record) const {
     auto denom = normal.dot(ray.direction);
 
-    if (std::abs(denom) < std::numeric_limits<T>::epsilon())
+    if (std::abs(denom) < std::numeric_limits<Real>::epsilon())
         return false;
 
     auto t = (D - normal.dot(ray.origin)) / denom;
@@ -143,7 +143,7 @@ bool Quad::hit(const Ray3 &ray, HitRecord &hit_record) const {
 }
 
 bool Triangle::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    constexpr T EPSILON = std::numeric_limits<T>::epsilon();
+    constexpr Real EPSILON = std::numeric_limits<Real>::epsilon();
     auto edge1 = b - a;
     auto edge2 = c - a;
 
@@ -177,7 +177,7 @@ bool Triangle::hit(const Ray3 &ray, HitRecord &hit_record) const {
 }
 
 bool Mesh::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    T min_dist = std::numeric_limits<T>::max();
+    Real min_dist = std::numeric_limits<Real>::max();
     HitRecord temp_hit_record;
     for (const auto &t : triangles) {
         if (t.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
@@ -185,11 +185,11 @@ bool Mesh::hit(const Ray3 &ray, HitRecord &hit_record) const {
             hit_record = temp_hit_record;
         }
     }
-    return min_dist != std::numeric_limits<T>::max();
+    return min_dist != std::numeric_limits<Real>::max();
 }
 
 bool Box::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    T min_dist = std::numeric_limits<T>::max();
+    Real min_dist = std::numeric_limits<Real>::max();
     HitRecord temp_hit_record;
     for (const auto &side : sides) {
         if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
@@ -197,11 +197,11 @@ bool Box::hit(const Ray3 &ray, HitRecord &hit_record) const {
             hit_record = temp_hit_record;
         }
     }
-    return min_dist != std::numeric_limits<T>::max();
+    return min_dist != std::numeric_limits<Real>::max();
 }
 
 bool RightPrism::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    T min_dist = std::numeric_limits<T>::max();
+    Real min_dist = std::numeric_limits<Real>::max();
     HitRecord temp_hit_record;
     for (const auto &side : side_faces) {
         if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
@@ -217,11 +217,11 @@ bool RightPrism::hit(const Ray3 &ray, HitRecord &hit_record) const {
         min_dist = temp_hit_record.dist;
         hit_record = temp_hit_record;
     }
-    return min_dist != std::numeric_limits<T>::max();
+    return min_dist != std::numeric_limits<Real>::max();
 }
 
 bool RightPyramid::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    T min_dist = std::numeric_limits<T>::max();
+    Real min_dist = std::numeric_limits<Real>::max();
     HitRecord temp_hit_record;
     for (const auto &side : side_faces) {
         if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
@@ -233,27 +233,13 @@ bool RightPyramid::hit(const Ray3 &ray, HitRecord &hit_record) const {
         min_dist = temp_hit_record.dist;
         hit_record = temp_hit_record;
     }
-    return min_dist != std::numeric_limits<T>::max();
+    return min_dist != std::numeric_limits<Real>::max();
 }
-
-// bool Model::hit(const Ray3 &ray, HitRecord &hit_record) const {
-//     if (!bbox.hit(ray, Interval::universe))
-//         return false;
-//     T min_dist = std::numeric_limits<T>::max();
-//     HitRecord temp_hit_record;
-//     for (const auto &side : sides) {
-//         if (side->hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-//             min_dist = temp_hit_record.dist;
-//             hit_record = temp_hit_record;
-//         }
-//     }
-//     return min_dist != std::numeric_limits<T>::max();
-// }
 
 bool Model::hit(const Ray3 &ray, HitRecord &hit_record) const {
     if (!bbox.hit(ray, Interval::universe))
         return false;
-    T min_dist = std::numeric_limits<T>::max();
+    Real min_dist = std::numeric_limits<Real>::max();
     HitRecord temp_hit_record;
     int triangle_index = -1;
     for (size_t i = 0; i < triangles.size(); ++i) {
@@ -264,13 +250,14 @@ bool Model::hit(const Ray3 &ray, HitRecord &hit_record) const {
             triangle_index = i;
         }
     }
-    if (min_dist == std::numeric_limits<T>::max())
+    if (min_dist == std::numeric_limits<Real>::max())
         return false;
     const TriangleIndex &info = index_triangles[triangle_index];
     const Vertex va = {coords[info.a.v], normals[info.a.vn]};
     const Vertex vb = {coords[info.b.v], normals[info.b.vn]};
     const Vertex vc = {coords[info.c.v], normals[info.c.vn]};
-    Vec3 coeffs = barycentric({va.pos, vb.pos, vc.pos}, hit_record.point);
+    Triangle t(va.pos, vb.pos, vc.pos);
+    Vec3 coeffs = t.barycentric(hit_record.point);
     hit_record.normal = (va.norm * coeffs.x + vb.norm * coeffs.y + vc.norm * coeffs.z).normalized();
     return true;
 }

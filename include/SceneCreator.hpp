@@ -6,7 +6,7 @@
 #include "ModelLoader.hpp"
 #include "Object.hpp"
 #include "Scene.hpp"
-#include "Vec3.hpp"
+#include "Vec.hpp"
 
 #include <format>
 

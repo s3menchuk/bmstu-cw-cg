@@ -3,14 +3,14 @@
 #include "Camera.hpp"
 #include "Canvas.hpp"
 #include "Object.hpp"
-#include "Ray3.hpp"
+#include "Ray.hpp"
 #include "Scene.hpp"
 
 #include <cfloat>
 
 struct RenderSettings {
-    size_t max_ray_bounces;
-    size_t count_threads;
+    int max_ray_bounces;
+    int count_threads;
 };
 
 class Renderer {
