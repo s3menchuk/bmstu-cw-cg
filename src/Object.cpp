@@ -63,27 +63,27 @@ Vec3 Triangle::barycentric(const Point3 &p) const {
     return {a, b, c};
 }
 
-// Classic
-// bool Sphere::hit(const Ray3 &ray, HitRecord &hit_record) const{
-//     Vec3 co = ray.origin - center;
-//     auto a = ray.direction.sqr();
-//     auto b = 2 * ray.direction.dot(co);
-//     auto c = co.sqr() - std::pow(radius, 2);
-//     auto D = b * b - 4 * a * c;
-//     if (D < 0)
-//         return false;
-//     auto t1 = (-b - std::sqrt(D)) / (2 * a);
-//     auto t2 = (-b + std::sqrt(D)) / (2 * a);
-//     if (t2 < 0)
-//         return false;
-//     auto t_min = t1 >= 0 ? t1 : t2;
-//     hit_record.dist = t_min;
-//     hit_record.point = ray.at(t_min);
-//     hit_record.normal = (hit_record.point - center).normalized();
-//     return true;
-// }
+template <typename T>
+concept HasHit = requires(T t, const Ray3 &ray, HitRecord &hit_record) {
+    { t.hit(ray, hit_record) } -> std::same_as<bool>;
+};
 
-// Optimized
+template <std::input_iterator It>
+    requires HasHit<std::iter_value_t<It>>
+It find_closest_hit(const Ray3 &ray, It begin, It end, HitRecord &hit_record) {
+    Real min_dist = std::numeric_limits<Real>::max();
+    HitRecord temp_hit_record;
+    It closest_obj = end;
+    for (auto it = begin; it != end; ++it) {
+        if (it->hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
+            min_dist = temp_hit_record.dist;
+            hit_record = temp_hit_record;
+            closest_obj = it;
+        }
+    }
+    return closest_obj;
+}
+
 bool Sphere::hit(const Ray3 &ray, HitRecord &hit_record) const {
     Vec3 oc = ray.origin - center;
     auto dot = oc.dot(ray.direction);
@@ -107,7 +107,7 @@ bool Plane::hit(const Ray3 &ray, HitRecord &hit_record) const {
     if (D == 0)
         return false;
     Real t = -N / D;
-    if (t < 0)
+    if (t <= 0)
         return false;
     hit_record.dist = t;
     hit_record.point = ray.at(t);
@@ -138,77 +138,56 @@ bool Quad::hit(const Ray3 &ray, HitRecord &hit_record) const {
     hit_record.dist = t;
     hit_record.point = intersection;
     hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
-
     return true;
 }
 
 bool Triangle::hit(const Ray3 &ray, HitRecord &hit_record) const {
     constexpr Real EPSILON = std::numeric_limits<Real>::epsilon();
-    auto edge1 = b - a;
-    auto edge2 = c - a;
+    auto edge_ab = b - a;
+    auto edge_ac = c - a;
 
-    auto h = ray.direction.cross(edge2);
-    auto det = edge1.dot(h);
+    auto pvec = ray.direction.cross(edge_ac);
+    auto det = edge_ab.dot(pvec);
 
     if (std::abs(det) < EPSILON)
         return false;
 
-    auto inv_det = 1.0 / det;
-    auto s = ray.origin - a;
-    auto u = inv_det * s.dot(h);
-    if (u < 0.0 || u > 1.0)
+    auto inv_det = 1 / det;
+    auto tvec = ray.origin - a;
+    auto u = inv_det * tvec.dot(pvec);
+    if (u < 0 || u > 1)
         return false;
 
-    auto q = s.cross(edge1);
-    auto v = inv_det * ray.direction.dot(q);
-    if (v < 0.0 || u + v > 1.0)
+    auto qvec = tvec.cross(edge_ab);
+    auto v = inv_det * ray.direction.dot(qvec);
+    if (v < 0 || u + v > 1)
         return false;
 
-    auto t = inv_det * edge2.dot(q);
-    if (t > EPSILON) {
-        hit_record.dist = t;
-        hit_record.point = ray.at(t);
-        auto normal = edge1.cross(edge2).normalized();
-        hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
-        return true;
+    auto t = inv_det * edge_ac.dot(qvec);
+    if (t < EPSILON) {
+        return false;
     }
-
-    return false;
+    hit_record.dist = t;
+    hit_record.point = ray.at(t);
+    auto normal = edge_ab.cross(edge_ac).normalized();
+    hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
+    return true;
 }
 
 bool Mesh::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    Real min_dist = std::numeric_limits<Real>::max();
-    HitRecord temp_hit_record;
-    for (const auto &t : triangles) {
-        if (t.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-            min_dist = temp_hit_record.dist;
-            hit_record = temp_hit_record;
-        }
-    }
-    return min_dist != std::numeric_limits<Real>::max();
+    return find_closest_hit(ray, faces.begin(), faces.end(), hit_record) != faces.end();
 }
 
 bool Box::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    Real min_dist = std::numeric_limits<Real>::max();
-    HitRecord temp_hit_record;
-    for (const auto &side : sides) {
-        if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-            min_dist = temp_hit_record.dist;
-            hit_record = temp_hit_record;
-        }
-    }
-    return min_dist != std::numeric_limits<Real>::max();
+    return find_closest_hit(ray, faces.begin(), faces.end(), hit_record) != faces.end();
 }
 
 bool RightPrism::hit(const Ray3 &ray, HitRecord &hit_record) const {
     Real min_dist = std::numeric_limits<Real>::max();
-    HitRecord temp_hit_record;
-    for (const auto &side : side_faces) {
-        if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-            min_dist = temp_hit_record.dist;
-            hit_record = temp_hit_record;
-        }
+    if (find_closest_hit(ray, side_faces.begin(), side_faces.end(), hit_record) != side_faces.end()) {
+        min_dist = hit_record.dist;
     }
+    HitRecord temp_hit_record;
     if (upper_base.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
         min_dist = temp_hit_record.dist;
         hit_record = temp_hit_record;
@@ -222,13 +201,10 @@ bool RightPrism::hit(const Ray3 &ray, HitRecord &hit_record) const {
 
 bool RightPyramid::hit(const Ray3 &ray, HitRecord &hit_record) const {
     Real min_dist = std::numeric_limits<Real>::max();
-    HitRecord temp_hit_record;
-    for (const auto &side : side_faces) {
-        if (side.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-            min_dist = temp_hit_record.dist;
-            hit_record = temp_hit_record;
-        }
+    if (find_closest_hit(ray, side_faces.begin(), side_faces.end(), hit_record) != side_faces.end()) {
+        min_dist = hit_record.dist;
     }
+    HitRecord temp_hit_record;
     if (base.hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
         min_dist = temp_hit_record.dist;
         hit_record = temp_hit_record;
@@ -239,19 +215,10 @@ bool RightPyramid::hit(const Ray3 &ray, HitRecord &hit_record) const {
 bool Model::hit(const Ray3 &ray, HitRecord &hit_record) const {
     if (!bbox.hit(ray, Interval::universe))
         return false;
-    Real min_dist = std::numeric_limits<Real>::max();
-    HitRecord temp_hit_record;
-    int triangle_index = -1;
-    for (size_t i = 0; i < triangles.size(); ++i) {
-        const auto &t = triangles[i];
-        if (t->hit(ray, temp_hit_record) && temp_hit_record.dist < min_dist) {
-            min_dist = temp_hit_record.dist;
-            hit_record = temp_hit_record;
-            triangle_index = i;
-        }
-    }
-    if (min_dist == std::numeric_limits<Real>::max())
+    auto it = find_closest_hit(ray, triangles.begin(), triangles.end(), hit_record);
+    if (it == triangles.end())
         return false;
+    int triangle_index = it - triangles.begin();
     const TriangleIndex &info = index_triangles[triangle_index];
     const Vertex va = {coords[info.a.v], normals[info.a.vn]};
     const Vertex vb = {coords[info.b.v], normals[info.b.vn]};

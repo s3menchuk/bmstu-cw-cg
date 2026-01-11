@@ -167,7 +167,7 @@ class Triangle : public Hittable {
 
 class Mesh : public Hittable {
   public:
-    Mesh(const std::vector<Triangle> &triangles) : triangles(triangles) {
+    Mesh(const std::vector<Triangle> &triangles) : faces(triangles) {
         if (triangles.empty())
             throw std::invalid_argument("Must be at least 1 triangle");
     }
@@ -185,12 +185,12 @@ class Mesh : public Hittable {
     }
 
   private:
-    std::vector<Triangle> triangles;
+    std::vector<Triangle> faces;
 };
 
 class Box : public Hittable {
   public:
-    Box(const Point3 &a, const Point3 &b) : a(a), b(b), sides(get_sides(a, b)), center((a + b) / 2.0f) {}
+    Box(const Point3 &a, const Point3 &b) : a(a), b(b), faces(get_sides(a, b)), center((a + b) / 2.0f) {}
 
     static std::array<Quad, 6> get_sides(const Vec3 &a, const Vec3 &b) {
         auto min = Vec3(std::fmin(a.x, b.x), std::fmin(a.y, b.y), std::fmin(a.z, b.z));
@@ -226,7 +226,7 @@ class Box : public Hittable {
   private:
     Point3 a;
     Point3 b;
-    std::array<Quad, 6> sides;
+    std::array<Quad, 6> faces;
     Point3 center;
 };
 
@@ -405,7 +405,7 @@ class Model : public Hittable {
         : coords(coords), normals(normals), faces(faces), bbox(coords) {
         for (const auto &face : faces) {
             for (size_t i = 1; i + 1 < face.size(); ++i) {
-                auto t = std::make_shared<Triangle>(coords[face[0].v], coords[face[i].v], coords[face[i + 1].v]);
+                Triangle t(coords[face[0].v], coords[face[i].v], coords[face[i + 1].v]);
                 triangles.push_back(t);
                 index_triangles.push_back({face[0], face[i], face[i + 1]});
             }
@@ -415,7 +415,7 @@ class Model : public Hittable {
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
   private:
-    std::vector<std::shared_ptr<Triangle>> triangles;
+    std::vector<Triangle> triangles;
     std::vector<TriangleIndex> index_triangles;
     AABB bbox;
 
