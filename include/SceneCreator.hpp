@@ -123,12 +123,12 @@ class CornellBox : public SceneCreator {
 
         // Left Wall
         auto left_quad = std::make_shared<Quad>(LBN, LTN - LBN, LBF - LBN);
-        left_wall = std::make_shared<Object>(left_quad, Material(sRGB::RED, 0.5));
+        left_wall = std::make_shared<Object>(left_quad, Material(sRGB::RED, 0));
         scene.add_object(left_wall);
 
         // Right Wall
         auto right_quad = std::make_shared<Quad>(RBN, RTN - RBN, RBF - RBN);
-        right_wall = std::make_shared<Object>(right_quad, Material(sRGB::GREEN, 0.5));
+        right_wall = std::make_shared<Object>(right_quad, Material(sRGB::GREEN, 0));
         scene.add_object(right_wall);
 
         // Back Wall
@@ -138,12 +138,12 @@ class CornellBox : public SceneCreator {
 
         // Floor
         auto floor_quad = std::make_shared<Quad>(LBN, LBF - LBN, RBN - LBN);
-        floor = std::make_shared<Object>(floor_quad, Material(sRGB::WHITE, 0.2));
+        floor = std::make_shared<Object>(floor_quad, Material(sRGB::WHITE, 0));
         scene.add_object(floor);
 
         // Ceiling
         auto ceiling_quad = std::make_shared<Quad>(LTN, LTF - LTN, RTN - LTN);
-        ceiling = std::make_shared<Object>(ceiling_quad, Material(sRGB::WHITE, 0.2));
+        ceiling = std::make_shared<Object>(ceiling_quad, Material(sRGB::WHITE, 0));
         scene.add_object(ceiling);
 
         // Front Wall
@@ -151,12 +151,13 @@ class CornellBox : public SceneCreator {
         front_wall = std::make_shared<Object>(front_quad, Material(sRGB::WHITE, 0));
         // scene.add_object(front_wall);
 
-        // auto quad = std::make_shared<Quad>(LTN * 0.99f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
+        auto quad = std::make_shared<Quad>(LTN * 0.98f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
         // scene.add_object(std::make_shared<Object>(quad, Material(sRGB::WHITE, 0.1)));
+        scene.add_light(std::make_shared<QuadLight>(*quad, Color(1, 1, 1), 0.5));
 
         // Light source
-        auto light_quad = std::make_shared<Quad>(LTN * 0.99f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
-        scene.add_light(std::make_shared<QuadLight>(*light_quad, sRGB::WHITE, 0.5));
+        // auto light_quad = std::make_shared<Quad>(LTN * 0.99f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
+        // scene.add_light(std::make_shared<QuadLight>(*light_quad, sRGB::WHITE, 0.25));
         return scene;
     }
 
@@ -288,6 +289,7 @@ class UtahTeapotInCornellBox : public SceneCreator {
         auto loader = std::make_shared<ObjLoader>();
 
         auto model = loader->load(std::format("assets/models/utah_teapot-res{}.obj", utah_res));
+        model = std::make_shared<Rotate>(model, scene.world_up, std::numbers::pi);
         model = std::make_shared<Scale>(model, Vec3(0.35, 0.35, 0.35));
         model = std::make_shared<Translate>(model, Vec3(width / 2, 0, -length * 0.7));
         scene.add_object(std::make_shared<Object>(model, Material(sRGB::BLUE, 0.25)));

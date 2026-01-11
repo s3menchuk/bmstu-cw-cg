@@ -25,7 +25,7 @@ class RayTracingRenderer : public Renderer {
     void render(Canvas &canvas, const Scene &scene, const Camera &camera, const RenderSettings &settings) override;
 
   private:
-    const float EPSILON = 1e-5;
+    const Real EPSILON = 1e-5;
 
     Color trace_ray(const Scene &scene, const Ray3 &ray, size_t depth) const;
 
