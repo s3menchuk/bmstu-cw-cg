@@ -153,7 +153,7 @@ class CornellBox : public SceneCreator {
 
         auto quad = std::make_shared<Quad>(LTN * 0.98f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
         // scene.add_object(std::make_shared<Object>(quad, Material(sRGB::WHITE, 0.1)));
-        scene.add_light(std::make_shared<QuadLight>(*quad, Color(1, 1, 1), 0.5));
+        scene.add_light(std::make_shared<QuadLight>(*quad, Color(1, 1, 1), 0.2));
 
         // Light source
         // auto light_quad = std::make_shared<Quad>(LTN * 0.99f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
