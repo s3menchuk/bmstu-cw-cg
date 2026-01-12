@@ -4,12 +4,23 @@
 
 #include <numbers>
 
-inline Real lerp(Real a, Real b, Real t) {
+template <typename T>
+inline T lerp(T a, T b, T t) {
     return a + (b - a) * t;
 }
 
-inline Real map(Real val, Real cl, Real cr, Real tl, Real tr) {
+template <typename T>
+inline T map(T val, T cl, T cr, T tl, T tr) {
     return tl + (val - cl) / (cr - cl) * (tr - tl);
+}
+
+template <typename T>
+T clamp(T x, T min, T max) {
+    if (x < min)
+        return min;
+    if (x > max)
+        return max;
+    return x;
 }
 
 template <typename T>
