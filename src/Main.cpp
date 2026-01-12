@@ -53,7 +53,7 @@ int main() {
 
     std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();
 
-    RenderSettings render_settings = {Settings::max_ray_bounces, omp_get_max_threads()};
+    RenderSettings render_settings = {Settings::max_ray_bounces, omp_get_max_threads(), Settings::samples_per_pixel};
     CameraSettings camera_settings = {Settings::CAMERA_MOVEMENT_SPEED, Settings::CAMERA_ROTATION_SPEED, Settings::MAX_ZENITH_RADIANS};
     AppContext app = {*canvas, scene, camera, *renderer, render_settings, camera_settings, true};
 

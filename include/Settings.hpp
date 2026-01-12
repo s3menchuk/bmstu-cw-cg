@@ -23,6 +23,7 @@ const Real CAMERA_MOVEMENT_SPEED = 0.1;
 const Real CAMERA_ROTATION_SPEED = 0.15;
 
 const int max_ray_bounces = 3;
+const int samples_per_pixel = 10;
 
 const auto scene_creator = std::make_unique<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
 // const auto scene_creator = std::make_unique<UtahTeapot>();

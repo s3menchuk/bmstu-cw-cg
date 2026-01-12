@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <omp.h>
+#include <random>
 
 bool RayTracingRenderer::is_in_shadow(const Scene &scene, const HitRecord &hit, const Light &light) const {
     Ray3 ray(hit.point, -light.get_direction(hit.point));
@@ -70,8 +71,16 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
     Color diffuse_total = diffuse_intensity * (1 - closest_obj->material.reflectance) * diffuse_color * closest_obj->material.color;
     Color specular_total = specular_intensity * closest_obj->material.reflectance;
 
-    Vec3 reflected_dir = ray.direction - 2 * N.dot(ray.direction) * N;
-    Ray3 reflected_ray(closest_hit.point + reflected_dir * EPSILON, reflected_dir);
+    thread_local std::mt19937 gen{std::random_device{}()};
+    std::uniform_real_distribution<Real> phi_dist(0, 2 * std::numbers::pi);
+    std::uniform_real_distribution<Real> theta_dist(0, std::numbers::pi);
+    Real phi = phi_dist(gen);
+    Real theta = theta_dist(gen);
+    Vec3 random_dir(std::cos(phi) * std::sin(theta), std::sin(phi) * std::sin(theta), std::cos(theta));
+
+    // Vec3 reflected_dir = ray.direction - 2 * N.dot(ray.direction) * N;
+    // Ray3 reflected_ray(closest_hit.point + reflected_dir * EPSILON, reflected_dir);
+    Ray3 reflected_ray(closest_hit.point + random_dir * EPSILON, random_dir);
     Color reflective_color = trace_ray(scene, reflected_ray, depth - 1) * closest_obj->material.reflectance;
 
     Color final_color = diffuse_total + specular_total + reflective_color;
@@ -87,6 +96,7 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
 
     omp_set_num_threads(settings.count_threads);
 
+    Real pixel_samples_scale = 1.0f / settings.samples_per_pixel;
 #pragma omp parallel for schedule(dynamic)
     for (int row = 0; row < height; ++row) {
         Real ndc_y = 1 - (row + 0.5) / height * 2;
@@ -96,7 +106,11 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
             Real dx = ndc_x * view_width / 2;
             Vec3 ray_dir = (dx * camera.right + dy * camera.up + camera.dir).normalized();
             Ray3 ray(camera.pos, ray_dir);
-            Color color = trace_ray(scene, ray, settings.max_ray_bounces);
+            Color color(0, 0, 0);
+            for (int i = 0; i < settings.samples_per_pixel; ++i) {
+                color += trace_ray(scene, ray, settings.max_ray_bounces);
+            }
+            color *= pixel_samples_scale;
             canvas.set_pixel(row, col, color.as_srgb());
         }
     }

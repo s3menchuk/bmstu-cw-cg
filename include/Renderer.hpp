@@ -11,6 +11,7 @@
 struct RenderSettings {
     int max_ray_bounces;
     int count_threads;
+    int samples_per_pixel;
 };
 
 class Renderer {
