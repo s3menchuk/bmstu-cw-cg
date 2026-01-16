@@ -18,6 +18,9 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(app PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
+# find_package(OpenGL REQUIRED)
+# target_include_directories(app PRIVATE OpenGL)
+# target_link_libraries()
 
 target_include_directories(app PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(app PRIVATE ImGui-SFML::ImGui-SFML)

@@ -27,8 +27,8 @@ class Scene {
     // TODO: VIA ITERATORS
     // ??? get_visible_objects() const {}
 
-    Color get_background_color(const Ray3 &ray) const {
-        float k = map(ray.direction.x, -1, 1, 0, 1);
-        return 1.75 * background_color * (1.0f - k);
+    Color get_background_color(Ray3 ray) const {
+        Real k = map(ray.direction.x, (Real)-1, (Real)1, (Real)0, (Real)1);
+        return 1.75 * background_color * (1.0 - k);
     }
 };
