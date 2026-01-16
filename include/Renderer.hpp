@@ -32,3 +32,5 @@ class RayTracingRenderer : public Renderer {
 
     std::shared_ptr<Object> find_closest_obj(HitRecord &closest_hit, const Scene &scene, Ray3 ray) const;
 };
+
+void accumulate_frame(Canvas &target, const Canvas &source, int frame_num);

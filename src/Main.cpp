@@ -8,6 +8,9 @@
 #include "imgui-SFML.h"
 #include "imgui.h"
 #include <SFML/Graphics.hpp>
+// #include <SFML/OpenGL.hpp>
+// #include <SFML/Window.hpp>
+// #include <glad/gl.h>
 
 #include <array>
 #include <cstddef>
@@ -49,13 +52,15 @@ int main() {
 
     Scene scene = Settings::scene_creator->create_scene();
     SceneView view = Settings::scene_creator->get_view();
-    Camera camera(view.pos, view.dir, scene.world_up, Settings::FOV_Y, Settings::ASPECT, Settings::NEAR, Settings::FAR);
+    Camera camera(view.pos, view.dir, scene.world_up, Settings::FOV_Y, Settings::ASPECT, Settings::CAMERA_NEAR, Settings::CAMERA_NEAR);
 
     std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();
 
     RenderSettings render_settings = {Settings::max_ray_bounces, omp_get_max_threads(), Settings::samples_per_pixel};
     CameraSettings camera_settings = {Settings::CAMERA_MOVEMENT_SPEED, Settings::CAMERA_ROTATION_SPEED, Settings::MAX_ZENITH_RADIANS};
-    AppContext app = {*canvas, scene, camera, *renderer, render_settings, camera_settings, true};
+    AppContext app = {*canvas, scene, camera, *renderer, render_settings, camera_settings, false, 0};
+
+    SimpleCanvas temp_canvas(Settings::WIDTH, Settings::HEIGHT);
 
     sf::Clock deltaClock;
     while (window.isOpen()) {
@@ -69,6 +74,9 @@ int main() {
         ImGui::SFML::Update(window, deltaClock.restart());
 
         draw_settings_iu(app);
+        app.frame_num++;
+        renderer->render(temp_canvas, scene, camera, render_settings);
+        accumulate_frame(*canvas, temp_canvas, app.frame_num);
 
         window.clear();
         window.draw(canvas->pixels);

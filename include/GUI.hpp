@@ -16,9 +16,10 @@ struct AppContext {
     Scene &scene;
     Camera &camera;
     Renderer &renderer;
-    RenderSettings render_settings;
+    RenderSettings &render_settings;
     CameraSettings camera_settings;
     bool scene_updated;
+    int frame_num;
 };
 
 void draw_settings_iu(AppContext &app);

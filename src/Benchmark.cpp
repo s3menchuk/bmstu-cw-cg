@@ -26,7 +26,7 @@ void benchmark() {
             std::shared_ptr<SceneCreator> scene_creator = std::make_shared<UtahTeapotInCornellBox>(3, 3, 1.5, utah_res);
             Scene scene = scene_creator->create_scene();
             SceneView view = scene_creator->get_view();
-            Camera camera(view.pos, view.dir, scene.world_up, Settings::FOV_Y, Settings::ASPECT, Settings::NEAR, Settings::FAR);
+            Camera camera(view.pos, view.dir, scene.world_up, Settings::FOV_Y, Settings::ASPECT, Settings::CAMERA_NEAR, Settings::CAMERA_FAR);
 
             auto start = std::chrono::high_resolution_clock::now();
 

@@ -12,7 +12,7 @@ void render_frame(const AppContext &app) {
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
-    std::cout << "Time: " << elapsed.count() << " ms\n";
+    std::cout << "Time: " << elapsed.count() << " ms" << " | " << "FPS: " << 1000 / elapsed.count() << "\n";
 }
 
 void draw_camera_ui(Camera &camera, CameraSettings &settings) {
@@ -297,12 +297,13 @@ void draw_render_ui(AppContext &app) {
     ImGui::SameLine();
     static int samples_per_pixel = app.render_settings.samples_per_pixel;
     const int MIN_SPP = 1;
-    const int MAX_SPP = 128;
+    const int MAX_SPP = 1024;
     ImGui::InputInt("##Samples-per-pixel", &samples_per_pixel, MIN_SPP, MAX_SPP);
     samples_per_pixel = clamp(samples_per_pixel, MIN_SPP, MAX_SPP);
     app.render_settings.samples_per_pixel = samples_per_pixel;
 
     if (ImGui::Button("Render") || app.scene_updated) {
+        app.frame_num = 0;
         render_frame(app);
         app.scene_updated = false;
     }
