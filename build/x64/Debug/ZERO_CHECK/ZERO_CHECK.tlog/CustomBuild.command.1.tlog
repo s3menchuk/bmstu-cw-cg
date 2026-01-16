@@ -1,0 +1,10 @@
+^D:\PERSONAL\BMSTU\5SEM_2025\GPURAYTRACER\BUILD\CMAKEFILES\96E18BB10B2060EBBE9470F6FFC24946\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Personal/BMSTU/5sem_2025/GPURayTracer -BD:/Personal/BMSTU/5sem_2025/GPURayTracer/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Personal/BMSTU/5sem_2025/GPURayTracer/build/glfw-opengl-test.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "cmake: build + run",
+			"command": "cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:Users/Mikhail/vcpkg/scripts/buildsystems/vcpkg.cmake && cmake --build build && build\\Debug\\app.exe",
+			"group": "build",
+		}
+	]
+}
