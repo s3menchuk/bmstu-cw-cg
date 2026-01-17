@@ -29,9 +29,11 @@ class QuadLight : public AttenuationLight {
     }
 
     virtual Real get_distance(const Point3 &point) const {
+        // auto center = quad.Q + (quad.u + quad.v) / 2.0f;
+        // return (point - center).length();
         Vec3 qp = point - quad.Q;
-        Real s = qp.dot(quad.u) / quad.u.dot(quad.u);
-        Real t = qp.dot(quad.v) / quad.v.dot(quad.v);
+        Real s = qp.dot(quad.u) / quad.u.length();
+        Real t = qp.dot(quad.v) / quad.v.length();
         s = std::min(1.0f, std::max(0.0f, s));
         t = std::min(1.0f, std::max(0.0f, t));
         Vec3 closest = quad.Q + s * quad.u + t * quad.v;
