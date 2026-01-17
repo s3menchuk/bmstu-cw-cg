@@ -152,12 +152,8 @@ class CornellBox : public SceneCreator {
         // scene.add_object(front_wall);
 
         auto quad = std::make_shared<Quad>(LTN * 0.98f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
-
-        scene.add_object(std::make_shared<Object>(quad, Material(sRGB::WHITE, 0, Color(1, 1, 1), 1)));
-        // scene.add_light(std::make_shared<QuadLight>(*quad, Color(1, 1, 1), 0.2));
-
         // scene.add_object(std::make_shared<Object>(quad, Material(sRGB::WHITE, 0.1)));
-        // scene.add_light(std::make_shared<QuadLight>(*quad, Color(1, 1, 1), 0.5));
+        scene.add_light(std::make_shared<QuadLight>(*quad, Color(1, 1, 1), 0.2));
 
         // Light source
         // auto light_quad = std::make_shared<Quad>(LTN * 0.99f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
@@ -296,7 +292,7 @@ class UtahTeapotInCornellBox : public SceneCreator {
         model = std::make_shared<Rotate>(model, scene.world_up, std::numbers::pi);
         model = std::make_shared<Scale>(model, Vec3(0.35, 0.35, 0.35));
         model = std::make_shared<Translate>(model, Vec3(width / 2, 0, -length * 0.7));
-        scene.add_object(std::make_shared<Object>(model, Material(sRGB::WHITE, 0)));
+        scene.add_object(std::make_shared<Object>(model, Material(sRGB::BLUE, 0.25)));
         return scene;
     }
 
@@ -308,31 +304,4 @@ class UtahTeapotInCornellBox : public SceneCreator {
     CornellBox scene_creator;
     float width, length, height;
     size_t utah_res;
-};
-
-class SphereInCornellBox : public SceneCreator {
-  public:
-    SphereInCornellBox(float width, float length, float height, float radius)
-        : width(width), length(length), height(height), radius(radius), scene_creator(width, length, height) {}
-
-    Scene create_scene() const {
-        Scene scene = scene_creator.create_scene();
-        scene.background_color = sRGB::BLACK;
-
-        auto model = std::make_shared<Sphere>(Vec3(width / 2, radius, -length / 2), radius);
-        scene.add_object(std::make_shared<Object>(model, Material(sRGB::WHITE, 0.3)));
-        return scene;
-    }
-
-    SceneView get_view() const {
-        SceneView view;
-        view.pos = {width / 2, height / 2, 1};
-        view.dir = {0, -0.1, -1};
-        return view;
-    }
-
-  private:
-    CornellBox scene_creator;
-    float width, length, height;
-    float radius;
 };

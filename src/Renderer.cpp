@@ -9,26 +9,20 @@
 
 #include <iostream>
 #include <omp.h>
-#include <random>
 
-Vec3 random_uniform_vec() {
-    thread_local std::mt19937 gen{std::random_device{}()};
-    std::uniform_real_distribution<Real> dist(-1, 1);
-    Vec3 dir;
-    do {
-        dir = {dist(gen), dist(gen), dist(gen)};
-    } while (dir.dot(dir) > 1);
-    return dir.normalized();
+bool RayTracingRenderer::is_in_shadow(const Scene &scene, const HitRecord &hit, const Light &light) const {
+    Ray3 ray(hit.point, -light.get_direction(hit.point));
+    // ray.origin = ray.at(EPSILON);
+    ray.origin += hit.normal * EPSILON;
+    const auto dist = light.get_distance(hit.point);
+    HitRecord hit_record;
+    for (const auto &obj : scene.objects)
+        if (obj->visible && obj->hit(ray, hit_record) && hit_record.dist < dist)
+            return true;
+    return false;
 }
 
-Vec3 random_hemisphere_vec(Vec3 normal) {
-    Vec3 dir = random_uniform_vec();
-    if (dir.dot(normal) < 0)
-        dir = -dir;
-    return dir;
-}
-
-std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(HitRecord &closest_hit, const Scene &scene, Ray3 ray) const {
+std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(HitRecord &closest_hit, const Scene &scene, const Ray3 &ray) const {
     HitRecord closest, current;
     closest.dist = std::numeric_limits<Real>::infinity();
     std::shared_ptr<Object> closest_obj = nullptr;
@@ -44,49 +38,44 @@ std::shared_ptr<Object> RayTracingRenderer::find_closest_obj(HitRecord &closest_
     return closest_obj;
 }
 
-// Iteration trace ray
-// Color RayTracingRenderer::trace_ray(const Scene &scene, Ray3 ray, int depth) const {
-//     Color final_color(0, 0, 0);
-//     Color ray_color(1, 1, 1);
-//     for (int i = 0; i < depth; ++i) {
-//         HitRecord closest_hit;
-//         auto closest_obj = find_closest_obj(closest_hit, scene, ray);
-//         if (closest_obj) {
-//             ray.direction = random_hemisphere_vec(closest_hit.normal);
-//             ray.origin = closest_hit.point + ray.direction * EPSILON;
-//             Color emitted_light = closest_obj->material.emission_color * closest_obj->material.emission_strength;
-//             final_color += emitted_light * ray_color;
-//             ray_color *= closest_obj->material.base_color;
-//         } else {
-//             break;
-//         }
-//     }
-//     return final_color;
-// }
+Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t depth) const {
+    if (depth == 0)
+        return Color();
 
-// Recursion trace ray
-Color RayTracingRenderer::trace_ray(const Scene &scene, Ray3 ray, int depth) const {
-    if (depth <= 0) {
-        return Color(0, 0, 0);
-    }
     HitRecord closest_hit;
     auto closest_obj = find_closest_obj(closest_hit, scene, ray);
     if (!closest_obj) {
-        return Color(0, 0, 0);
+        return scene.get_background_color(ray);
     }
-    Vec3 random_dir = random_hemisphere_vec(closest_hit.normal);
-    Ray3 random_ray(closest_hit.point + random_dir * EPSILON, random_dir);
-    Color diffuse_light = closest_obj->material.base_color * trace_ray(scene, random_ray, depth - 1) * (1 - closest_obj->material.metallic);
 
-    Vec3 V = ray.direction;
-    Vec3 N = closest_hit.normal;
-    Vec3 reflected_dir = V - 2 * N.dot(V) * N;
+    const Vec3 N = closest_hit.normal;
+    const Vec3 V = -ray.direction;
+
+    Color diffuse_intensity;
+    Color specular_intensity;
+
+    for (const auto &light : scene.lights) {
+        if (!is_in_shadow(scene, closest_hit, *light)) {
+            const Vec3 L = -light->get_direction(closest_hit.point);
+            diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(closest_hit.point);
+
+            // const Vec3 R = 2 * N.dot(L) * N - L;
+            Vec3 H = (L + V).normalized();
+            specular_intensity += std::pow(std::max(N.dot(H), 0.0f), 100) * light->get_color() * light->get_intensity(closest_hit.point);
+        }
+    }
+
+    Color diffuse_color = {1, 1, 1};
+
+    Color diffuse_total = diffuse_intensity * (1 - closest_obj->material.reflectance) * diffuse_color * closest_obj->material.color;
+    Color specular_total = specular_intensity * closest_obj->material.reflectance;
+
+    Vec3 reflected_dir = ray.direction - 2 * N.dot(ray.direction) * N;
     Ray3 reflected_ray(closest_hit.point + reflected_dir * EPSILON, reflected_dir);
-    Color reflected_light = trace_ray(scene, reflected_ray, depth - 1) * closest_obj->material.metallic;
+    Color reflective_color = trace_ray(scene, reflected_ray, depth - 1) * closest_obj->material.reflectance;
 
-    Color emitted_light = closest_obj->material.emission_color * closest_obj->material.emission_strength;
-
-    return diffuse_light + reflected_light + emitted_light;
+    Color final_color = diffuse_total + specular_total + reflective_color;
+    return final_color;
 }
 
 void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, const RenderSettings &settings) {
@@ -100,24 +89,33 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
 
 #pragma omp parallel for schedule(dynamic)
     for (int row = 0; row < height; ++row) {
+        Real ndc_y = 1 - (row + 0.5) / height * 2;
+        Real dy = ndc_y * view_height / 2;
         for (int col = 0; col < width; ++col) {
-            thread_local std::mt19937 gen;
-            std::uniform_real_distribution<Real> dist(0, 1);
-            Real ndc_x = (col + dist(gen)) / width * 2 - 1;
+            Real ndc_x = (col + 0.5) / width * 2 - 1;
             Real dx = ndc_x * view_width / 2;
-            Real ndc_y = 1 - (row + dist(gen)) / height * 2;
-            Real dy = ndc_y * view_height / 2;
-
             Vec3 ray_dir = (dx * camera.right + dy * camera.up + camera.dir).normalized();
             Ray3 ray(camera.pos, ray_dir);
-
-            Color color(0, 0, 0);
-            for (int i = 0; i < settings.samples_per_pixel; ++i) {
-                color += trace_ray(scene, ray, settings.max_ray_bounces);
-            }
-            color *= 1.0 / settings.samples_per_pixel;
-
+            Color color = trace_ray(scene, ray, settings.max_ray_bounces);
             canvas.set_pixel(row, col, color.as_srgb());
         }
     }
+}
+
+Color RayTracingRenderer::calc_diffuse(const Scene &scene, const Point3 &origin, const Point3 &point, const Vec3 &normal) const {
+    Ray3 ray(origin, (point - origin).normalized());
+    const Vec3 N = normal;
+    const Vec3 V = -ray.direction;
+    HitRecord hit_record;
+    hit_record.point = point;
+    hit_record.normal = normal;
+    hit_record.dist = (point - origin).length();
+    Color diffuse_intensity;
+    for (const auto &light : scene.lights) {
+        if (!RayTracingRenderer::is_in_shadow(scene, hit_record, *light)) {
+            const Vec3 L = -light->get_direction(hit_record.point);
+            diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(hit_record.point);
+        }
+    }
+    return diffuse_intensity;
 }

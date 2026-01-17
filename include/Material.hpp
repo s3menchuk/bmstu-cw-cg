@@ -5,11 +5,8 @@
 
 class Material {
   public:
-    Material(Color base_color, Real metallic, Color emission_color = Color(1, 1, 1), Real emission_strength = 0)
-        : base_color(base_color), metallic(metallic), emission_color(emission_color), emission_strength(emission_strength) {}
+    Material(const Color &color, Real reflectance) : color(color), reflectance(reflectance) {}
 
-    Color base_color;
-    Real metallic;
-    Color emission_color;
-    Real emission_strength;
+    Color color;
+    Real reflectance;
 };

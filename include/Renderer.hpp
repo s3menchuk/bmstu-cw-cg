@@ -11,7 +11,6 @@
 struct RenderSettings {
     int max_ray_bounces;
     int count_threads;
-    int samples_per_pixel;
 };
 
 class Renderer {
@@ -28,7 +27,11 @@ class RayTracingRenderer : public Renderer {
   private:
     const Real EPSILON = 1e-5;
 
-    Color trace_ray(const Scene &scene, Ray3 ray, int depth) const;
+    Color trace_ray(const Scene &scene, const Ray3 &ray, size_t depth) const;
 
-    std::shared_ptr<Object> find_closest_obj(HitRecord &closest_hit, const Scene &scene, Ray3 ray) const;
+    std::shared_ptr<Object> find_closest_obj(HitRecord &closest_hit, const Scene &scene, const Ray3 &ray) const;
+
+    bool is_in_shadow(const Scene &scene, const HitRecord &hit, const Light &light) const;
+
+    Color calc_diffuse(const Scene &scene, const Point3 &origin, const Point3 &point, const Vec3 &normal) const;
 };

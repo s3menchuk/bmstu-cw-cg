@@ -1,6 +1,5 @@
 #include "GUI.hpp"
 #include "CanvasExporter.hpp"
-#include "Math.hpp"
 #include "PrimitiveTypes.hpp"
 
 #include "imgui.h"
@@ -140,10 +139,10 @@ void draw_objects_ui(Scene &scene) {
                 // Diffuse color
                 ImGui::Text("Color");
                 ImGui::SameLine();
-                std::array<float, 3> float_rgb = obj->material.base_color.as_linear_array();
+                std::array<float, 3> float_rgb = obj->material.color.as_linear_array();
                 ImGui::ColorEdit3("", &float_rgb[0], ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
                 Color new_color(float_rgb[0], float_rgb[1], float_rgb[2]);
-                obj->material.base_color = new_color;
+                obj->material.color = new_color;
 
                 ImGui::Text("Visible");
                 ImGui::SameLine();
@@ -284,23 +283,11 @@ void draw_lights_ui() {
 }
 
 void draw_render_ui(AppContext &app) {
-    ImGui::Text("Max ray bounces");
+    ImGui::Text("RT Depth");
     ImGui::SameLine();
     static int max_ray_bounces = app.render_settings.max_ray_bounces;
-    const int MIN_VALUE_RAY_BOUNCES = 1;
-    const int MAX_VALUE_RAY_BOUNCES = 20;
-    ImGui::InputInt("##Max-ray-bounces", &max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MIN_VALUE_RAY_BOUNCES);
-    max_ray_bounces = clamp(max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MAX_VALUE_RAY_BOUNCES);
+    ImGui::SliderInt("##RT-Depth", &max_ray_bounces, 1, 5);
     app.render_settings.max_ray_bounces = max_ray_bounces;
-
-    ImGui::Text("Samples per pixel");
-    ImGui::SameLine();
-    static int samples_per_pixel = app.render_settings.samples_per_pixel;
-    const int MIN_SPP = 1;
-    const int MAX_SPP = 128;
-    ImGui::InputInt("##Samples-per-pixel", &samples_per_pixel, MIN_SPP, MAX_SPP);
-    samples_per_pixel = clamp(samples_per_pixel, MIN_SPP, MAX_SPP);
-    app.render_settings.samples_per_pixel = samples_per_pixel;
 
     if (ImGui::Button("Render") || app.scene_updated) {
         render_frame(app);
