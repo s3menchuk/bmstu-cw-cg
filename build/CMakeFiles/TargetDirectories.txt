@@ -1,4 +1,0 @@
-D:/Personal/BMSTU/5sem_2025/GPURayTracer/build/CMakeFiles/app.dir
-D:/Personal/BMSTU/5sem_2025/GPURayTracer/build/CMakeFiles/glad.dir
-D:/Personal/BMSTU/5sem_2025/GPURayTracer/build/CMakeFiles/ALL_BUILD.dir
-D:/Personal/BMSTU/5sem_2025/GPURayTracer/build/CMakeFiles/ZERO_CHECK.dir

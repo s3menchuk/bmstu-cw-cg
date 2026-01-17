@@ -3,6 +3,10 @@ out vec4 FragColor;
 
 in vec2 PixelCoords;
 in vec2 TexCoords;
+
+uniform vec3 CameraPos;
+uniform vec3 CameraDir;
+
 uniform float Time;
 uniform int FrameNum;
 uniform sampler2D AccumTex;
@@ -12,9 +16,11 @@ const float inf = 1.0 / 0.0;
 const float EPSILON = 1e-5;
 
 const int samples_per_pixel = 8;
-const int max_ray_bounces = 6;
+const int max_ray_bounces = 8;
 
-bool contains(float val, float min_val, float max_val) { return min_val <= val && val <= max_val; }
+bool contains(float val, float min_val, float max_val) {
+    return min_val <= val && val <= max_val;
+}
 
 struct Camera {
     vec3 pos;
@@ -31,13 +37,17 @@ struct Ray3 {
     vec3 dir;
 };
 
-vec3 ray_at(Ray3 ray, float dist) { return ray.orig + ray.dir * dist; }
+vec3 ray_at(Ray3 ray, float dist) {
+    return ray.orig + ray.dir * dist;
+}
 
 struct Material {
     vec3 color;
     float metallic;
     vec3 emission_color;
     float emission_strength;
+    float alpha;
+    float ior;
 };
 
 struct HitRecord {
@@ -105,16 +115,25 @@ bool hit(Quad quad, Ray3 ray, inout HitRecord hit_record) {
     hit_record.point = intersection;
     hit_record.normal = dot(normal, ray.dir) < 0 ? normal : -normal;
     hit_record.material = quad.material;
+
+    float k = 8.0;
+    vec3 v = (hit_record.point - quad.q) * k;
+    if (mod(trunc(v.x) + trunc(v.y) + trunc(v.z), 2) == 0)
+        hit_record.material.color *= 0.5;
+    // hit_record.material.color = 1 - hit_record.material.color;
     return true;
 }
 
 Camera camera;
 
-void init_camera(vec3 pos) {
+void set_camera(vec3 pos, vec3 dir) {
     camera.pos = pos;
-    camera.dir = vec3(0.0, 0.0, -1.0);
-    camera.up = vec3(0.0, 1.0, 0.0);
-    camera.right = cross(camera.dir, camera.up);
+    camera.dir = normalize(dir);
+
+    vec3 world_up = vec3(0.0, 1.0, 0.0);
+    camera.right = normalize(cross(camera.dir, world_up));
+    camera.up = cross(camera.right, camera.dir);
+
     camera.near = 1.0;
     camera.fov_y = radians(55.0);
     camera.aspect = 16.0 / 9.0;
@@ -134,6 +153,7 @@ void create_sphere_scene() {
     red.material.metallic = 0.0;
     red.material.emission_color = vec3(1.0, 1.0, 1.0);
     red.material.emission_strength = 0.0;
+    red.material.alpha = 1.0;
 
     Sphere green;
     green.radius = 2.0;
@@ -142,6 +162,7 @@ void create_sphere_scene() {
     green.material.metallic = 0.25;
     green.material.emission_color = vec3(1.0, 1.0, 1.0);
     green.material.emission_strength = 0.0;
+    green.material.alpha = 1.0;
 
     Sphere blue;
     blue.radius = 3.0;
@@ -150,6 +171,7 @@ void create_sphere_scene() {
     blue.material.metallic = 0.5;
     blue.material.emission_color = vec3(1.0, 1.0, 1.0);
     blue.material.emission_strength = 0.0;
+    blue.material.alpha = 1.0;
 
     Sphere surface;
     surface.radius = 1000.0;
@@ -158,6 +180,7 @@ void create_sphere_scene() {
     surface.material.metallic = 0.0;
     surface.material.emission_color = vec3(1.0, 1.0, 1.0);
     surface.material.emission_strength = 0.0;
+    surface.material.alpha = 1.0;
 
     Sphere sun;
     sun.center = vec3(-50, 10, 50);
@@ -165,7 +188,8 @@ void create_sphere_scene() {
     sun.material.color = vec3(1.0, 1.0, 1.0);
     sun.material.metallic = 0.0;
     sun.material.emission_color = vec3(1.0, 1.0, 1.0);
-    sun.material.emission_strength = 10.0;
+    sun.material.emission_strength = 1.0;
+    sun.material.alpha = 1.0;
 
     Quad floor_quad;
     floor_quad.q = vec3(-5.0, 0, 5.0);
@@ -175,6 +199,7 @@ void create_sphere_scene() {
     floor_quad.material.metallic = 0.0;
     floor_quad.material.emission_color = vec3(1.0, 1.0, 1.0);
     floor_quad.material.emission_strength = 0.0;
+    floor_quad.material.alpha = 1.0;
 
     spheres[0] = sun;
     spheres[1] = red;
@@ -187,13 +212,14 @@ void create_sphere_scene() {
     COUNT_SPHERES = 4;
     COUNT_QUADS = 1;
 
-    init_camera(vec3(2.0, 3.0, 15.0));
-    camera.dir = vec3(0.0, -0.1, -1.0);
+    vec3 pos = vec3(2.0, 3.0, 15.0);
+    vec3 dir = vec3(0.0, -0.1, -1.0);
+    set_camera(pos, dir);
 }
 
 void create_cornell_box() {
-    float box_width = 2.0;
-    float box_length = 2.0;
+    float box_width = 1.5;
+    float box_length = 1.5;
     float box_height = 1.5;
 
     /*
@@ -220,6 +246,7 @@ void create_cornell_box() {
     left_wall.material.metallic = 0.0;
     left_wall.material.emission_color = vec3(1.0, 1.0, 1.0);
     left_wall.material.emission_strength = 0.0;
+    left_wall.material.alpha = 1.0;
 
     // Right Wall
     Quad right_wall;
@@ -230,16 +257,18 @@ void create_cornell_box() {
     right_wall.material.metallic = 0.0;
     right_wall.material.emission_color = vec3(1.0, 1.0, 1.0);
     right_wall.material.emission_strength = 0.0;
+    right_wall.material.alpha = 1.0;
 
     // Back Wall
     Quad back_wall;
     back_wall.q = LBF;
     back_wall.u = LTF - LBF;
     back_wall.v = RBF - LBF;
-    back_wall.material.color = vec3(1.0, 1.0, 1.0);
+    back_wall.material.color = vec3(0.0, 0.0, 1.0);
     back_wall.material.metallic = 0.0;
     back_wall.material.emission_color = vec3(1.0, 1.0, 1.0);
     back_wall.material.emission_strength = 0.0;
+    back_wall.material.alpha = 1.0;
 
     // Floor
     Quad floor_wall;
@@ -250,6 +279,7 @@ void create_cornell_box() {
     floor_wall.material.metallic = 0.0;
     floor_wall.material.emission_color = vec3(1.0, 1.0, 1.0);
     floor_wall.material.emission_strength = 0.0;
+    floor_wall.material.alpha = 1.0;
 
     // Ceiling
     Quad ceiling_wall;
@@ -260,6 +290,7 @@ void create_cornell_box() {
     ceiling_wall.material.metallic = 0.0;
     ceiling_wall.material.emission_color = vec3(1.0, 1.0, 1.0);
     ceiling_wall.material.emission_strength = 0.0;
+    ceiling_wall.material.alpha = 1.0;
 
     // Front Wall
     // Quad front_wall;
@@ -270,15 +301,18 @@ void create_cornell_box() {
     // front_wall.material.metallic = 0.0;
     // front_wall.material.emission_color = vec3(1.0, 1.0, 1.0);
     // front_wall.material.emission_strength = 0.0;
+    // front_wall.material.alpha = 1.0;
 
     // Sphere
     Sphere sphere;
-    sphere.radius = 0.5;
+    sphere.radius = 0.3;
     sphere.center = vec3(box_width / 2, sphere.radius, -box_length / 2);
     sphere.material.color = vec3(1.0, 1.0, 1.0);
     sphere.material.metallic = 0;
     sphere.material.emission_color = vec3(1.0, 1.0, 1.0);
     sphere.material.emission_strength = 0.0;
+    sphere.material.alpha = 0.05;
+    sphere.material.ior = 1.5;
 
     // Light source
     Quad light;
@@ -288,7 +322,8 @@ void create_cornell_box() {
     light.material.color = vec3(1.0, 1.0, 1.0);
     light.material.metallic = 0.0;
     light.material.emission_color = vec3(1.0, 1.0, 1.0);
-    light.material.emission_strength = 1.0;
+    light.material.emission_strength = 5.0;
+    light.material.alpha = 1.0;
 
     quads[0] = left_wall;
     quads[1] = right_wall;
@@ -303,8 +338,9 @@ void create_cornell_box() {
     COUNT_QUADS = 6;
     COUNT_SPHERES = 1;
 
-    init_camera(vec3(box_width / 2, box_height / 2, 1.0));
-    camera.dir = vec3(0.0, -0.1, -1.0);
+    vec3 pos = vec3(box_width / 2, box_height / 2, 1.0);
+    vec3 dir = vec3(0.0, 0, -1.0);
+    set_camera(pos, dir);
 }
 
 uint hash(uint x) {
@@ -318,7 +354,7 @@ uint hash(uint x) {
 
 float rand(inout uint seed) {
     seed = hash(seed);
-    return float(seed) / 4294967296.0; // 2^32
+    return float(seed) / 4294967296.0;  // 2^32
 }
 
 void make_basis(vec3 n, out vec3 t, out vec3 b) {
@@ -389,26 +425,41 @@ bool find_closest_hit(inout HitRecord closest_hit, Ray3 ray) {
     return true;
 }
 
-// vec3 reflect
-
 vec3 trace_ray(Ray3 ray, int depth, inout uint seed) {
     vec3 final_light = vec3(0.0, 0.0, 0.0);
     vec3 ray_color = vec3(1.0, 1.0, 1.0);
+    bool inside = false;
     for (int i = 0; i < depth; ++i) {
         HitRecord closest_hit;
         if (find_closest_hit(closest_hit, ray)) {
             vec3 emitted_light = closest_hit.material.emission_color * closest_hit.material.emission_strength;
             final_light += emitted_light * ray_color;
 
-            ray.orig = closest_hit.point + closest_hit.normal * EPSILON;
-            if (rand(seed) > closest_hit.material.metallic) {
-                ray.dir = random_cosine_hemisphere(closest_hit.normal, seed);
-                ray_color *= closest_hit.material.color;
+            if (rand(seed) < closest_hit.material.alpha) {
+                ray.orig = closest_hit.point + closest_hit.normal * EPSILON;
+                if (rand(seed) > closest_hit.material.metallic) {
+                    ray.dir = random_cosine_hemisphere(closest_hit.normal, seed);
+                    ray_color *= closest_hit.material.color;
+                } else {
+                    ray.dir = reflect(ray.dir, closest_hit.normal);
+                }
+            } else {
+                vec3 N;
+                float eta;
+                if (inside) {
+                    N = -closest_hit.normal;
+                    eta = closest_hit.material.ior / 1.0;
+                } else {
+                    N = closest_hit.normal;
+                    eta = 1.0 / closest_hit.material.ior;
+                }
+                inside = !inside;
+                ray.orig = closest_hit.point - N * EPSILON;
+                ray.dir = refract(ray.dir, N, eta);
             }
-            else {
-                ray.dir = reflect(ray.dir, closest_hit.normal);
-            }
+
         } else {
+            // return vec3(0.0, 0.0, 0.25 + (ray.dir.y + 1) / 4);
             break;
         }
     }
@@ -428,7 +479,7 @@ vec3 render() {
     ray.orig = camera.pos;
     ray.dir = normalize(dx * camera.right + dy * camera.up + camera.dir);
 
-    uint seed = uint(gl_FragCoord.x) * 1973u + uint(gl_FragCoord.y) * 9277u + uint(FrameNum) * 26699u;
+    uint seed = uint(gl_FragCoord.x) * 1973u + uint(gl_FragCoord.y) * 9277u + uint(FrameNum) * 26699u;  // PixelCoords for intersting effect
 
     vec3 color = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < samples_per_pixel; ++i) {
@@ -440,12 +491,13 @@ vec3 render() {
 }
 
 void init_scene() {
-    // create_sphere_scene();
-    create_cornell_box();
+    create_sphere_scene();
+    // create_cornell_box();
 }
 
 void main() {
     init_scene();
+    set_camera(CameraPos, CameraDir);
 
     vec3 prev_color = texture(AccumTex, TexCoords).rgb;
     vec3 curr_color = render();

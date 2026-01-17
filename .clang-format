@@ -1,2 +1,10 @@
-ColumnLimit: 120
 IndentWidth: 4
+UseTab: Never
+TabWidth: 4
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Empty
+PointerAlignment: Right
+ColumnLimit: 150
+SpacesBeforeTrailingComments: 2
+SpaceBeforeParens: ControlStatements
+AlwaysBreakTemplateDeclarations: true
