@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 out vec4 FragColor;
 
 in vec2 PixelCoords;
@@ -11,16 +11,65 @@ uniform float Time;
 uniform int FrameNum;
 uniform sampler2D AccumTex;
 
+uniform int SamplesPerPixel;
+uniform int MaxRayBounces;
+
 const float PI = 3.14159265359;
 const float inf = 1.0 / 0.0;
 const float EPSILON = 1e-5;
 
-const int samples_per_pixel = 8;
-const int max_ray_bounces = 8;
+struct VertexIndices {
+    uint coord;
+    uint normal;
+    uint texture;
+    uint pad;
+};
+
+struct TriangleIndices {
+    VertexIndices a, b, c;
+};
+
+struct Triangle {
+    vec3 a, b, c;
+};
+
+layout(std430, binding = 0) buffer CoordsBuffer {
+    vec4 coords[];
+};
+
+layout(std430, binding = 1) buffer TrianglesIndicesBuffer {
+    TriangleIndices triangles_indices[];
+};
+
+layout(std430, binding = 2) buffer NormalsBuffer {
+    vec4 normals[];
+};
+
+layout(std430, binding = 3) buffer TexturesBuffer {
+    vec4 textures[];
+};
 
 bool contains(float val, float min_val, float max_val) {
     return min_val <= val && val <= max_val;
 }
+
+struct PointLight {
+    vec3 pos;
+    vec3 color;
+    float intensity;
+};
+
+int COUNT_POINT_LIGHTS = 0;
+PointLight point_lights[32];
+
+struct DirectionalLight {
+    vec3 dir;
+    vec3 color;
+    float intensity;
+};
+
+int COUNT_DIRECTIONAL_LIGHTS = 0;
+DirectionalLight directional_lights[32];
 
 struct Camera {
     vec3 pos;
@@ -63,7 +112,28 @@ struct Sphere {
     Material material;
 };
 
-bool hit(Sphere sphere, Ray3 ray, inout HitRecord hit_record) {
+Sphere create_sphere(vec3 center, float radius, vec3 color) {
+    Sphere sphere;
+    sphere.radius = radius;
+    sphere.center = center;
+    sphere.material.color = color;
+    sphere.material.metallic = 0.0;
+    sphere.material.emission_color = vec3(1.0, 1.0, 1.0);
+    sphere.material.emission_strength = 0.0;
+    sphere.material.alpha = 1.0;
+    sphere.material.ior = 1.0;
+    return sphere;
+}
+
+Sphere create_sun(vec3 pos, float radius) {
+    Sphere sun = create_sphere(pos, radius, vec3(1.0, 1.0, 1.0));
+    sun.material.emission_color = vec3(1.0, 1.0, 1.0);
+    sun.material.emission_strength = 1.0;
+    sun.material.alpha = 1.0;
+    return sun;
+}
+
+bool hit(Sphere sphere, Ray3 ray, out HitRecord hit_record) {
     vec3 oc = ray.orig - sphere.center;
     float dot_value = dot(oc, ray.dir);
     float D = dot_value * dot_value - dot(oc, oc) + sphere.radius * sphere.radius;
@@ -87,7 +157,7 @@ struct Quad {
     Material material;
 };
 
-bool hit(Quad quad, Ray3 ray, inout HitRecord hit_record) {
+bool hit(Quad quad, Ray3 ray, out HitRecord hit_record) {
     vec3 n = cross(quad.u, quad.v);
     vec3 normal = normalize(n);
     float D = dot(normal, quad.q);
@@ -116,11 +186,100 @@ bool hit(Quad quad, Ray3 ray, inout HitRecord hit_record) {
     hit_record.normal = dot(normal, ray.dir) < 0 ? normal : -normal;
     hit_record.material = quad.material;
 
+    // chess coloring
     float k = 8.0;
     vec3 v = (hit_record.point - quad.q) * k;
     if (mod(trunc(v.x) + trunc(v.y) + trunc(v.z), 2) == 0)
         hit_record.material.color *= 0.5;
-    // hit_record.material.color = 1 - hit_record.material.color;
+    return true;
+}
+
+Triangle create_triangle(vec3 a, vec3 b, vec3 c) {
+    Triangle t;
+    t.a = a;
+    t.b = b;
+    t.c = c;
+    return t;
+}
+
+Triangle create_triangle(TriangleIndices i) {
+    Triangle t;
+    t.a = coords[i.a.coord].xyz;
+    t.b = coords[i.b.coord].xyz;
+    t.c = coords[i.c.coord].xyz;
+    return t;
+}
+
+float calc_triangle_area(Triangle t) {
+    float ab = length(t.b - t.a);
+    float bc = length(t.c - t.b);
+    float ca = length(t.a - t.c);
+    float p = (ab + bc + ca) / 2;
+    return sqrt(p * (p - ab) * (p - bc) * (p - ca));
+}
+
+vec3 barycentric(Triangle t, vec3 p) {
+    float area = calc_triangle_area(t);
+    Triangle t_a = create_triangle(p, t.b, t.c);
+    Triangle t_b = create_triangle(p, t.a, t.c);
+    Triangle t_c = create_triangle(p, t.a, t.b);
+    float a = calc_triangle_area(t_a);
+    float b = calc_triangle_area(t_b);
+    float c = calc_triangle_area(t_c);
+    return vec3(a, b, c) / area;
+}
+
+bool hit(TriangleIndices indices, Ray3 ray, out HitRecord hit_record) {
+    // vec3 a = coords[indices.a.coord].xyz;
+    // vec3 b = coords[indices.b.coord].xyz;
+    // vec3 c = coords[indices.c.coord].xyz;
+    Triangle triangle = create_triangle(indices);
+    vec3 a = triangle.a;
+    vec3 b = triangle.b;
+    vec3 c = triangle.c;
+
+    vec3 edge_ab = b - a;
+    vec3 edge_ac = c - a;
+
+    vec3 pvec = cross(ray.dir, edge_ac);
+    float det = dot(edge_ab, pvec);
+
+    if (abs(det) < EPSILON)
+        return false;
+
+    float inv_det = 1 / det;
+    vec3 tvec = ray.orig - a;
+    float u = inv_det * dot(tvec, pvec);
+    if (u < 0 || u > 1)
+        return false;
+
+    vec3 qvec = cross(tvec, edge_ab);
+    float v = inv_det * dot(ray.dir, qvec);
+    if (v < 0 || u + v > 1)
+        return false;
+
+    float t = inv_det * dot(edge_ac, qvec);
+    if (t < EPSILON) {
+        return false;
+    }
+    hit_record.dist = t;
+    hit_record.point = ray_at(ray, t);
+    vec3 normal = normalize(cross(edge_ab, edge_ac));
+    hit_record.normal = dot(normal, ray.dir) < 0 ? normal : -normal;
+
+    vec3 coeffs = barycentric(triangle, hit_record.point);
+    vec3 vn_a = normals[indices.a.normal].xyz;
+    vec3 vn_b = normals[indices.b.normal].xyz;
+    vec3 vn_c = normals[indices.c.normal].xyz;
+    hit_record.normal = normalize(vn_a * coeffs.x + vn_b * coeffs.y + vn_c * coeffs.z);
+
+    hit_record.material.color = vec3(0.0, 0.0, 1.0);
+    hit_record.material.metallic = 1.0;
+    hit_record.material.emission_color = vec3(1.0, 1.0, 1.0);
+    hit_record.material.emission_strength = 0.0;
+    hit_record.material.alpha = 0.05;
+    hit_record.material.ior = 1.5;
+
     return true;
 }
 
@@ -217,25 +376,21 @@ void create_sphere_scene() {
     set_camera(pos, dir);
 }
 
-void create_cornell_box() {
-    float box_width = 1.5;
-    float box_length = 1.5;
-    float box_height = 1.5;
-
+void create_cornell_box(vec3 pos, vec3 size) {
     /*
     L - left, R - right
     B - bottom, T - top
     N - near, F - far
     */
-    vec3 LBN = vec3(0.0, 0.0, 0.0);
-    vec3 LTN = vec3(0.0, box_height, 0.0);
-    vec3 LBF = vec3(0.0, 0.0, -box_length);
-    vec3 LTF = vec3(0.0, box_height, -box_length);
+    vec3 LBN = vec3(0.0, 0.0, 0.0) + pos;
+    vec3 LTN = vec3(0.0, size.z, 0.0) + pos;
+    vec3 LBF = vec3(0.0, 0.0, -size.y) + pos;
+    vec3 LTF = vec3(0.0, size.z, -size.y) + pos;
 
-    vec3 RBN = vec3(box_width, 0.0, 0.0);
-    vec3 RTN = vec3(box_width, box_height, 0.0);
-    vec3 RBF = vec3(box_width, 0.0, -box_length);
-    vec3 RTF = vec3(box_width, box_height, -box_length);
+    vec3 RBN = vec3(size.x, 0.0, 0.0) + pos;
+    vec3 RTN = vec3(size.x, size.z, 0.0) + pos;
+    vec3 RBF = vec3(size.x, 0.0, -size.y) + pos;
+    vec3 RTF = vec3(size.x, size.z, -size.y) + pos;
 
     // Left Wall
     Quad left_wall;
@@ -264,7 +419,7 @@ void create_cornell_box() {
     back_wall.q = LBF;
     back_wall.u = LTF - LBF;
     back_wall.v = RBF - LBF;
-    back_wall.material.color = vec3(0.0, 0.0, 1.0);
+    back_wall.material.color = vec3(1.0, 1.0, 1.0);
     back_wall.material.metallic = 0.0;
     back_wall.material.emission_color = vec3(1.0, 1.0, 1.0);
     back_wall.material.emission_strength = 0.0;
@@ -293,26 +448,15 @@ void create_cornell_box() {
     ceiling_wall.material.alpha = 1.0;
 
     // Front Wall
-    // Quad front_wall;
-    // front_wall.q = LBN;
-    // front_wall.u = LTN - LBN;
-    // front_wall.v = RBN - LBN;
-    // front_wall.material.color = vec3(1.0, 1.0, 1.0);
-    // front_wall.material.metallic = 0.0;
-    // front_wall.material.emission_color = vec3(1.0, 1.0, 1.0);
-    // front_wall.material.emission_strength = 0.0;
-    // front_wall.material.alpha = 1.0;
-
-    // Sphere
-    Sphere sphere;
-    sphere.radius = 0.3;
-    sphere.center = vec3(box_width / 2, sphere.radius, -box_length / 2);
-    sphere.material.color = vec3(1.0, 1.0, 1.0);
-    sphere.material.metallic = 0;
-    sphere.material.emission_color = vec3(1.0, 1.0, 1.0);
-    sphere.material.emission_strength = 0.0;
-    sphere.material.alpha = 0.05;
-    sphere.material.ior = 1.5;
+    Quad front_wall;
+    front_wall.q = LBN;
+    front_wall.u = LTN - LBN;
+    front_wall.v = RBN - LBN;
+    front_wall.material.color = vec3(1.0, 1.0, 1.0);
+    front_wall.material.metallic = 0.0;
+    front_wall.material.emission_color = vec3(1.0, 1.0, 1.0);
+    front_wall.material.emission_strength = 0.0;
+    front_wall.material.alpha = 1.0;
 
     // Light source
     Quad light;
@@ -325,22 +469,22 @@ void create_cornell_box() {
     light.material.emission_strength = 5.0;
     light.material.alpha = 1.0;
 
-    quads[0] = left_wall;
-    quads[1] = right_wall;
-    quads[2] = back_wall;
-    quads[3] = floor_wall;
-    quads[4] = ceiling_wall;
-    quads[5] = light;
-    // quads[6] = front_wall;
+    quads[COUNT_QUADS + 0] = left_wall;
+    quads[COUNT_QUADS + 1] = right_wall;
+    quads[COUNT_QUADS + 2] = back_wall;
+    quads[COUNT_QUADS + 3] = floor_wall;
+    quads[COUNT_QUADS + 4] = ceiling_wall;
+    quads[COUNT_QUADS + 5] = light;
+    quads[COUNT_QUADS + 6] = front_wall;
 
-    spheres[0] = sphere;
+    COUNT_QUADS += 6;
 
-    COUNT_QUADS = 6;
-    COUNT_SPHERES = 1;
-
-    vec3 pos = vec3(box_width / 2, box_height / 2, 1.0);
-    vec3 dir = vec3(0.0, 0, -1.0);
-    set_camera(pos, dir);
+    // PointLight point_light;
+    // point_light.pos = pos + vec3(size.x / 2.0, size.z - 0.1, 0.0);
+    // point_light.color = vec3(1.0, 1.0, 1.0);
+    // point_light.intensity = 0.1;
+    // point_lights[COUNT_POINT_LIGHTS] = point_light;
+    // COUNT_POINT_LIGHTS++;
 }
 
 uint hash(uint x) {
@@ -381,7 +525,7 @@ vec3 random_cosine_hemisphere(vec3 normal, inout uint seed) {
     return normalize(localDir.x * t + localDir.y * b + localDir.z * normal);
 }
 
-bool find_closest_sphere(inout HitRecord closest_hit, Ray3 ray) {
+bool find_closest_sphere(out HitRecord closest_hit, Ray3 ray) {
     HitRecord closest, current;
     closest.dist = inf;
     for (int i = 0; i < COUNT_SPHERES; ++i) {
@@ -396,7 +540,7 @@ bool find_closest_sphere(inout HitRecord closest_hit, Ray3 ray) {
     return true;
 }
 
-bool find_closest_quad(inout HitRecord closest_hit, Ray3 ray) {
+bool find_closest_quad(out HitRecord closest_hit, Ray3 ray) {
     HitRecord closest, current;
     closest.dist = inf;
     for (int i = 0; i < COUNT_QUADS; ++i) {
@@ -411,27 +555,45 @@ bool find_closest_quad(inout HitRecord closest_hit, Ray3 ray) {
     return true;
 }
 
-bool find_closest_hit(inout HitRecord closest_hit, Ray3 ray) {
-    HitRecord current, closest;
+bool find_closest_triangle(out HitRecord closest_hit, Ray3 ray) {
+    HitRecord closest, current;
     closest.dist = inf;
-    if (find_closest_sphere(current, ray) && current.dist < closest.dist)
-        closest = current;
-    if (find_closest_quad(current, ray) && current.dist < closest.dist)
-        closest = current;
-
-    if (isinf(closest.dist))
+    for (int i = 0; i < triangles_indices.length(); ++i) {
+        if (hit(triangles_indices[i], ray, current) && current.dist < closest.dist) {
+            closest = current;
+        }
+    }
+    if (isinf(closest.dist)) {
         return false;
+    }
     closest_hit = closest;
     return true;
 }
 
-vec3 trace_ray(Ray3 ray, int depth, inout uint seed) {
+bool find_closest_hit(out HitRecord closest_hit, Ray3 ray, float max_dist) {
+    HitRecord current, closest;
+    closest.dist = max_dist;
+    if (find_closest_sphere(current, ray) && current.dist < closest.dist)
+        closest = current;
+    if (find_closest_quad(current, ray) && current.dist < closest.dist)
+        closest = current;
+    if (find_closest_triangle(current, ray) && current.dist < closest.dist)
+        closest = current;
+
+    if (closest.dist == max_dist)
+        return false;
+
+    closest_hit = closest;
+    return true;
+}
+
+vec3 path_trace(Ray3 ray, inout uint seed) {
     vec3 final_light = vec3(0.0, 0.0, 0.0);
     vec3 ray_color = vec3(1.0, 1.0, 1.0);
     bool inside = false;
-    for (int i = 0; i < depth; ++i) {
+    for (int i = 0; i < MaxRayBounces + 1; i++) {
         HitRecord closest_hit;
-        if (find_closest_hit(closest_hit, ray)) {
+        if (find_closest_hit(closest_hit, ray, inf)) {
             vec3 emitted_light = closest_hit.material.emission_color * closest_hit.material.emission_strength;
             final_light += emitted_light * ray_color;
 
@@ -466,7 +628,72 @@ vec3 trace_ray(Ray3 ray, int depth, inout uint seed) {
     return final_light;
 }
 
-vec3 render() {
+bool is_in_shadow(HitRecord hit, PointLight light) {
+    Ray3 ray;
+    ray.orig = hit.point + hit.normal * EPSILON;
+    ray.dir = normalize(light.pos - hit.point);
+    float dist = length(light.pos - ray.orig);
+    HitRecord hit_record;
+    return find_closest_hit(hit_record, ray, dist);
+}
+
+vec3 ray_trace(Ray3 ray) {
+    vec3 final_color = vec3(0.0, 0.0, 0.0);
+    vec3 ray_color = vec3(1.0, 1.0, 1.0);
+
+    for (int i = 0; i < MaxRayBounces + 1; i++) {
+        HitRecord closest_hit;
+        if (!find_closest_hit(closest_hit, ray, inf)) {
+            break;
+        }
+        vec3 N = closest_hit.normal;
+        vec3 V = -ray.dir;
+
+        vec3 diffuse_intensity = vec3(0.0, 0.0, 0.0);
+        vec3 specular_intensity = vec3(0.0, 0.0, 0.0);
+        for (int j = 0; j < COUNT_POINT_LIGHTS; j++) {
+            PointLight light = point_lights[j];
+            if (!is_in_shadow(closest_hit, light)) {
+                float dist = length(light.pos - closest_hit.point);
+
+                vec3 L = normalize(light.pos - closest_hit.point);
+                diffuse_intensity += max(dot(N, L), 0.0) * light.color * light.intensity / pow(dist, 2.0);
+
+                // vec3 R = 2 * dot(N, L) * N - L;
+                vec3 H = normalize(L + V);
+                specular_intensity += pow(max(dot(N, H), 0.0), 100.0) * light.color * light.intensity / pow(dist, 2.0);
+            }
+        }
+        vec3 diffuse_total = diffuse_intensity * (1.0 - closest_hit.material.metallic) * closest_hit.material.color;
+        vec3 specular_total = specular_intensity * closest_hit.material.metallic;
+        final_color += (diffuse_total + specular_total) * ray_color;
+
+        ray.dir = reflect(ray.dir, N);
+        ray.orig = closest_hit.point + ray.dir * EPSILON;
+
+        ray_color *= closest_hit.material.metallic;
+    }
+
+    return final_color;
+}
+
+vec3 render_ray_tracing() {
+    float view_height = 2.0 * tan(camera.fov_y / 2.0) * camera.near;
+    float view_width = view_height * camera.aspect;
+
+    float ndc_x = PixelCoords.x;
+    float dx = ndc_x * view_width / 2.0;
+    float ndc_y = PixelCoords.y;
+    float dy = ndc_y * view_height / 2.0;
+
+    Ray3 ray;
+    ray.orig = camera.pos;
+    ray.dir = normalize(dx * camera.right + dy * camera.up + camera.dir);
+
+    return ray_trace(ray);
+}
+
+vec3 render_path_tracing() {
     float view_height = 2.0 * tan(camera.fov_y / 2.0) * camera.near;
     float view_width = view_height * camera.aspect;
 
@@ -482,17 +709,19 @@ vec3 render() {
     uint seed = uint(gl_FragCoord.x) * 1973u + uint(gl_FragCoord.y) * 9277u + uint(FrameNum) * 26699u;  // PixelCoords for intersting effect
 
     vec3 color = vec3(0.0, 0.0, 0.0);
-    for (int i = 0; i < samples_per_pixel; ++i) {
-        color += trace_ray(ray, max_ray_bounces, seed);
+    for (int i = 0; i < SamplesPerPixel; ++i) {
+        color += path_trace(ray, seed);
     }
-    color /= samples_per_pixel;
+    color /= SamplesPerPixel;
 
     return color;
 }
 
 void init_scene() {
-    create_sphere_scene();
-    // create_cornell_box();
+    // create_sphere_scene();
+    vec3 pos = vec3(-0.8, 0.0, 0.5);
+    vec3 size = vec3(1.5, 1.0, 0.75);
+    create_cornell_box(pos, size);
 }
 
 void main() {
@@ -500,7 +729,8 @@ void main() {
     set_camera(CameraPos, CameraDir);
 
     vec3 prev_color = texture(AccumTex, TexCoords).rgb;
-    vec3 curr_color = render();
+    vec3 curr_color = render_path_tracing();
+    // vec3 curr_color = render_ray_tracing();
     vec3 final_color = (prev_color * float(FrameNum - 1) + curr_color) / float(FrameNum);
     FragColor = vec4(final_color, 1.0);
 }

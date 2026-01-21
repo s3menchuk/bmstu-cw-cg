@@ -14,7 +14,7 @@ const Real ASPECT = 16.0f / 9.0f;
 const int WIDTH = 1920;
 const int HEIGHT = WIDTH / ASPECT;
 
-const Vec3 CAMERA_POS(0, 0, 5);
+const Vec3 CAMERA_POS(0, 0.35, 1);
 const Vec3 CAMERA_DIR(0, 0, -1);
 const Vec3 WORLD_UP(0, 1, 0);
 
@@ -30,6 +30,6 @@ const Real CAMERA_ROTATION_SPEED = 0.1;
 
 const Real MOUSE_SENSITIVITY = 0.025f;
 
-const int max_ray_bounces = 3;
+const int max_ray_bounces = 6;
 const int samples_per_pixel = 1;
 }  // namespace Settings
