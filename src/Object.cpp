@@ -3,12 +3,12 @@
 #include <numbers>
 #include <vector>
 
-void move_points_by(std::vector<Point3> &points, const Vec3 &offset) {
+void move_points_by(std::vector<Point3> &points, Vec3 offset) {
     for (Point3 &p : points)
         p += offset;
 }
 
-std::vector<Point3> get_points_on_circle(const Vec3 &center, Real radius, size_t order) {
+std::vector<Point3> get_points_on_circle(Vec3 center, Real radius, size_t order) {
     std::vector<Point3> res;
     for (size_t i = 0; i < order; ++i) {
         auto radians = static_cast<Real>(i) / order * (2 * std::numbers::pi);
@@ -175,7 +175,7 @@ bool Triangle::hit(const Ray3 &ray, HitRecord &hit_record) const {
 }
 
 bool Mesh::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    return find_closest_hit(ray, faces.begin(), faces.end(), hit_record) != faces.end();
+    return find_closest_hit(ray, triangles.begin(), triangles.end(), hit_record) != triangles.end();
 }
 
 bool Box::hit(const Ray3 &ray, HitRecord &hit_record) const {
@@ -213,7 +213,7 @@ bool RightPyramid::hit(const Ray3 &ray, HitRecord &hit_record) const {
 }
 
 bool Model::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    if (!bbox.hit(ray, Interval::universe))
+    if (!aabb.hit(ray))
         return false;
     auto it = find_closest_hit(ray, triangles.begin(), triangles.end(), hit_record);
     if (it == triangles.end())

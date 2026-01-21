@@ -40,8 +40,18 @@ class Interval {
             max = x;
     }
 
+    void stretch(Interval range) {
+        this->stretch(range.min);
+        this->stretch(range.max);
+    }
+
+    void move(Real offset) {
+        min += offset;
+        max += offset;
+    }
+
     static const Interval empty, universe;
 };
 
-const inline Interval Interval::empty = Interval(+infinity, -infinity);
-const inline Interval Interval::universe = Interval(-infinity, +infinity);
+inline const Interval Interval::empty = Interval(+infinity, -infinity);
+inline const Interval Interval::universe = Interval(-infinity, +infinity);

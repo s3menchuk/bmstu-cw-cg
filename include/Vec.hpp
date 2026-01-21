@@ -32,11 +32,6 @@ class Vector3 {
         x /= len;
         y /= len;
         z /= len;
-        // if (len != 0) {
-        //     x /= len;
-        //     y /= len;
-        //     z /= len;
-        // }
     }
 
     Vector3 normalized() const {

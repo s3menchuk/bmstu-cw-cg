@@ -5,6 +5,7 @@
 #include "Object.hpp"
 #include "Ray.hpp"
 #include "Scene.hpp"
+#include "Types.hpp"
 
 #include <cfloat>
 
@@ -29,7 +30,10 @@ class RayTracingRenderer : public Renderer {
 
     Color trace_ray(const Scene &scene, const Ray3 &ray, size_t depth) const;
 
-    std::shared_ptr<Object> find_closest_obj(HitRecord &closest_hit, const Scene &scene, const Ray3 &ray) const;
+    // std::shared_ptr<Object> find_closest_obj(HitRecord &closest_hit, const Scene &scene, const Ray3 &ray) const;
+
+    std::shared_ptr<Object> find_closest_obj(HitRecord &closest_hit, const Scene &scene, const Ray3 &ray,
+                                             Real max_dist = std::numeric_limits<Real>::infinity()) const;
 
     bool is_in_shadow(const Scene &scene, const HitRecord &hit, const Light &light) const;
 

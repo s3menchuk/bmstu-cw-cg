@@ -9,7 +9,7 @@
 
 enum class Primitive { Sphere, Plane, Triangle, Quad, Box, RightPrism, RightPyramid, Mesh, Model, Translate, Rotate, Scale };
 
-const std::unordered_map<std::type_index, Primitive> PRIMITIVE_TYPES = {
+const std::unordered_map<std::type_index, Primitive> TYPES_PRIMITIVES = {
     {typeid(Sphere), Primitive::Sphere},
     {typeid(Plane), Primitive::Plane},
     {typeid(Triangle), Primitive::Triangle},
@@ -24,15 +24,15 @@ const std::unordered_map<std::type_index, Primitive> PRIMITIVE_TYPES = {
     {typeid(Scale), Primitive::Scale},
 };
 
-const std::unordered_map<Primitive, std::string> PRIMITIVE_NAMES = {{Primitive::Sphere, "Sphere"},
-                                                                    {Primitive::Plane, "Plane"},
-                                                                    {Primitive::Triangle, "Triangle"},
-                                                                    {Primitive::Quad, "Quad"},
-                                                                    {Primitive::Box, "Box"},
-                                                                    {Primitive::RightPrism, "RightPrism"},
-                                                                    {Primitive::RightPyramid, "RightPyramid"},
-                                                                    {Primitive::Mesh, "Mesh"},
-                                                                    {Primitive::Model, "Model"},
-                                                                    {Primitive::Translate, "Translate"},
-                                                                    {Primitive::Rotate, "Rotate"},
-                                                                    {Primitive::Scale, "Scale"}};
+const std::unordered_map<Primitive, std::string> NAMES_PRIMITIVES = {{Primitive::Sphere, "Sphere"},
+                                                                     {Primitive::Plane, "Plane"},
+                                                                     {Primitive::Triangle, "Triangle"},
+                                                                     {Primitive::Quad, "Quad"},
+                                                                     {Primitive::Box, "Box"},
+                                                                     {Primitive::RightPrism, "RightPrism"},
+                                                                     {Primitive::RightPyramid, "RightPyramid"},
+                                                                     {Primitive::Mesh, "Mesh"},
+                                                                     {Primitive::Model, "Model"},
+                                                                     {Primitive::Translate, "Translate"},
+                                                                     {Primitive::Rotate, "Rotate"},
+                                                                     {Primitive::Scale, "Scale"}};

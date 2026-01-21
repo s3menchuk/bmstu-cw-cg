@@ -4,11 +4,12 @@
 #include "Canvas.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
+#include "Types.hpp"
 
 struct CameraSettings {
-    float camera_movement_speed;
-    float camera_rotation_speed;
-    float max_zenith_radians;
+    Real camera_movement_speed;
+    Real camera_rotation_speed;
+    Real max_zenith_radians;
 };
 
 struct AppContext {
@@ -18,16 +19,14 @@ struct AppContext {
     Renderer &renderer;
     RenderSettings render_settings;
     CameraSettings camera_settings;
-    bool scene_updated;
+    bool need_render;
 };
 
 void draw_settings_iu(AppContext &app);
-
-void render_frame(const AppContext &app);
 
 void draw_objects_ui(Scene &scene);
 void draw_camera_ui(Camera &camera, CameraSettings &settings);
 void draw_lights_ui();
 
 void draw_render_ui(const AppContext &app);
-void process_key_input(AppContext &app);
+bool handle_keystrokes(Camera &camera, const Scene &scene, const CameraSettings &camera_settings);

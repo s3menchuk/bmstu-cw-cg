@@ -1,51 +1,39 @@
 #include "GUI.hpp"
 #include "CanvasExporter.hpp"
+#include "Math.hpp"
 #include "PrimitiveTypes.hpp"
+#include "Types.hpp"
 
 #include "imgui.h"
 
-void render_frame(const AppContext &app) {
-    auto start = std::chrono::high_resolution_clock::now();
-
-    app.renderer.render(app.canvas, app.scene, app.camera, app.render_settings);
-
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed = end - start;
-    std::cout << "Time: " << elapsed.count() << " ms\n";
-}
-
 void draw_camera_ui(Camera &camera, CameraSettings &settings) {
     if (ImGui::CollapsingHeader("Camera")) {
-        float azimuth = radians2degrees(camera.get_azimuth());
-        float zenith = radians2degrees(camera.get_zenith());
+        static float pos[3] = {camera.pos.x, camera.pos.y, camera.pos.z};
+        ImGui::DragFloat3("Position", pos);
+        camera.pos = pos;
 
-        ImGui::SliderFloat("x", &camera.pos.x, -25, 25);
-        ImGui::SliderFloat("y", &camera.pos.y, -25, 25);
-        ImGui::SliderFloat("z", &camera.pos.z, -25, 25);
+        Real azimuth = radians2degrees(camera.get_azimuth());
         if (ImGui::SliderFloat("azimuth", &azimuth, -180, 180))
             camera.set_azimuth(degrees2radians(azimuth));
-        if (ImGui::SliderFloat("zenith", &zenith, -settings.max_zenith_radians, settings.max_zenith_radians))
+        Real zenith = radians2degrees(camera.get_zenith());
+        if (ImGui::SliderFloat("zenith", &zenith, -radians2degrees(settings.max_zenith_radians), radians2degrees(settings.max_zenith_radians)))
             camera.set_zenith(degrees2radians(zenith));
     }
 }
 
 void draw_objects_ui(Scene &scene) {
     if (ImGui::CollapsingHeader("Objects")) {
-        std::unordered_map<std::string, size_t> counter;
-
         for (size_t i = 0; i < scene.objects.size();) {
             auto &obj = scene.objects[i];
+
             ImGui::PushID(&obj);
 
-            const Primitive primitive_type = PRIMITIVE_TYPES.at(typeid(*obj));
-            const std::string primitive_name = PRIMITIVE_NAMES.at(primitive_type);
-            if (counter.find(primitive_name) == counter.end())
-                counter[primitive_name] = 0;
-            counter[primitive_name]++;
-            const std::string name = primitive_name + "##" + std::to_string(counter[primitive_name]);
-            if (ImGui::TreeNode(name.c_str())) {
-                if (primitive_type == Primitive::Sphere) {
-                    std::shared_ptr<Sphere> sphere = std::dynamic_pointer_cast<Sphere>(obj->get());
+            const Primitive obj_type = TYPES_PRIMITIVES.at(typeid(*obj->get()));
+            const std::string obj_name = NAMES_PRIMITIVES.at(obj_type);
+
+            if (ImGui::TreeNode((obj_name + "##" + std::to_string(i)).c_str())) {
+                if (obj_type == Primitive::Sphere) {
+                    auto sphere = std::dynamic_pointer_cast<Sphere>(obj->get());
 
                     ImGui::Text("Center");
                     ImGui::SameLine();
@@ -58,8 +46,8 @@ void draw_objects_ui(Scene &scene) {
                     float radius = sphere->get_radius();
                     if (ImGui::DragFloat(("##Radius" + std::to_string(i)).c_str(), &radius, 1.0f, 0.01, 100))
                         sphere->set_radius(radius);
-                } else if (primitive_type == Primitive::Plane) {
-                    std::shared_ptr<Plane> plane = std::dynamic_pointer_cast<Plane>(obj->get());
+                } else if (obj_type == Primitive::Plane) {
+                    auto plane = std::dynamic_pointer_cast<Plane>(obj->get());
 
                     ImGui::Text("Normal");
                     ImGui::SameLine();
@@ -70,7 +58,7 @@ void draw_objects_ui(Scene &scene) {
                     ImGui::Text("Offset");
                     ImGui::SameLine();
                     ImGui::DragFloat(("##Offset" + std::to_string(i)).c_str(), &plane->offset, 1.0f, 0.01, 100);
-                } else if (primitive_type == Primitive::Box) {
+                } else if (obj_type == Primitive::Box) {
                     std::shared_ptr<Box> box = std::dynamic_pointer_cast<Box>(obj->get());
 
                     ImGui::Text("Center");
@@ -78,7 +66,7 @@ void draw_objects_ui(Scene &scene) {
                     std::array<float, 3> center(box->get_center());
                     if (ImGui::DragFloat3(("##Center" + std::to_string(i)).c_str(), center.data()))
                         box->set_center(center);
-                } else if (primitive_type == Primitive::RightPrism) {
+                } else if (obj_type == Primitive::RightPrism) {
                     std::shared_ptr<RightPrism> prism = std::dynamic_pointer_cast<RightPrism>(obj->get());
 
                     ImGui::Text("Base center");
@@ -104,7 +92,7 @@ void draw_objects_ui(Scene &scene) {
                     int order = prism->get_order();
                     if (ImGui::DragInt(("##Order" + std::to_string(i)).c_str(), &order, 1.0f, 3, 16))
                         prism->set_order(order);
-                } else if (primitive_type == Primitive::RightPyramid) {
+                } else if (obj_type == Primitive::RightPyramid) {
                     std::shared_ptr<RightPyramid> pyramid = std::dynamic_pointer_cast<RightPyramid>(obj->get());
 
                     ImGui::Text("Base center");
@@ -130,7 +118,7 @@ void draw_objects_ui(Scene &scene) {
                     int order = pyramid->get_order();
                     if (ImGui::DragInt(("##Order" + std::to_string(i)).c_str(), &order, 1.0f, 3, 16))
                         pyramid->set_order(order);
-                } else if (primitive_type == Primitive::Model) {
+                } else if (obj_type == Primitive::Model) {
                 } else
                     throw std::runtime_error("Unknown primitive type");
 
@@ -160,13 +148,13 @@ void draw_objects_ui(Scene &scene) {
             ImGui::PopID();
         }
 
-        static Primitive selected_primitive = Primitive::Sphere;
+        static Primitive selected_obj_type = Primitive::Sphere;
 
-        if (ImGui::BeginCombo("##combo_primitives", PRIMITIVE_NAMES.at(selected_primitive).c_str())) {
-            for (const auto &[primitive_type, primitive] : PRIMITIVE_TYPES) {
-                bool is_selected = (selected_primitive == primitive);
-                if (ImGui::Selectable(PRIMITIVE_NAMES.at(primitive).c_str(), is_selected)) {
-                    selected_primitive = primitive;
+        if (ImGui::BeginCombo("##combo_primitives", NAMES_PRIMITIVES.at(selected_obj_type).c_str())) {
+            for (const auto &[primitive_type, primitive] : TYPES_PRIMITIVES) {
+                bool is_selected = (selected_obj_type == primitive);
+                if (ImGui::Selectable(NAMES_PRIMITIVES.at(primitive).c_str(), is_selected)) {
+                    selected_obj_type = primitive;
                 }
                 if (is_selected) {
                     ImGui::SetItemDefaultFocus();
@@ -194,7 +182,7 @@ void draw_objects_ui(Scene &scene) {
         static float pyramid_height = 1;
         static int pyramid_order = 3;
 
-        if (selected_primitive == Primitive::Sphere) {
+        if (selected_obj_type == Primitive::Sphere) {
             ImGui::Text("Center");
             ImGui::SameLine();
             ImGui::DragFloat3("##sphere-center", sphere_center);
@@ -202,7 +190,7 @@ void draw_objects_ui(Scene &scene) {
             ImGui::Text("Radius");
             ImGui::SameLine();
             ImGui::DragFloat("##sphere-radius", &sphere_radius, 1.0f, 0.01, 100);
-        } else if (selected_primitive == Primitive::Plane) {
+        } else if (selected_obj_type == Primitive::Plane) {
             ImGui::Text("Normal");
             ImGui::SameLine();
             ImGui::DragFloat3("##plane-normal", plane_normal);
@@ -210,7 +198,7 @@ void draw_objects_ui(Scene &scene) {
             ImGui::Text("Offset");
             ImGui::SameLine();
             ImGui::DragFloat("##plane-offset", &plane_offset, 1.0f, -100, 100);
-        } else if (selected_primitive == Primitive::Box) {
+        } else if (selected_obj_type == Primitive::Box) {
             ImGui::Text("Center");
             ImGui::SameLine();
             ImGui::DragFloat3("##box-center", box_center);
@@ -218,7 +206,7 @@ void draw_objects_ui(Scene &scene) {
             ImGui::Text("Sizes");
             ImGui::SameLine();
             ImGui::DragFloat("##box-sizes", box_sizes);
-        } else if (selected_primitive == Primitive::RightPrism) {
+        } else if (selected_obj_type == Primitive::RightPrism) {
             ImGui::Text("Base center");
             ImGui::SameLine();
             ImGui::DragFloat3("##prism-base_center", prism_base_center);
@@ -234,7 +222,7 @@ void draw_objects_ui(Scene &scene) {
             ImGui::Text("Order");
             ImGui::SameLine();
             ImGui::DragInt("##prism-order", &prism_order, 1.0f, 3, 16);
-        } else if (selected_primitive == Primitive::RightPyramid) {
+        } else if (selected_obj_type == Primitive::RightPyramid) {
             ImGui::Text("Base center");
             ImGui::SameLine();
             ImGui::DragFloat3("##pyramid-base_center", pyramid_base_center);
@@ -254,23 +242,23 @@ void draw_objects_ui(Scene &scene) {
 
         ImGui::Text("Color");
         ImGui::SameLine();
-        static float float_rgb[3];
-        ImGui::ColorEdit3("", float_rgb, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+        static float rgb[3];
+        ImGui::ColorEdit3("", rgb, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 
         if (ImGui::Button("Add object")) {
             std::shared_ptr<Hittable> primitive;
-            if (selected_primitive == Primitive::Sphere)
+            if (selected_obj_type == Primitive::Sphere)
                 primitive = std::make_shared<Sphere>(sphere_center, sphere_radius);
-            if (selected_primitive == Primitive::Plane)
+            if (selected_obj_type == Primitive::Plane)
                 primitive = std::make_shared<Plane>(plane_normal, plane_offset);
-            if (selected_primitive == Primitive::Box)
+            if (selected_obj_type == Primitive::Box)
                 primitive = std::make_shared<Box>(Vec3(box_center) - Vec3(box_sizes) / 2.f, Vec3(box_center) + Vec3(box_sizes) / 2.f);
-            if (selected_primitive == Primitive::RightPrism)
+            if (selected_obj_type == Primitive::RightPrism)
                 primitive = std::make_shared<RightPrism>(prism_base_center, prism_radius, prism_height, prism_order);
-            if (selected_primitive == Primitive::RightPyramid)
+            if (selected_obj_type == Primitive::RightPyramid)
                 primitive = std::make_shared<RightPyramid>(pyramid_base_center, pyramid_radius, pyramid_height, pyramid_order);
 
-            Color color(float_rgb);
+            Color color(rgb);
             auto object = std::make_shared<Object>(primitive, Material(color, 0));
             scene.add_object(object);
         }
@@ -283,15 +271,17 @@ void draw_lights_ui() {
 }
 
 void draw_render_ui(AppContext &app) {
-    ImGui::Text("RT Depth");
+    ImGui::Text("Max ray bounces");
     ImGui::SameLine();
     static int max_ray_bounces = app.render_settings.max_ray_bounces;
-    ImGui::SliderInt("##RT-Depth", &max_ray_bounces, 1, 5);
+    const int MIN_VALUE_RAY_BOUNCES = 1;
+    const int MAX_VALUE_RAY_BOUNCES = 20;
+    ImGui::InputInt("##MaxRayBounces", &max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MIN_VALUE_RAY_BOUNCES);
+    max_ray_bounces = clamp(max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MAX_VALUE_RAY_BOUNCES);
     app.render_settings.max_ray_bounces = max_ray_bounces;
 
-    if (ImGui::Button("Render") || app.scene_updated) {
-        render_frame(app);
-        app.scene_updated = false;
+    if (ImGui::Button("Render")) {
+        app.need_render = true;
     }
 
     if (ImGui::Button("Save image")) {
@@ -300,12 +290,10 @@ void draw_render_ui(AppContext &app) {
     }
 }
 
-void process_key_input(AppContext &app) {
-    auto &camera = app.camera;
-    auto &scene = app.scene;
-    auto &camera_movement_speed = app.camera_settings.camera_movement_speed;
-    auto &camera_rotation_speed = app.camera_settings.camera_rotation_speed;
-    auto &max_zenith_radians = app.camera_settings.max_zenith_radians;
+bool handle_keystrokes(Camera &camera, const Scene &scene, const CameraSettings &camera_settings) {
+    auto camera_movement_speed = camera_settings.camera_movement_speed;
+    auto camera_rotation_speed = camera_settings.camera_rotation_speed;
+    auto max_zenith_radians = camera_settings.max_zenith_radians;
 
     bool is_key_pressed = false;
 
@@ -353,8 +341,7 @@ void process_key_input(AppContext &app) {
         is_key_pressed = true;
     }
 
-    if (is_key_pressed)
-        app.scene_updated = is_key_pressed;
+    return is_key_pressed;
 }
 
 void draw_settings_iu(AppContext &app) {

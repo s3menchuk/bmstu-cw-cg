@@ -13,7 +13,7 @@
 
 void benchmark() {
     std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();
-    auto canvas = std::make_shared<SimpleCanvas>(Settings::WIDTH, Settings::HEIGHT);
+    auto canvas = std::make_shared<SimpleCanvas>(DefaultSettings::WIDTH, DefaultSettings::HEIGHT);
 
     RenderSettings render_settings;
     render_settings.max_ray_bounces = 3;
@@ -26,7 +26,8 @@ void benchmark() {
             std::shared_ptr<SceneCreator> scene_creator = std::make_shared<UtahTeapotInCornellBox>(3, 3, 1.5, utah_res);
             Scene scene = scene_creator->create_scene();
             SceneView view = scene_creator->get_view();
-            Camera camera(view.pos, view.dir, scene.world_up, Settings::FOV_Y, Settings::ASPECT, Settings::NEAR, Settings::FAR);
+            Camera camera(view.pos, view.dir, scene.world_up, DefaultSettings::FOV_Y, DefaultSettings::ASPECT, DefaultSettings::NEAR,
+                          DefaultSettings::FAR);
 
             auto start = std::chrono::high_resolution_clock::now();
 

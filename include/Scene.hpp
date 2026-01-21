@@ -2,6 +2,7 @@
 
 #include "Color.hpp"
 #include "Light.hpp"
+#include "Math.hpp"
 #include "Object.hpp"
 #include "Ray.hpp"
 #include "Vec.hpp"
@@ -28,7 +29,7 @@ class Scene {
     // ??? get_visible_objects() const {}
 
     Color get_background_color(const Ray3 &ray) const {
-        float k = map(ray.direction.x, -1, 1, 0, 1);
-        return 1.75 * background_color * (1.0f - k);
+        Real k = map(ray.direction.x, (Real)-1, (Real)1, (Real)0, (Real)1);
+        return 1.75 * background_color * (1 - k);
     }
 };

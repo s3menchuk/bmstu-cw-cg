@@ -4,27 +4,27 @@
 #include "SceneCreator.hpp"
 #include "Types.hpp"
 
-namespace Settings {
+namespace DefaultSettings {
 const std::string APP_NAME = "Graphics Engine";
 const int FRAME_LIMIT = 60;
 
-const Real ASPECT = 16.0f / 9.0f;
-const int WIDTH = 600;
+const Real ASPECT = 16.0 / 9.0;
+const int WIDTH = 800;
 const int HEIGHT = WIDTH / ASPECT;
 
-const Real FOV_Y = degrees2radians(55.0f);
+const Real FOV_Y = degrees2radians(55.0);
 
 const Real NEAR = 1;
 const Real FAR = 1000;
 
-const Real MAX_ZENITH_RADIANS = degrees2radians(75.0f);
+const Real MAX_ZENITH_RADIANS = degrees2radians(75.0);
 
 const Real CAMERA_MOVEMENT_SPEED = 0.1;
 const Real CAMERA_ROTATION_SPEED = 0.15;
 
-const int max_ray_bounces = 3;
+const int MAX_RAY_BOUNCES = 3;
 
-const auto scene_creator = std::make_unique<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
+const auto SCENE_CREATOR = std::make_unique<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
 // const auto scene_creator = std::make_unique<UtahTeapot>();
 // const auto scene_creator = std::make_unique<SimpleSphere>();
-}  // namespace Settings
+}  // namespace DefaultSettings

@@ -17,9 +17,9 @@ Vec3 compute_centroid(const std::vector<Vec3> &points);
 
 void sort_vertices_ccw3d(std::vector<Vec3> &vertices);
 
-void move_points_by(std::vector<Point3> &points, const Vec3 &offset);
+void move_points_by(std::vector<Point3> &points, Vec3 offset);
 
-std::vector<Point3> get_points_on_circle(const Vec3 &center, Real radius, size_t order);
+std::vector<Point3> get_points_on_circle(Vec3 center, Real radius, size_t order);
 
 struct HitRecord {
     Vec3 point;
@@ -30,7 +30,7 @@ struct HitRecord {
 class Hittable {
   public:
     virtual bool hit(const Ray3 &ray, HitRecord &hit_record) const = 0;
-    // virtual AABB bounding_box() const = 0;
+    virtual AABB bounding_box() const = 0;
     virtual ~Hittable() = default;
 };
 
@@ -80,6 +80,11 @@ class Sphere : public Hittable {
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
+    AABB bounding_box() const override {
+        Vec3 v(radius, radius, radius);
+        return AABB(center - v, center + v);
+    }
+
     Real get_radius() const {
         return radius;
     }
@@ -116,6 +121,10 @@ class Plane : public Hittable {
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
+    AABB bounding_box() const override {
+        return AABB(Interval::universe, Interval::universe, Interval::universe);
+    }
+
   private:
     Vec3 normal;
 };
@@ -134,6 +143,10 @@ class Quad : public Hittable {
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
+    AABB bounding_box() const override {
+        return AABB(Q, Q + u + v);
+    }
+
   private:
     Vec3 w;
     Vec3 normal;
@@ -148,6 +161,14 @@ class Triangle : public Hittable {
     }
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
+
+    AABB bounding_box() const override {
+        AABB aabb;
+        aabb.add_vertex(a);
+        aabb.add_vertex(b);
+        aabb.add_vertex(c);
+        return aabb;
+    }
 
     float calc_area() const {
         auto l1 = (b - a).length();
@@ -167,12 +188,20 @@ class Triangle : public Hittable {
 
 class Mesh : public Hittable {
   public:
-    Mesh(const std::vector<Triangle> &triangles) : faces(triangles) {
+    Mesh(const std::vector<Triangle> &triangles) : triangles(triangles) {
         if (triangles.empty())
             throw std::invalid_argument("Must be at least 1 triangle");
     }
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
+
+    AABB bounding_box() const override {
+        AABB aabb;
+        for (const auto &t : triangles) {
+            aabb.add_aabb(t.bounding_box());
+        }
+        return aabb;
+    }
 
     static Mesh get_base(const Vec3 &center, Real radius, size_t order, Real offset) {
         std::vector<Point3> points = get_points_on_circle(center, radius, order);
@@ -185,7 +214,7 @@ class Mesh : public Hittable {
     }
 
   private:
-    std::vector<Triangle> faces;
+    std::vector<Triangle> triangles;
 };
 
 class Box : public Hittable {
@@ -213,6 +242,14 @@ class Box : public Hittable {
     }
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
+
+    AABB bounding_box() const override {
+        AABB aabb;
+        for (const auto &f : faces) {
+            aabb.add_aabb(f.bounding_box());
+        }
+        return aabb;
+    }
 
     void set_center(const Vec3 &new_center) {
         const Vec3 offset = new_center - center;
@@ -265,6 +302,18 @@ class RightPrism : public Hittable {
         }
     }
 
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
+
+    AABB bounding_box() const override {
+        AABB aabb;
+        for (const auto &f : side_faces) {
+            aabb.add_aabb(f.bounding_box());
+        }
+        aabb.add_aabb(upper_base.bounding_box());
+        aabb.add_aabb(lower_base.bounding_box());
+        return aabb;
+    }
+
     static Mesh get_upper_base(const Vec3 &center, Real radius, Real height, size_t order) {
         return Mesh::get_base(center, radius, order, height / 2);
     }
@@ -304,8 +353,6 @@ class RightPrism : public Hittable {
         *this = RightPrism(base_center, radius, height, new_order);
     }
 
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
-
   private:
     Vec3 base_center;
     Real radius;
@@ -340,6 +387,15 @@ class RightPyramid : public Hittable {
     }
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
+
+    AABB bounding_box() const override {
+        AABB aabb;
+        for (const auto &f : side_faces) {
+            aabb.add_aabb(f.bounding_box());
+        }
+        aabb.add_aabb(base.bounding_box());
+        return aabb;
+    }
 
     Point3 get_base_center() const {
         return base_center;
@@ -402,7 +458,7 @@ struct Vertex {
 class Model : public Hittable {
   public:
     Model(const std::vector<Vec3> &coords, const std::vector<std::vector<VertexIndex>> &faces, const std::vector<Vec3> &normals)
-        : coords(coords), normals(normals), faces(faces), bbox(coords) {
+        : coords(coords), normals(normals), faces(faces) {
         for (const auto &face : faces) {
             for (size_t i = 1; i + 1 < face.size(); ++i) {
                 Triangle t(coords[face[0].v], coords[face[i].v], coords[face[i + 1].v]);
@@ -410,14 +466,22 @@ class Model : public Hittable {
                 index_triangles.push_back({face[0], face[i], face[i + 1]});
             }
         }
+
+        for (const auto &t : triangles) {
+            aabb.add_aabb(t.bounding_box());
+        }
     }
 
     bool hit(const Ray3 &ray, HitRecord &hit_record) const override;
 
+    AABB bounding_box() const override {
+        return aabb;
+    }
+
   private:
     std::vector<Triangle> triangles;
     std::vector<TriangleIndex> index_triangles;
-    AABB bbox;
+    AABB aabb;
 
     std::vector<Vec3> coords;
     std::vector<Vec3> normals;
@@ -435,6 +499,14 @@ class Translate : public Hittable {
             hit_record.point += offset;
         }
         return is_hit;
+    }
+
+    AABB bounding_box() const override {
+        AABB aabb = hittable->bounding_box();
+        aabb.x.move(offset.x);
+        aabb.y.move(offset.y);
+        aabb.z.move(offset.z);
+        return aabb;
     }
 
   private:
@@ -460,6 +532,11 @@ class Rotate : public Hittable {
         return is_hit;
     }
 
+    AABB bounding_box() const override {
+        AABB aabb = hittable->bounding_box();
+        return aabb;
+    }
+
   private:
     std::shared_ptr<Hittable> hittable;
     Vec3 axis;
@@ -479,6 +556,17 @@ class Scale : public Hittable {
             hit_record.dist *= factor;
         }
         return is_hit;
+    }
+
+    AABB bounding_box() const override {
+        AABB aabb = hittable->bounding_box();
+        aabb.x.min *= factor;
+        aabb.x.max *= factor;
+        aabb.y.min *= factor;
+        aabb.y.max *= factor;
+        aabb.z.min *= factor;
+        aabb.z.max *= factor;
+        return aabb;
     }
 
   private:

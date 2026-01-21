@@ -39,22 +39,31 @@ At first:
     - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза) | Ok
 */
 
+void render_frame(const AppContext &app) {
+    auto start = std::chrono::high_resolution_clock::now();
+    app.renderer.render(app.canvas, app.scene, app.camera, app.render_settings);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    std::cout << "Time: " << elapsed.count() << " ms\n";
+}
+
 int main() {
-    sf::RenderWindow window(sf::VideoMode({Settings::WIDTH, Settings::HEIGHT}), Settings::APP_NAME);
+    sf::RenderWindow window(sf::VideoMode({DefaultSettings::WIDTH, DefaultSettings::HEIGHT}), DefaultSettings::APP_NAME);
     // window.setFramerateLimit(Settings::FRAME_LIMIT);
     if (!ImGui::SFML::Init(window))
         return -1;
 
-    std::shared_ptr<SFML_Canvas> canvas = std::make_unique<SFML_Canvas>(Settings::WIDTH, Settings::HEIGHT);  // std::unique_ptr<Canvas>
+    auto canvas = std::make_unique<SFML_Canvas>(DefaultSettings::WIDTH, DefaultSettings::HEIGHT);  // std::unique_ptr<Canvas>
 
-    Scene scene = Settings::scene_creator->create_scene();
-    SceneView view = Settings::scene_creator->get_view();
-    Camera camera(view.pos, view.dir, scene.world_up, Settings::FOV_Y, Settings::ASPECT, Settings::NEAR, Settings::FAR);
+    Scene scene = DefaultSettings::SCENE_CREATOR->create_scene();
+    SceneView view = DefaultSettings::SCENE_CREATOR->get_view();
+    Camera camera(view.pos, view.dir, scene.world_up, DefaultSettings::FOV_Y, DefaultSettings::ASPECT, DefaultSettings::NEAR, DefaultSettings::FAR);
 
-    std::shared_ptr<Renderer> renderer = std::make_unique<RayTracingRenderer>();
+    auto renderer = std::make_unique<RayTracingRenderer>();
 
-    RenderSettings render_settings = {Settings::max_ray_bounces, omp_get_max_threads()};
-    CameraSettings camera_settings = {Settings::CAMERA_MOVEMENT_SPEED, Settings::CAMERA_ROTATION_SPEED, Settings::MAX_ZENITH_RADIANS};
+    RenderSettings render_settings = {DefaultSettings::MAX_RAY_BOUNCES, omp_get_max_threads()};
+    CameraSettings camera_settings = {DefaultSettings::CAMERA_MOVEMENT_SPEED, DefaultSettings::CAMERA_ROTATION_SPEED,
+                                      DefaultSettings::MAX_ZENITH_RADIANS};
     AppContext app = {*canvas, scene, camera, *renderer, render_settings, camera_settings, true};
 
     sf::Clock deltaClock;
@@ -63,14 +72,19 @@ int main() {
             ImGui::SFML::ProcessEvent(window, *event);
             if (event->is<sf::Event::Closed>())
                 window.close();
-            process_key_input(app);
+            app.need_render = handle_keystrokes(camera, scene, camera_settings);
         }
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
         draw_settings_iu(app);
 
-        window.clear();
+        if (app.need_render) {
+            render_frame(app);
+            app.need_render = false;
+        }
+
+        // window.clear();
         window.draw(canvas->pixels);
         ImGui::SFML::Render(window);
         window.display();
@@ -78,3 +92,18 @@ int main() {
 
     ImGui::SFML::Shutdown();
 }
+
+/*
+auto window = std::make_unique<CreateWindow>(width, height);
+if (!window)
+    return -1;
+
+while (window.is_open()) {
+    handle events
+    update app state
+    render image
+    display image
+}
+
+window.close();
+*/
