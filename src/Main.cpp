@@ -1,4 +1,5 @@
-﻿#include "Camera.hpp"
+﻿#include "AppContext.hpp"
+#include "Camera.hpp"
 #include "Canvas.hpp"
 #include "GUI.hpp"
 #include "Renderer.hpp"
@@ -41,7 +42,7 @@ At first:
 
 void render_frame(const AppContext &app) {
     auto start = std::chrono::high_resolution_clock::now();
-    app.renderer.render(app.canvas, app.scene, app.camera, app.render_settings);
+    app.renderer.render(app.canvas, app.scene, app.camera);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
     std::cout << "Time: " << elapsed.count() << " ms\n";
@@ -61,10 +62,11 @@ int main() {
 
     auto renderer = std::make_unique<RayTracingRenderer>();
 
-    RenderSettings render_settings = {DefaultSettings::MAX_RAY_BOUNCES, omp_get_max_threads()};
     CameraSettings camera_settings = {DefaultSettings::CAMERA_MOVEMENT_SPEED, DefaultSettings::CAMERA_ROTATION_SPEED,
                                       DefaultSettings::MAX_ZENITH_RADIANS};
-    AppContext app = {*canvas, scene, camera, *renderer, render_settings, camera_settings, true};
+    AppContext app = {*canvas, scene, camera, *renderer, camera_settings, DefaultSettings::MAX_RAY_BOUNCES, true};
+    app.renderer = *std::make_unique<PathTracingRenderer>();
+    // omp_get_max_threads()
 
     sf::Clock deltaClock;
     while (window.isOpen()) {
@@ -72,16 +74,20 @@ int main() {
             ImGui::SFML::ProcessEvent(window, *event);
             if (event->is<sf::Event::Closed>())
                 window.close();
-            app.need_render = handle_keystrokes(camera, scene, camera_settings);
+            if (handle_keystrokes(camera, scene, camera_settings))
+                app.state.need_render = true;
         }
 
         ImGui::SFML::Update(window, deltaClock.restart());
 
         draw_settings_iu(app);
 
-        if (app.need_render) {
+        if (app.state.need_render) {
+            renderer->max_ray_bounces = app.render_settings.max_ray_bounces;
+            renderer->count_threads = app.render_settings.count_threads;
+            renderer->samples_per_pixel = app.render_settings.samples_per_pixel;
             render_frame(app);
-            app.need_render = false;
+            app.state.need_render = false;
         }
 
         // window.clear();

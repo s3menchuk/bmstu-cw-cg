@@ -1,4 +1,5 @@
 #include "GUI.hpp"
+#include "AppContext.hpp"
 #include "CanvasExporter.hpp"
 #include "Math.hpp"
 #include "PrimitiveTypes.hpp"
@@ -274,14 +275,14 @@ void draw_render_ui(AppContext &app) {
     ImGui::Text("Max ray bounces");
     ImGui::SameLine();
     static int max_ray_bounces = app.render_settings.max_ray_bounces;
-    const int MIN_VALUE_RAY_BOUNCES = 1;
+    const int MIN_VALUE_RAY_BOUNCES = 0;
     const int MAX_VALUE_RAY_BOUNCES = 20;
     ImGui::InputInt("##MaxRayBounces", &max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MIN_VALUE_RAY_BOUNCES);
     max_ray_bounces = clamp(max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MAX_VALUE_RAY_BOUNCES);
     app.render_settings.max_ray_bounces = max_ray_bounces;
 
     if (ImGui::Button("Render")) {
-        app.need_render = true;
+        app.state.need_render = true;
     }
 
     if (ImGui::Button("Save image")) {

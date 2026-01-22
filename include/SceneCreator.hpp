@@ -123,36 +123,36 @@ class CornellBox : public SceneCreator {
 
         // Left Wall
         auto left_quad = std::make_shared<Quad>(LBN, LTN - LBN, LBF - LBN);
-        left_wall = std::make_shared<Object>(left_quad, Material(sRGB::RED, 0));
+        left_wall = std::make_shared<Object>(left_quad, Material(sRGB::RED));
         scene.add_object(left_wall);
 
         // Right Wall
         auto right_quad = std::make_shared<Quad>(RBN, RTN - RBN, RBF - RBN);
-        right_wall = std::make_shared<Object>(right_quad, Material(sRGB::GREEN, 0));
+        right_wall = std::make_shared<Object>(right_quad, Material(sRGB::GREEN));
         scene.add_object(right_wall);
 
         // Back Wall
         auto back_quad = std::make_shared<Quad>(LBF, LTF - LBF, RBF - LBF);
-        back_wall = std::make_shared<Object>(back_quad, Material(sRGB::WHITE, 0));
+        back_wall = std::make_shared<Object>(back_quad, Material(sRGB::WHITE));
         scene.add_object(back_wall);
 
         // Floor
         auto floor_quad = std::make_shared<Quad>(LBN, LBF - LBN, RBN - LBN);
-        floor = std::make_shared<Object>(floor_quad, Material(sRGB::WHITE, 0));
+        floor = std::make_shared<Object>(floor_quad, Material(sRGB::WHITE));
         scene.add_object(floor);
 
         // Ceiling
         auto ceiling_quad = std::make_shared<Quad>(LTN, LTF - LTN, RTN - LTN);
-        ceiling = std::make_shared<Object>(ceiling_quad, Material(sRGB::WHITE, 0));
+        ceiling = std::make_shared<Object>(ceiling_quad, Material(sRGB::WHITE));
         scene.add_object(ceiling);
 
         // Front Wall
         auto front_quad = std::make_shared<Quad>(LBN, LTN - LBN, RBN - LBN);
-        front_wall = std::make_shared<Object>(front_quad, Material(sRGB::WHITE, 0));
+        front_wall = std::make_shared<Object>(front_quad, Material(sRGB::WHITE));
         // scene.add_object(front_wall);
 
         auto quad = std::make_shared<Quad>(LTN * 0.98f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
-        // scene.add_object(std::make_shared<Object>(quad, Material(sRGB::WHITE, 0.1)));
+        scene.add_object(std::make_shared<Object>(quad, Material(sRGB::WHITE, 0.1, Color(1, 1, 1), 1)));
         // scene.add_light(std::make_shared<QuadLight>(*quad, Color(1, 1, 1), 0.2));
 
         // Light source

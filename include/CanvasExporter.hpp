@@ -23,7 +23,7 @@ class CanvasPPMTextExporter : public CanvasExporter {
         fout << 255 << '\n';
         for (size_t row = 0; row < canvas.get_height(); ++row) {
             for (size_t col = 0; col < canvas.get_width(); ++col) {
-                sRGB color = canvas.get_pixel(row, col);
+                sRGB color = canvas.get_pixel(row, col).as_srgb();
                 fout << static_cast<int>(color.r) << ' ' << static_cast<int>(color.g) << ' ' << static_cast<int>(color.b) << '\n';
             }
         }
@@ -43,7 +43,7 @@ class CanvasPPMBinaryExporter : public CanvasExporter {
         fout << 255 << '\n';
         for (size_t row = 0; row < canvas.get_height(); ++row) {
             for (size_t col = 0; col < canvas.get_width(); ++col) {
-                sRGB color = canvas.get_pixel(row, col);
+                sRGB color = canvas.get_pixel(row, col).as_srgb();
                 fout.write(reinterpret_cast<char *>(&color), 3);
             }
         }

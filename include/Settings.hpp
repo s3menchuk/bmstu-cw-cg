@@ -22,7 +22,7 @@ const Real MAX_ZENITH_RADIANS = degrees2radians(75.0);
 const Real CAMERA_MOVEMENT_SPEED = 0.1;
 const Real CAMERA_ROTATION_SPEED = 0.15;
 
-const int MAX_RAY_BOUNCES = 3;
+const int MAX_RAY_BOUNCES = 1;
 
 const auto SCENE_CREATOR = std::make_unique<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
 // const auto scene_creator = std::make_unique<UtahTeapot>();
