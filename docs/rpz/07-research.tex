@@ -2,13 +2,13 @@
 
 \section{Анализ производительности ПО}
 
-В качестве тестовой сцены для анализа времени генерации кадра был выбран знаменитый чайник университета Юта (Utah Teapot), помещенный в Корнеллскую коробку (Cornell Box).
+В качестве тестовой сцены для анализа времени генерации кадра был выбран чайник университета Юта (Utah Teapot)\cite{utah_teapot}, помещенный в Корнеллскую коробку (Cornell Box)\cite{cornell_box}. Для освещения был использован точечный источник, помещенный на середину потолка.
 
 \noindent Тестовая сцена состоит из:
 \begin{itemize}
     \item Корнеллской коробки;
     \item чайника Юта;
-    \item источника освещения.
+    \item точечного источника освещения.
 \end{itemize}
 
 \noindent Параметра генерации кадра:
@@ -23,118 +23,111 @@
     \item RAM: 32GB DDR5
 \end{itemize}
 
-Для распараллеливания программы использовался стандарт OpenMP. Выбор обусловлен относительной простостой способа примения технологии. В языке C++ эта технология реализуется с помощью директивы \#pragma.
+Для распараллеливания программы использовался стандарт OpenMP\cite{openmp}. Выбор обусловлен относительной простостой способа примения технологии. В языке C++ эта технология реализуется с помощью директивы \#pragma.
 
 % \#pragma omp parallel for schedule(dynamic)
 
-Для установки числа потоков используется функция \texttt{omp\_set\_num\_threads(int)} из заголовочного файла  \texttt{<omp.h>}. Для получения количества логических ядер процессора используется функция \texttt{omp\_get\_max\_threads()}.
+Для установки числа потоков используется функция \texttt{omp\_set\_num\_threads(int)} из заголовочного файла \texttt{<omp.h>}. Для получения количества логических ядер процессора используется функция \texttt{omp\_get\_max\_threads()}.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{utah-teapot.jpg}
-    \caption{Чайники Юта с разным числом полигонов}
+    \caption{Чайники с разным числом полигонов}
     \label{fig:utah-teapot}
 \end{figure}
 
 Следующие графики представляют собой зависимость времени генерации изображения от количества граней в полигональной моделе чайника.
 
-\begin{tikzpicture}
-    \begin{axis}[
-            title={Время генерация кадра одним потоком},
-            xlabel={число граней}, ylabel={время, (с)},
-            grid=major
-        ]
-        \addplot coordinates {
-                (108,15.351) (532,53.706) (1166,114.694) (2148,199.755)
-            };
-    \end{axis}
-\end{tikzpicture}
+\begin{figure}[ht]
+    \centering
 
-\begin{tikzpicture}
-    \begin{axis}[
-            title={Время генерация кадра в 2 потока},
-            xlabel={число граней}, ylabel={время, (с)},
-            grid=major
-        ]
-        \addplot coordinates {
-                (108,7.966) (532,27.058) (1166,57.741) (2148,105.847)
-            };
-    \end{axis}
-\end{tikzpicture}
+    % 1 поток
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \begin{axis}[
+                    title={1 поток},
+                    xlabel={число граней},
+                    ylabel={время (с)},
+                    grid=major
+                ]
+                \addplot coordinates {
+                        (108,15.351) (532,53.706) (1166,114.694) (2148,199.755)
+                    };
+            \end{axis}
+        \end{tikzpicture}
+    \end{subfigure}
+    \hfill
+    % 6 потоков
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \begin{axis}[
+                    title={6 потоков},
+                    xlabel={число граней},
+                    ylabel={время (с)},
+                    grid=major
+                ]
+                \addplot coordinates {
+                        (108,4.505) (532,15.768) (1166,30.743) (2148,55.789)
+                    };
+            \end{axis}
+        \end{tikzpicture}
+    \end{subfigure}
+    \hfill
+    % 12 потоков
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \begin{axis}[
+                    title={12 потоков},
+                    xlabel={число граней},
+                    ylabel={время (с)},
+                    grid=major
+                ]
+                \addplot coordinates {
+                        (108,2.818) (532,9.704) (1166,21.069) (2148,38.631)
+                    };
+            \end{axis}
+        \end{tikzpicture}
+    \end{subfigure}
+    % 24 потока
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \begin{tikzpicture}
+            \begin{axis}[
+                    title={24 потока},
+                    xlabel={число граней},
+                    ylabel={время (с)},
+                    grid=major
+                ]
+                \addplot coordinates {
+                        (108,2.566) (532,9.595) (1166,18.611) (2148,36.063)
+                    };
+            \end{axis}
+        \end{tikzpicture}
+    \end{subfigure}
 
+    \caption{Время генерации кадра в зависимости от числа потоков и числа граней}
+    \label{fig:all_plots}
+\end{figure}
 
-\begin{tikzpicture}
-    \begin{axis}[
-            title={Время генерация кадра в 4 потока},
-            xlabel={число граней}, ylabel={время, (с)},
-            grid=major
-        ]
-        \addplot coordinates {
-                (108,4.505) (532,15.768) (1166,30.743) (2148,55.789)
-            };
-    \end{axis}
-\end{tikzpicture}
+\begin{table}[ht]
+    \centering
+    \caption{Время генерации кадра в зависимости от числа потоков и числа граней}
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        Число граней & 1 поток & 6 потока & 12 потоков & 24 потоков \\
+        \hline
+        108          & 15.4    & 4.5      & 2.5        & 2.6        \\
+        532          & 53.7    & 15.8     & 8.8        & 9.6        \\
+        1166         & 114.7   & 30.7     & 18.8       & 18.6       \\
+        2148         & 199.8   & 55.8     & 38.6       & 36.1       \\
+        \hline
+    \end{tabular}
+    \label{tab:frame_times_1dp}
+\end{table}
 
-\begin{tikzpicture}
-    \begin{axis}[
-            title={Время генерация кадра в 8 потоков},
-            xlabel={число граней}, ylabel={время, (с)},
-            grid=major
-        ]
-        \addplot coordinates {
-                (108,2.818) (532,9.704) (1166,21.069) (2148,38.631)
-            };
-    \end{axis}
-\end{tikzpicture}
-
-
-\begin{tikzpicture}
-    \begin{axis}[
-            title={Время генерация кадра в 12 потоков},
-            xlabel={число граней}, ylabel={время, (с)},
-            grid=major
-        ]
-        \addplot coordinates {
-                (108,2.488) (532,8.803) (1166,18.769) (2148,38.612)
-            };
-    \end{axis}
-\end{tikzpicture}
-
-\begin{tikzpicture}
-    \begin{axis}[
-            title={Время генерация кадра в 16 потоков},
-            xlabel={число граней}, ylabel={время, (с)},
-            grid=major
-        ]
-        \addplot coordinates {
-                (108,2.652) (532,9.455) (1166,19.316) (2148,33.443)
-            };
-    \end{axis}
-\end{tikzpicture}
-
-\begin{tikzpicture}
-    \begin{axis}[
-            title={Время генерация кадра в 20 потоков},
-            xlabel={число граней}, ylabel={время, (с)},
-            grid=major
-        ]
-        \addplot coordinates {
-                (108,2.515) (532,8.843) (1166,18.568) (2148,36.925)
-            };
-    \end{axis}
-\end{tikzpicture}
-
-\begin{tikzpicture}
-    \begin{axis}[
-            title={Время генерация кадра в 24 потоков},
-            xlabel={число граней}, ylabel={время, (с)},
-            grid=major
-        ]
-        \addplot coordinates {
-                (108,2.566) (532,9.595) (1166,18.611) (2148,36.063)
-            };
-    \end{axis}
-\end{tikzpicture}
 
 На графике ниже представлена зависимость времени генерации кадра от числа потоков.
 

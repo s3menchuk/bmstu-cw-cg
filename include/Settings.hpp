@@ -9,7 +9,7 @@ const std::string APP_NAME = "Graphics Engine";
 const int FRAME_LIMIT = 60;
 
 const Real ASPECT = 16.0 / 9.0;
-const int WIDTH = 800;
+const int WIDTH = 1280;
 const int HEIGHT = WIDTH / ASPECT;
 
 const Real FOV_Y = degrees2radians(55.0);
@@ -22,9 +22,10 @@ const Real MAX_ZENITH_RADIANS = degrees2radians(75.0);
 const Real CAMERA_MOVEMENT_SPEED = 0.1;
 const Real CAMERA_ROTATION_SPEED = 0.15;
 
-const int MAX_RAY_BOUNCES = 1;
+const int MAX_RAY_BOUNCES = 2;
+const int SAMPLES_PER_PIXEL = 1;
 
-const auto SCENE_CREATOR = std::make_unique<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
-// const auto scene_creator = std::make_unique<UtahTeapot>();
-// const auto scene_creator = std::make_unique<SimpleSphere>();
+// const auto SCENE_CREATOR = std::make_unique<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
+// const auto SCENE_CREATOR = std::make_unique<UtahTeapot>();
+const auto SCENE_CREATOR = std::make_unique<SimpleSphere>();
 }  // namespace DefaultSettings

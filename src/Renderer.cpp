@@ -23,11 +23,11 @@ void TracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &c
 #pragma omp parallel for schedule(dynamic)
     for (int row = 0; row < height; ++row) {
         for (int col = 0; col < width; ++col) {
-            thread_local std::mt19937 gen;
-            std::uniform_real_distribution<Real> dist(0, 1);
-            Real ndc_x = (col + dist(gen)) / width * 2 - 1;
+            // thread_local std::mt19937 gen;
+            // std::uniform_real_distribution<Real> dist(0, 1);
+            Real ndc_x = (col + 0.5) / width * 2 - 1;
             Real dx = ndc_x * view_width / 2;
-            Real ndc_y = 1 - (row + dist(gen)) / height * 2;
+            Real ndc_y = 1 - (row + 0.5) / height * 2;
             Real dy = ndc_y * view_height / 2;
             Vec3 ray_dir = (dx * camera.right + dy * camera.up + camera.dir).normalized();
             Ray3 ray(camera.pos, ray_dir);

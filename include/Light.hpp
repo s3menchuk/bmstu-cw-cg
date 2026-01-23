@@ -18,9 +18,10 @@ class Light {
 
     virtual ~Light() = default;
 
-  protected:
     Color color;
     float intensity;
+
+  protected:
 };
 
 class AttenuationLight : public Light {
@@ -58,8 +59,9 @@ class PointLight : public AttenuationLight {
         return (point - pos).length();
     }
 
-  private:
     Vec3 pos;
+
+  private:
 };
 
 class DirectionLight : public NonAttenuationLight {
@@ -74,6 +76,7 @@ class DirectionLight : public NonAttenuationLight {
         return std::numeric_limits<float>::infinity();
     }
 
-  private:
     Vec3 dir;
+
+  private:
 };

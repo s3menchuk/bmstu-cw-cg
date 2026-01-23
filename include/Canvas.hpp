@@ -11,7 +11,7 @@ class Canvas {
   public:
     virtual int get_width() const = 0;
     virtual int get_height() const = 0;
-    virtual void set_pixel(int row, int col, const Color &color) = 0;
+    virtual void set_pixel(int row, int col, Color color) = 0;
     virtual Color get_pixel(int row, int col) const = 0;
 
     virtual ~Canvas() = default;
@@ -29,7 +29,7 @@ class SimpleCanvas : public Canvas {
         return height;
     }
 
-    void set_pixel(int row, int col, const Color &color) override {
+    void set_pixel(int row, int col, Color color) override {
         pixels[row][col] = color;
     };
 
@@ -59,7 +59,7 @@ class SFML_Canvas : public Canvas {
         return height;
     }
 
-    void set_pixel(int row, int col, const Color &color) override {
+    void set_pixel(int row, int col, Color color) override {
         canvas.set_pixel(row, col, color);
         sRGB rgb = color.as_srgb();
         pixels[row * width + col].color = sf::Color(rgb.r, rgb.g, rgb.b);
@@ -77,17 +77,4 @@ class SFML_Canvas : public Canvas {
     SimpleCanvas canvas;
 };
 
-// void accumulate_frame(Canvas &target, const Canvas &source, int frame_num) {
-//     int width = target.get_width();
-//     int height = target.get_height();
-
-// #pragma omp parallel for schedule(dynamic)
-//     for (int row = 0; row < height; ++row) {
-//         for (int col = 0; col < width; ++col) {
-//             Color prev_color = target.get_pixel(row, col);
-//             Color curr_color = source.get_pixel(row, col);
-//             Color updt_color = (prev_color * (frame_num - 1) + curr_color) / frame_num;
-//             target.set_pixel(row, col, updt_color);
-//         }
-//     }
-// }
+void accumulate_frame(Canvas &target, const Canvas &source, int frame_num);

@@ -1,4 +1,5 @@
 ﻿#include "AppContext.hpp"
+#include "Benchmark.hpp"
 #include "Camera.hpp"
 #include "Canvas.hpp"
 #include "GUI.hpp"
@@ -10,42 +11,29 @@
 #include "imgui.h"
 #include <SFML/Graphics.hpp>
 
-#include <array>
-#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <omp.h>
-#include <string>
-#include <typeindex>
-#include <typeinfo>
 
 /*
 TODO:
-At first:
-    - GUI
     - Transforms (canonical forms of primitives (sphere at (0, 0, 0) and r=1))
-    - Shading
-    - Camera limit verticle angles
-
-    - GPU (OpenGL, Vulkan)
-    - Real diffuse
-    - Antialiasing (several rays per pixel)
-    - Emmision materials
-
     - BVH (AABB) | KD-Tree
-
     - Make Vec3 class template class
-
-    - Добавить реализацию оставшихся объектов | Ok
-    - Устранить искажения на бокам изображения (вроде бы называется эффектом рыбьего глаза) | Ok
 */
 
-void render_frame(const AppContext &app) {
+void render_frame(AppContext &app) {
+    app.renderer.max_ray_bounces = app.render_settings.max_ray_bounces;
+    app.renderer.count_threads = app.render_settings.count_threads;
+    app.renderer.samples_per_pixel = app.render_settings.samples_per_pixel;
+
     auto start = std::chrono::high_resolution_clock::now();
     app.renderer.render(app.canvas, app.scene, app.camera);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
     std::cout << "Time: " << elapsed.count() << " ms\n";
+
+    app.state.need_render = false;
 }
 
 int main() {
@@ -54,27 +42,41 @@ int main() {
     if (!ImGui::SFML::Init(window))
         return -1;
 
-    auto canvas = std::make_unique<SFML_Canvas>(DefaultSettings::WIDTH, DefaultSettings::HEIGHT);  // std::unique_ptr<Canvas>
+    // benchmark();
+    // return 0;
+
+    RayTracingRenderer renderer;
+    renderer.background_color = sRGB::SKY_BLUE;
 
     Scene scene = DefaultSettings::SCENE_CREATOR->create_scene();
+
     SceneView view = DefaultSettings::SCENE_CREATOR->get_view();
     Camera camera(view.pos, view.dir, scene.world_up, DefaultSettings::FOV_Y, DefaultSettings::ASPECT, DefaultSettings::NEAR, DefaultSettings::FAR);
 
-    auto renderer = std::make_unique<RayTracingRenderer>();
+    SFML_Canvas canvas(DefaultSettings::WIDTH, DefaultSettings::HEIGHT);
 
-    CameraSettings camera_settings = {DefaultSettings::CAMERA_MOVEMENT_SPEED, DefaultSettings::CAMERA_ROTATION_SPEED,
-                                      DefaultSettings::MAX_ZENITH_RADIANS};
-    AppContext app = {*canvas, scene, camera, *renderer, camera_settings, DefaultSettings::MAX_RAY_BOUNCES, true};
-    app.renderer = *std::make_unique<PathTracingRenderer>();
-    // omp_get_max_threads()
+    AppContext app(renderer, scene, camera, canvas);
+
+    app.camera_settings.camera_movement_speed = DefaultSettings::CAMERA_MOVEMENT_SPEED;
+    app.camera_settings.camera_rotation_speed = DefaultSettings::CAMERA_ROTATION_SPEED;
+    app.camera_settings.max_zenith_radians = DefaultSettings::MAX_ZENITH_RADIANS;
+
+    app.render_settings.max_ray_bounces = DefaultSettings::MAX_RAY_BOUNCES;
+    app.render_settings.count_threads = omp_get_max_threads();
+    app.render_settings.samples_per_pixel = DefaultSettings::SAMPLES_PER_PIXEL;
+
+    app.state.need_render = true;
+    app.state.frame_num = 0;
 
     sf::Clock deltaClock;
     while (window.isOpen()) {
+        app.state.frame_num++;
+
         while (const std::optional event = window.pollEvent()) {
             ImGui::SFML::ProcessEvent(window, *event);
             if (event->is<sf::Event::Closed>())
                 window.close();
-            if (handle_keystrokes(camera, scene, camera_settings))
+            if (handle_keystrokes(camera, scene, app.camera_settings))
                 app.state.need_render = true;
         }
 
@@ -83,15 +85,10 @@ int main() {
         draw_settings_iu(app);
 
         if (app.state.need_render) {
-            renderer->max_ray_bounces = app.render_settings.max_ray_bounces;
-            renderer->count_threads = app.render_settings.count_threads;
-            renderer->samples_per_pixel = app.render_settings.samples_per_pixel;
             render_frame(app);
-            app.state.need_render = false;
         }
 
-        // window.clear();
-        window.draw(canvas->pixels);
+        window.draw(canvas.pixels);
         ImGui::SFML::Render(window);
         window.display();
     }

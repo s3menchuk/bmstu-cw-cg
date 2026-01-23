@@ -29,14 +29,15 @@ class SimpleSphere : public SceneCreator {
         Scene scene;
         scene.background_color = sRGB::SKY_BLUE;
         scene.world_up = {0, 1, 0};
-        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, 1, -1), Color(sRGB::WHITE), 10));
-        scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(0, 0, 0), 1), Material(Color(sRGB::RED), 0.1)));
+        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, -1, -1), Color(sRGB::WHITE), 1));
+        scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(0, 1, 0), 1), Material(Color(sRGB::RED), 0)));
+        scene.add_object(std::make_shared<Object>(std::make_shared<Plane>(scene.world_up, 0), Material(Color(sRGB::GRAY), 0)));
         return scene;
     }
 
     SceneView get_view() const override {
         SceneView view;
-        view.pos = {0, 0, 3};
+        view.pos = {0, 1, 3};
         view.dir = {0, 0, -1};
         return view;
     }
@@ -151,15 +152,15 @@ class CornellBox : public SceneCreator {
         front_wall = std::make_shared<Object>(front_quad, Material(sRGB::WHITE));
         // scene.add_object(front_wall);
 
-        auto quad = std::make_shared<Quad>(LTN * 0.98f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
-        scene.add_object(std::make_shared<Object>(quad, Material(sRGB::WHITE, 0.1, Color(1, 1, 1), 1)));
+        // auto quad = std::make_shared<Quad>(LTN * 0.98f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
+        // scene.add_object(std::make_shared<Object>(quad, Material(sRGB::WHITE, 0.1, Color(1, 1, 1), 1)));
         // scene.add_light(std::make_shared<QuadLight>(*quad, Color(1, 1, 1), 0.2));
 
         // Light source
         // auto light_quad = std::make_shared<Quad>(LTN * 0.99f + (RTF - LTN) * 0.4f, (LTF - LTN) * 0.2f, (RTN - LTN) * 0.2f);
         // scene.add_light(std::make_shared<QuadLight>(*light_quad, sRGB::WHITE, 0.25));
 
-        auto light = std::make_shared<PointLight>(LTN * 0.99f + (RTF - LTN) * 0.5f, sRGB::WHITE, 1.0);
+        auto light = std::make_shared<PointLight>(LTN * 0.99f + (RTF - LTN) * 0.5f, Color(1, 1, 1), 1.0);
         scene.add_light(light);
         return scene;
     }

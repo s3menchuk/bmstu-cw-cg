@@ -8,8 +8,8 @@
 
 class Camera {
   public:
-    Camera(const Point3 &pos, const Vec3 &dir, const Vec3 &world_up, Real fov_y, Real aspect, Real near, Real far)
-        : pos(pos), fov_y(fov_y), aspect(aspect), near(near), far(far) {
+    Camera(Point3 pos, Vec3 dir, Vec3 world_up, Real fov_y, Real aspect, Real near, Real far)
+        : pos(pos), fov_y(fov_y), aspect(aspect), near(near), far(far), world_up(world_up) {
         this->dir = dir.normalized();
         this->right = this->dir.cross(world_up.normalized());
         this->up = this->right.cross(this->dir);
@@ -22,40 +22,45 @@ class Camera {
         up.rotate(right, radians);
     }
     void rotate_horizontally(Real radians) {
-        dir.rotate_x(radians);
-        up.rotate_x(radians);
-        right.rotate_x(radians);
+        dir.rotate(world_up, radians);
+        up.rotate(world_up, radians);
+        right.rotate(world_up, radians);
     }
 
-    void rotate_by(const Vec3 &axis, Real radians) {
+    void rotate_by(Vec3 axis, Real radians) {
         dir.rotate(axis, radians);
         up.rotate(axis, radians);
         right.rotate(axis, radians);
     }
 
     Real get_azimuth() const {
-        return std::atan2(dir.z, dir.y) + std::numbers::pi / 2;
+        return std::atan2(dir.x, -dir.z);
     }
 
     Real get_zenith() const {
-        return std::acos(dir.x) - std::numbers::pi / 2;
+        return std::asin(dir.y);
     }
 
     void set_azimuth(Real radians) {
-        rotate_horizontally(-get_azimuth() - radians);
+        rotate_horizontally(get_azimuth() - radians);
     }
 
     void set_zenith(Real radians) {
-        rotate_vertically(get_zenith() - radians);
+        rotate_vertically(radians - get_zenith());
     }
 
     Vec3 pos;
+
     Vec3 dir;
     Vec3 up;
     Vec3 right;
+
     Real fov_y;
     Real fov_x;
     Real aspect;
     Real near;
     Real far;
+
+  private:
+    Vec3 world_up;
 };

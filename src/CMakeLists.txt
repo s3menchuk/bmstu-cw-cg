@@ -1,6 +1,7 @@
 add_executable(app
     Main.cpp
     Renderer.cpp
+    Canvas.cpp
     Object.cpp
     Color.cpp
     GUI.cpp

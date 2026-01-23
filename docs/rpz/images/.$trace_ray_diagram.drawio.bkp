@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
   <diagram name="Страница — 1" id="JgPFXq7IQemjubNMsndn">
-    <mxGraphModel dx="1434" dy="836" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1793" dy="1045" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -13,6 +13,18 @@
         <mxCell id="PTgwIgAsGBQvlemEZ9Fp-6" value="Обход всех источников освщения" style="whiteSpace=wrap;html=1;rounded=0;fontSize=10;" parent="1" vertex="1">
           <mxGeometry x="424" y="501" width="120" height="60" as="geometry" />
         </mxCell>
+        <mxCell id="PTgwIgAsGBQvlemEZ9Fp-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="PTgwIgAsGBQvlemEZ9Fp-13" target="PTgwIgAsGBQvlemEZ9Fp-14" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="PTgwIgAsGBQvlemEZ9Fp-13" value="Обход всех пикселей экрана" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="PTgwIgAsGBQvlemEZ9Fp-22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="PTgwIgAsGBQvlemEZ9Fp-14" target="PTgwIgAsGBQvlemEZ9Fp-21" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="PTgwIgAsGBQvlemEZ9Fp-14" value="Создание луча из точки наблюдения через пиксель на проекцинной плоскости экрана" style="whiteSpace=wrap;html=1;rounded=0;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="40" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
         <mxCell id="PTgwIgAsGBQvlemEZ9Fp-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="PTgwIgAsGBQvlemEZ9Fp-17" target="PTgwIgAsGBQvlemEZ9Fp-19" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -24,6 +36,9 @@
         </mxCell>
         <mxCell id="PTgwIgAsGBQvlemEZ9Fp-19" value="Расчет направления отраженного луча" style="whiteSpace=wrap;html=1;rounded=0;fontSize=10;" parent="1" vertex="1">
           <mxGeometry x="424" y="721" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="PTgwIgAsGBQvlemEZ9Fp-21" value="Вызов функции вычисления цвета пикселя" style="whiteSpace=wrap;html=1;rounded=0;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="40" y="280" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="PTgwIgAsGBQvlemEZ9Fp-23" value="Начало" style="strokeWidth=1;html=1;shape=mxgraph.flowchart.terminator;whiteSpace=wrap;fontSize=10;" parent="1" vertex="1">
           <mxGeometry x="254" y="41" width="100" height="60" as="geometry" />
@@ -88,7 +103,7 @@
         <mxCell id="PTgwIgAsGBQvlemEZ9Fp-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=-0.013;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="PTgwIgAsGBQvlemEZ9Fp-23" target="PTgwIgAsGBQvlemEZ9Fp-33" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="_MBhO8ekqR_m6X86OL6a-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.008;entryY=0.503;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="PTgwIgAsGBQvlemEZ9Fp-39" target="PTgwIgAsGBQvlemEZ9Fp-33" edge="1">
+        <mxCell id="_MBhO8ekqR_m6X86OL6a-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.008;entryY=0.503;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="PTgwIgAsGBQvlemEZ9Fp-39" target="PTgwIgAsGBQvlemEZ9Fp-33">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="210" y="850" />

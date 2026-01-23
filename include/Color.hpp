@@ -33,8 +33,8 @@ class Color {
     constexpr Color() : Color(0.f) {}
     constexpr Color(float c) : Color(c, c, c) {}
     constexpr Color(float R, float G, float B) : r(R), g(G), b(B) {}
-    constexpr Color(float rgb[3]) : r(rgb[0]), g(rgb[1]), b(rgb[2]) {}
-    constexpr Color(const sRGB &srgb) {
+    constexpr Color(const float rgb[3]) : r(rgb[0]), g(rgb[1]), b(rgb[2]) {}
+    constexpr Color(sRGB srgb) {
         r = srgb_to_linear(srgb.r);
         g = srgb_to_linear(srgb.g);
         b = srgb_to_linear(srgb.b);
@@ -113,6 +113,6 @@ class Color {
     }
 };
 
-Color inline operator*(float k, const Color &color) {
+Color inline operator*(float k, Color color) {
     return color * k;
 }

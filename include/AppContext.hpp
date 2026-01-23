@@ -23,10 +23,11 @@ struct State {
 };
 
 struct AppContext {
-    SFML_Canvas &canvas;  // TODO: Not SFML_Canvas, just Canvas!
+    TracingRenderer &renderer;
     Scene &scene;
     Camera &camera;
-    Renderer &renderer;
+    SFML_Canvas &canvas;  // TODO: Not SFML_Canvas, just Canvas!
+
     CameraSettings camera_settings;
     RenderSettings render_settings;
     State state;

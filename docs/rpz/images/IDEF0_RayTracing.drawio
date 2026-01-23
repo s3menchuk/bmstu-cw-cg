@@ -1,0 +1,25 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/26.0.9 Chrome/128.0.6613.186 Electron/32.2.5 Safari/537.36" version="26.0.9">
+  <diagram name="Страница — 1" id="oJg4LkoMcXPC6njq8dp6">
+    <mxGraphModel dx="989" dy="577" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="4BXz-0DY7b7LkDBiY6FI-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="4BXz-0DY7b7LkDBiY6FI-2" target="4BXz-0DY7b7LkDBiY6FI-4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4BXz-0DY7b7LkDBiY6FI-2" value="Обход всех пикселей экрана" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="129" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4BXz-0DY7b7LkDBiY6FI-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="4BXz-0DY7b7LkDBiY6FI-4" target="4BXz-0DY7b7LkDBiY6FI-5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4BXz-0DY7b7LkDBiY6FI-4" value="Создание луча из точки наблюдения через пиксель на проекцинной плоскости экрана" style="whiteSpace=wrap;html=1;rounded=0;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="349" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4BXz-0DY7b7LkDBiY6FI-5" value="Вызов функции вычисления цвета пикселя" style="whiteSpace=wrap;html=1;rounded=0;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="579" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
