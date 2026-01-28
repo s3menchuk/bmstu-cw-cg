@@ -53,6 +53,7 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, int max
     if (!closest_obj) {
         return background_color;
     }
+    // return closest_obj->material.color;
 
     Vec3 N = closest_hit.normal;
     Vec3 V = -ray.direction;
@@ -68,9 +69,15 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, int max
             Vec3 L = -light->get_direction(closest_hit.point);
             diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(closest_hit.point);
 
-            // const Vec3 R = 2 * N.dot(L) * N - L;
-            Vec3 H = (L + V).normalized();
-            specular_intensity += std::pow(std::max(N.dot(H), 0.0f), 100) * light->get_color() * light->get_intensity(closest_hit.point);
+            // Phong
+            const Vec3 R = 2 * N.dot(L) * N - L;
+            specular_intensity +=
+                std::pow(std::max(R.dot(V), 0.0f), closest_obj->material.shininess) * light->get_color() * light->get_intensity(closest_hit.point);
+
+            // Blinn-Phong
+            // Vec3 H = (L + V).normalized();
+            // specular_intensity +=
+            //     std::pow(std::max(N.dot(H), 0.0f), closest_obj->material.shininess) * light->get_color() * light->get_intensity(closest_hit.point);
         }
     }
 

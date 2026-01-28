@@ -19,7 +19,7 @@ class Canvas {
 
 class SimpleCanvas : public Canvas {
   public:
-    SimpleCanvas(int width, int height) : width(width), height(height), pixels(height, std::vector<Color>(width, Color(0, 0, 0))) {}
+    SimpleCanvas(int width, int height) : width(width), height(height), pixels(width * height, Color(0, 0, 0)) {}
 
     int get_width() const override {
         return width;
@@ -30,17 +30,17 @@ class SimpleCanvas : public Canvas {
     }
 
     void set_pixel(int row, int col, Color color) override {
-        pixels[row][col] = color;
+        pixels[row * col + col] = color;
     };
 
     Color get_pixel(int row, int col) const override {
-        return pixels[row][col];
+        return pixels[row * col + col];
     }
 
   private:
     int width;
     int height;
-    std::vector<std::vector<Color>> pixels;
+    std::vector<Color> pixels;
 };
 
 class SFML_Canvas : public Canvas {

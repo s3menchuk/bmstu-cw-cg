@@ -5,11 +5,12 @@
 #include "Types.hpp"
 
 namespace DefaultSettings {
-const std::string APP_NAME = "Graphics Engine";
+// const std::string APP_NAME = "Graphics Engine";
+const std::string APP_NAME = "CG Coursework by Semenchuk";
 const int FRAME_LIMIT = 60;
 
 const Real ASPECT = 16.0 / 9.0;
-const int WIDTH = 1280;
+const int WIDTH = 1920;
 const int HEIGHT = WIDTH / ASPECT;
 
 const Real FOV_Y = degrees2radians(55.0);

@@ -326,18 +326,68 @@ void draw_lights_ui(Scene &scene) {
             }
             ImGui::PopID();
         }
+
+        static eLight selected_light_type = eLight::Directional;
+
+        if (ImGui::BeginCombo("##combo_lights", LIGHT_NAMES.at(selected_light_type).c_str())) {
+            for (const auto &[light_type, light] : LIGHT_TYPES) {
+                bool is_selected = (selected_light_type == light);
+                if (ImGui::Selectable(LIGHT_NAMES.at(light).c_str(), is_selected)) {
+                    selected_light_type = light;
+                }
+                if (is_selected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        static float light_dir[3];
+        static float light_pos[3];
+
+        if (selected_light_type == eLight::Directional) {
+            ImGui::Text("Dir");
+            ImGui::SameLine();
+            ImGui::DragFloat3("##light-dir", light_dir);
+        } else if (selected_light_type == eLight::Point) {
+            ImGui::Text("Pos");
+            ImGui::SameLine();
+            ImGui::DragFloat3("##light-pos", light_pos);
+        }
+
+        ImGui::Text("Color");
+        ImGui::SameLine();
+        static float light_color[3] = {1, 1, 1};
+        ImGui::ColorEdit3("", light_color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+
+        static float light_intensity = 1;
+        ImGui::Text("Intensity");
+        ImGui::SameLine();
+        ImGui::DragFloat("##light-intensity", &light_intensity, 1.0f, 0, 100);
+
+        if (ImGui::Button("Add light")) {
+            std::shared_ptr<Light> light;
+            if (selected_light_type == eLight::Directional)
+                light = std::make_shared<DirectionLight>(light_dir, light_color, light_intensity);
+            else if (selected_light_type == eLight::Point)
+                light = std::make_shared<PointLight>(light_pos, light_color, light_intensity);
+
+            scene.add_light(light);
+        }
     }
 }
 
 void draw_render_ui(AppContext &app) {
-    ImGui::Text("Max ray bounces");
-    ImGui::SameLine();
-    static int max_ray_bounces = app.render_settings.max_ray_bounces;
-    const int MIN_VALUE_RAY_BOUNCES = 0;
-    const int MAX_VALUE_RAY_BOUNCES = 20;
-    ImGui::InputInt("##MaxRayBounces", &max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MIN_VALUE_RAY_BOUNCES);
-    max_ray_bounces = clamp(max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MAX_VALUE_RAY_BOUNCES);
-    app.render_settings.max_ray_bounces = max_ray_bounces;
+    if (ImGui::CollapsingHeader("Render settings")) {
+        ImGui::Text("Max ray bounces");
+        ImGui::SameLine();
+        static int max_ray_bounces = app.render_settings.max_ray_bounces;
+        const int MIN_VALUE_RAY_BOUNCES = 0;
+        const int MAX_VALUE_RAY_BOUNCES = 20;
+        ImGui::InputInt("##MaxRayBounces", &max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MIN_VALUE_RAY_BOUNCES);
+        max_ray_bounces = clamp(max_ray_bounces, MIN_VALUE_RAY_BOUNCES, MAX_VALUE_RAY_BOUNCES);
+        app.render_settings.max_ray_bounces = max_ray_bounces;
+    }
 
     if (ImGui::Button("Render")) {
         app.state.need_render = true;

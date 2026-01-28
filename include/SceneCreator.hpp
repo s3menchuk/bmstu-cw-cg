@@ -30,8 +30,10 @@ class SimpleSphere : public SceneCreator {
         scene.background_color = sRGB::SKY_BLUE;
         scene.world_up = {0, 1, 0};
         scene.add_light(std::make_shared<DirectionLight>(Vec3(1, -1, -1), Color(sRGB::WHITE), 1));
-        scene.add_object(std::make_shared<Object>(std::make_shared<Sphere>(Vec3(0, 1, 0), 1), Material(Color(sRGB::RED), 0)));
-        scene.add_object(std::make_shared<Object>(std::make_shared<Plane>(scene.world_up, 0), Material(Color(sRGB::GRAY), 0)));
+        Real radius = 1;
+        scene.add_object(
+            std::make_shared<Object>(std::make_shared<Sphere>(Vec3(0, radius, 0), radius), Material{.color = sRGB::RED, .shininess = 0.1}));
+        scene.add_object(std::make_shared<Object>(std::make_shared<Plane>(scene.world_up, 0), Material{.color = sRGB::GRAY}));
         return scene;
     }
 

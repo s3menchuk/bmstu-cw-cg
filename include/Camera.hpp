@@ -17,6 +17,14 @@ class Camera {
         this->fov_x = 2 * std::atan(std::tan(fov_y / 2) * aspect);
     };
 
+
+    // TODO
+    // Vec3 get_dir() const {
+    //     return dir;
+    // }
+
+    // void set_dir(Vec3 new_dir) {}
+
     void rotate_vertically(Real radians) {
         dir.rotate(right, radians);
         up.rotate(right, radians);

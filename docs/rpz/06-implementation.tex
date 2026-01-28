@@ -11,10 +11,12 @@
     \item изменение положения, ориентации и цвета источников освещения;
 \end{itemize}
 
-\noindent Разрабатываемое ПО должно соответствовать следующим требованиями:
-\begin{itemize}
-    \item при запуске программы должна создаваться камера;
-\end{itemize}
+При запуске программы должна создаваться камера.
+
+% \noindent Разрабатываемое ПО должно соответствовать следующим требованиями:
+% \begin{itemize}
+%     \item при запуске программы должна создаваться камера;
+% \end{itemize}
 
 \section{Средства реализации}
 Для написания данной курсовой работы был выбран C++. Выбор языка программирования обусловлен следующими факторами:
@@ -27,9 +29,9 @@
     \item личный опыт использования.
 \end{itemize}
 
-В качестве графической библиотеки была выбрана SFML\cite{sfml} по причине поддержке объектно-ориентированный модели, что отличает ее от GLFW\cite{glfw}, SDL\cite{sdl}.
+В качестве графической библиотеки была выбрана SFML\cite{sfml} по причине поддержки объектно-ориентированный модели, что отличает ее от GLFW\cite{glfw}, SDL\cite{sdl}.
 
-Для реализация графического интефейса пользователя был использован ImGui по причине легковесности, быстродействия и интеграции с вышеперечисленными библиотеками для создания окон и ввода.
+Для реализация графического интефейса пользователя был использован Dear ImGui\cite{imgui} по причине легковесности, быстродействия и интеграции с вышеперечисленными библиотеками для создания окон и ввода.
 
 Для генерации файлов сборки проекта был использован CMake\cite{cmake}.
 
@@ -44,12 +46,15 @@
     \label{fig:UML}
 \end{figure}
 
-\section{Типы и структуры данных}
-Основные типы и структуры данных, используемые в программе.
 
-\textbf{RayTracingRenderer::render}
+Класс \textit{Scene} предназначен для хранения геометрических объектов сцены и источников освещения. Класс \textit{Camera} инкапсулирует логику работы камеры, включая ее положение и ориентацию. Класс \textit{Canvas} используется для сохранения сгенерированного изображения. Класс \textit{Renderer} осуществляет формирование изображения сцены (Scene) с позиции камеры (Camera) и записывает результат в выходной буфер (Canvas). Этот класс выполняет роль центрального модуля, обеспечивая взаимодействии всех остальных компонентов системы.
 
-\begin{lstlisting}
+\section{Листинги кода}
+В этом разделе будут приведены листинги основных классов и функций программы.
+
+На листинге \ref{lst:render} представлен метод hit класса RayTracingRenderer. Метод существляет обход всех пикселей кадра, вычисляет их цвет и записывает его на холст.
+
+\begin{lstlisting}[caption={Метод render класса RayTracingRenderer}, label={lst:render}]
 void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera &camera, const RenderSettings &settings) override {
     float view_height = 2 * std::tan(camera.fov_y / 2) * camera.near;
     float view_width = view_height * camera.aspect;
@@ -75,9 +80,9 @@ void RayTracingRenderer::render(Canvas &canvas, const Scene &scene, const Camera
 }
 \end{lstlisting}
 
-\textbf{Листинг функции трассировки луча}
+На листинге \ref{lst:trace-ray} представлен метод trace\_ray класса RayTracingRenderer. Метод рекурсивно вычисляет цвет пикселя.
 
-\begin{lstlisting}
+\begin{lstlisting}[caption={Метод trace\_ray класса RayTracingRenderer}, label={lst:trace-ray}]
 Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t depth) const {
     if (depth == 0)
         return Color();
@@ -96,12 +101,8 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
 
     for (const auto &light : scene.lights) {
         if (!is_in_shadow(scene, closest_hit.point, *light)) {
-            const Vec3 L = -light->get_direction(closest_hit.point);
-            diffuse_intensity += std::max(N.dot(L), 0.0f) * light->get_color() * light->get_intensity(closest_hit.point);
-
-            // const Vec3 R = 2 * N.dot(L) * N - L;
-            Vec3 H = (L + V).normalized();
-            specular_intensity += std::pow(std::max(N.dot(H), 0.0f), 100) * light->get_color() * light->get_intensity(closest_hit.point);
+            const Vec3 R = 2 * N.dot(L) * N - L;
+            specular_intensity += std::pow(std::max(R.dot(V), 0.0f), closest_obj->material.shininess) * light->get_color() * light->get_intensity(closest_hit.point);
         }
     }
 
@@ -117,9 +118,9 @@ Color RayTracingRenderer::trace_ray(const Scene &scene, const Ray3 &ray, size_t 
 }
 \end{lstlisting}
 
-\textbf{Hittable и Object}
+Класс Hittable представляет собой интерфейс, от которого наследуются все геометрические примитив сцены. Каждая производная реализация обязана предоставлять метод hit, отвечающий за проверку пересечения луча с объектом. Класс Object объединяет геометрический каркас объекта (Hittable) и его материал (Material), который определяет цвет объекта и отражающие способности поверхности. Кроме того, класс содержит метаданные, такие как visible, определяющие видимость объекта на сцене. Оба класса представлены на следующем листинге \ref{lst:object}.
 
-\begin{lstlisting}
+\begin{lstlisting}[caption={Классы Hittable и Object}, label={lst:object}]
 class Hittable {
   public:
     virtual bool hit(const Ray3 &ray, HitRecord &hit_record) const = 0;
@@ -147,33 +148,20 @@ class Object {
 };
 \end{lstlisting}
 
-\section{Алгоритмы}
+На листинге \ref{lst:sphere-hit} представлен метод hit класса Sphere, вычисляющий пересечение луча со сферой.
 
-Листинги программ нахождения пересечения луча с примитивами
-
-\textbf{Пересечение луча со сферой}
-
-\begin{lstlisting}
-bool Sphere::hit(const Ray3 &ray, HitRecord &hit_record) const override {
-    Vec3 co = ray.origin - center;
-
-    auto a = ray.direction.sqr();
-    auto b = 2 * ray.direction.dot(co);
-    auto c = co.sqr() - std::pow(radius, 2);
-
-    auto D = b * b - 4 * a * c;
+\begin{lstlisting}[caption={Метод hit класса Sphere}, label={lst:sphere-hit}]
+bool Sphere::hit(const Ray3 &ray, HitRecord &hit_record) const {
+    Vec3 oc = ray.origin - center;
+    auto dot = oc.dot(ray.direction);
+    auto D = dot * dot - oc.dot(oc) + radius * radius;
     if (D < 0)
         return false;
-    auto t1 = (-b - std::sqrt(D)) / (2 * a);
-    auto t2 = (-b + std::sqrt(D)) / (2 * a);
-
-    auto t_min = std::numeric_limits<T>::max();
-    if (t1 >= 0)
-        t_min = t1;
-    if (t2 >= 0 && t2 < t_min)
-        t_min = t2;
-    if (t_min == std::numeric_limits<T>::max())
+    auto t2 = -dot + std::sqrt(D);
+    if (t2 < 0)
         return false;
+    auto t1 = -dot - std::sqrt(D);
+    auto t_min = t1 > 0 ? t1 : t2;
     hit_record.dist = t_min;
     hit_record.point = ray.at(t_min);
     hit_record.normal = (hit_record.point - center).normalized();
@@ -181,51 +169,65 @@ bool Sphere::hit(const Ray3 &ray, HitRecord &hit_record) const override {
 }
 \end{lstlisting}
 
-\textbf{Пересечение луча с треугольником}
+На листинге \ref{lst:triangle-hit} представлен метод hit класса Triangle, вычисляющий пересечение луча с треугольником.
 
-\begin{lstlisting}
+\begin{lstlisting}[caption={Метод hit класса Triangle}, label={lst:triangle-hit}]
 bool Triangle::hit(const Ray3 &ray, HitRecord &hit_record) const {
-    constexpr T EPSILON = std::numeric_limits<T>::epsilon();
-    auto edge1 = b - a;
-    auto edge2 = c - a;
+    constexpr Real EPSILON = std::numeric_limits<Real>::epsilon();
+    auto edge_ab = b - a;
+    auto edge_ac = c - a;
 
-    auto h = ray.direction.cross(edge2);
-    auto det = edge1.dot(h);
+    auto pvec = ray.direction.cross(edge_ac);
+    auto det = edge_ab.dot(pvec);
 
     if (std::abs(det) < EPSILON)
         return false;
 
-    auto inv_det = 1.0 / det;
-    auto s = ray.origin - a;
-    auto u = inv_det * s.dot(h);
-    if (u < 0.0 || u > 1.0)
+    auto inv_det = 1 / det;
+    auto tvec = ray.origin - a;
+    auto u = inv_det * tvec.dot(pvec);
+    if (u < 0 || u > 1)
         return false;
 
-    auto q = s.cross(edge1);
-    auto v = inv_det * ray.direction.dot(q);
-    if (v < 0.0 || u + v > 1.0)
+    auto qvec = tvec.cross(edge_ab);
+    auto v = inv_det * ray.direction.dot(qvec);
+    if (v < 0 || u + v > 1)
         return false;
 
-    auto t = inv_det * edge2.dot(q);
-    if (t > EPSILON) {
-        hit_record.dist = t;
-        hit_record.point = ray.at(t);
-        auto normal = edge1.cross(edge2).normalized();
-        hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
-        return true;
+    auto t = inv_det * edge_ac.dot(qvec);
+    if (t < EPSILON) {
+        return false;
     }
-
-    return false;
+    hit_record.dist = t;
+    hit_record.point = ray.at(t);
+    auto normal = edge_ab.cross(edge_ac).normalized();
+    hit_record.normal = normal.dot(ray.direction) < 0 ? normal : -normal;
+    return true;
 }
 \end{lstlisting}
 
 \section{Графический интерфейс пользователя}
 
+На рисунке \ref{fig:GUI} приведен пример работы графического интерфейса пользователя.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{GUI.png}
     \caption{Пример работы GUI}
     \label{fig:GUI}
 \end{figure}
+
+GUI позволяет:
+\begin{itemize}
+    \item настраивать параметры камеры;
+    \item добавлять, изменять и удалять геометрические примитивы и источники освещения;
+    \item задавать параматеры рендеринга, включая максимальное число отражений луча;
+    \item сохранять сгенерированный кадр на устройство.
+\end{itemize}
+
+Для добавления геометрических примитивов или источников освещения пользователь должен выбрать соответствующий тип объекта в выпающем меню, задать необходимые параметры и нажать кнопку Add Object или Add Light.
+
+Также была реализована возможность управления положением и ориентацией камеры с помощью клавиатуры, аналогично большинству 3D-игр. Для перемещения камеры используются клавиши W (вперед), S (назад), A (влево), D (вправо), Page Up (подъём вверх) и Page Down (опускание вниз). Ориентация камеры управляется с помощью стрелок: Arrow Up и Arrow Down -- наклон вверх и вниз, Arrow Left и Arrow Right -- поворот влево и вправо.
+
+Сохранение сгенерированного кадра осуществляется с помощью кнопки <<Save image>>.
 
 % Многопоточность
