@@ -255,6 +255,47 @@ GLuint ssbo_load(const std::vector<T> &data, GLuint binding) {
     return ssbo;
 }
 
+// coords vec3
+// indexes vec3i
+// normals vec3
+// colors vec4
+
+// textures
+
+// objects (offset, count, color)
+
+struct TBO {
+    GLuint buf = 0;
+    GLuint tex = 0;
+};
+
+template <typename T>
+TBO tbo_load(const std::vector<T> &data, GLenum internal_format, GLuint shader, std::string uniform_name) {
+    static_assert(sizeof(T) % 4 == 0, "TBO element must be 4-byte aligned");
+
+    static GLint tex_num = 1;
+
+    TBO tbo;
+
+    glGenBuffers(1, &tbo.buf);
+    glBindBuffer(GL_TEXTURE_BUFFER, tbo.buf);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(T) * data.size(), data.data(), GL_STATIC_DRAW);
+
+    glGenTextures(1, &tbo.tex);
+    glBindTexture(GL_TEXTURE_BUFFER, tbo.tex);
+    glTexBuffer(GL_TEXTURE_BUFFER, internal_format, tbo.buf);
+
+    glBindBuffer(GL_TEXTURE_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_BUFFER, 0);
+
+    glActiveTexture(GL_TEXTURE0 + tex_num);
+    glBindTexture(GL_TEXTURE_BUFFER, tbo.tex);
+    glUniform1i(glGetUniformLocation(shader, uniform_name.c_str()), tex_num);
+    tex_num++;
+
+    return tbo;
+}
+
 bool save_to_ppm_binary(const std::vector<uint8_t> &image, const std::string &filename) {
     std::ofstream fout(filename, std::ios::binary);
     if (!fout.is_open())
@@ -327,9 +368,8 @@ int main() {
     glfwSetMouseButtonCallback(window, SetMouseButton_callback);
     // glfwSetWindowSizeCallback(window, WindowSize_callback);
 
-    // отключить V-Sync
-    // glfwSwapInterval(0);
-    // 0 = без синхронизации, 1 = синхронизация с монитором
+    // отключить V-Sync; 0 = без синхронизации, 1 = синхронизация с монитором
+    glfwSwapInterval(1);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD\n";
@@ -389,10 +429,35 @@ int main() {
     std::vector<glm::vec4> normals;
     std::vector<glm::vec4> textures;
     load("assets/models/utah_teapot-res2_unit.obj", coords, faces, normals, textures);
-    GLuint coordsSSBO = ssbo_load(coords, 0);
-    GLuint facesSSBO = ssbo_load(faces, 1);
-    GLuint normalsSSBO = ssbo_load(normals, 2);
-    GLuint texturesSSBO = ssbo_load(textures, 3);
+    glUseProgram(tracer_shader);
+    TBO coordsTBO = tbo_load(coords, GL_RGBA32F, tracer_shader, "CoordsBuffer");
+    TBO facesTBO = tbo_load(faces, GL_RGBA32UI, tracer_shader, "TrianglesBuffer");
+    TBO normalsTBO = tbo_load(normals, GL_RGBA32F, tracer_shader, "NormalsBuffer");
+    TBO texturesTBO = tbo_load(textures, GL_RGBA32F, tracer_shader, "TexturesBuffer");
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_BUFFER, coordsTBO.tex);
+    glUniform1i(glGetUniformLocation(tracer_shader, "CoordsBuffer"), 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_BUFFER, facesTBO.tex);
+    glUniform1i(glGetUniformLocation(tracer_shader, "TrianglesBuffer"), 2);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_BUFFER, normalsTBO.tex);
+    glUniform1i(glGetUniformLocation(tracer_shader, "NormalsBuffer"), 3);
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_BUFFER, texturesTBO.tex);
+    glUniform1i(glGetUniformLocation(tracer_shader, "TexturesBuffer"), 4);
+
+    // glUseProgram(tracer_shader);
+    // std::vector<glm::vec4> colors(5);
+    // colors[0] = {1.0f, 0.0f, 0.0f, 1.0f};
+    // TBO colorsTBO = tbo_load(colors, GL_RGBA32F);
+    // glActiveTexture(GL_TEXTURE4);
+    // glBindTexture(GL_TEXTURE_BUFFER, colorsTBO.tex);
+    // glUniform1i(glGetUniformLocation(tracer_shader, "ColorsBuffer"), 4);
 
     int total_curr_frame = 0;
     int total_last_frame = 0;
@@ -428,6 +493,8 @@ int main() {
         glUniform3f(glGetUniformLocation(tracer_shader, "CameraDir"), camera.dir.x, camera.dir.y, camera.dir.z);
         glUniform1i(glGetUniformLocation(tracer_shader, "MaxRayBounces"), Settings::max_ray_bounces);
         glUniform1i(glGetUniformLocation(tracer_shader, "SamplesPerPixel"), Settings::samples_per_pixel);
+
+        glUniform1i(glGetUniformLocation(tracer_shader, "CountTriangles"), faces.size());
 
         // передаём предыдущую текстуру
         glActiveTexture(GL_TEXTURE0);

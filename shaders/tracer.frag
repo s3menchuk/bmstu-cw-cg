@@ -33,21 +33,55 @@ struct Triangle {
     vec3 a, b, c;
 };
 
-layout(std430, binding = 0) buffer CoordsBuffer {
-    vec4 coords[];
-};
+// layout(std430, binding = 0) buffer CoordsBuffer {
+//     vec4 coords[];
+// };
 
-layout(std430, binding = 1) buffer TrianglesIndicesBuffer {
-    TriangleIndices triangles_indices[];
-};
+// layout(std430, binding = 1) buffer TrianglesIndicesBuffer {
+//     TriangleIndices triangles_indices[];
+// };
 
-layout(std430, binding = 2) buffer NormalsBuffer {
-    vec4 normals[];
-};
+// layout(std430, binding = 2) buffer NormalsBuffer {
+//     vec4 normals[];
+// };
 
-layout(std430, binding = 3) buffer TexturesBuffer {
-    vec4 textures[];
-};
+// layout(std430, binding = 3) buffer TexturesBuffer {
+//     vec4 textures[];
+// };
+
+uniform samplerBuffer CoordsBuffer;
+uniform usamplerBuffer TrianglesBuffer;
+uniform samplerBuffer NormalsBuffer;
+uniform samplerBuffer TexturesBuffer;
+
+uniform samplerBuffer ColorsBuffer;
+
+uniform int CountTriangles;
+
+vec3 get_normal(int id) {
+    return texelFetch(NormalsBuffer, id).xyz;
+}
+
+VertexIndices get_vertex(int id) {
+    VertexIndices res;
+    uvec3 cnt = texelFetch(TrianglesBuffer, id).xyz;
+    res.coord = cnt.x;
+    res.normal = cnt.y;
+    res.texture = cnt.z;
+    return res;
+}
+
+TriangleIndices get_triangle(int id) {
+    TriangleIndices res;
+    res.a = get_vertex(3 * id + 0);
+    res.b = get_vertex(3 * id + 1);
+    res.c = get_vertex(3 * id + 2);
+    return res;
+}
+
+vec3 get_coord(uint id) {
+    return texelFetch(CoordsBuffer, int(id)).xyz;
+}
 
 bool contains(float val, float min_val, float max_val) {
     return min_val <= val && val <= max_val;
@@ -204,9 +238,12 @@ Triangle create_triangle(vec3 a, vec3 b, vec3 c) {
 
 Triangle create_triangle(TriangleIndices i) {
     Triangle t;
-    t.a = coords[i.a.coord].xyz;
-    t.b = coords[i.b.coord].xyz;
-    t.c = coords[i.c.coord].xyz;
+    // t.a = coords[i.a.coord].xyz;
+    // t.b = coords[i.b.coord].xyz;
+    // t.c = coords[i.c.coord].xyz;
+    t.a = get_coord(i.a.coord);
+    t.b = get_coord(i.b.coord);
+    t.c = get_coord(i.c.coord);
     return t;
 }
 
@@ -268,13 +305,13 @@ bool hit(TriangleIndices indices, Ray3 ray, out HitRecord hit_record) {
     hit_record.normal = dot(normal, ray.dir) < 0 ? normal : -normal;
 
     vec3 coeffs = barycentric(triangle, hit_record.point);
-    vec3 vn_a = normals[indices.a.normal].xyz;
-    vec3 vn_b = normals[indices.b.normal].xyz;
-    vec3 vn_c = normals[indices.c.normal].xyz;
+    vec3 vn_a = get_normal(int(indices.a.normal));
+    vec3 vn_b = get_normal(int(indices.b.normal));
+    vec3 vn_c = get_normal(int(indices.c.normal));
     hit_record.normal = normalize(vn_a * coeffs.x + vn_b * coeffs.y + vn_c * coeffs.z);
 
-    hit_record.material.color = vec3(0.0, 0.0, 1.0);
-    hit_record.material.metallic = 1.0;
+    hit_record.material.color = vec3(1.0, 1.0, 1.0);
+    hit_record.material.metallic = 0.0;
     hit_record.material.emission_color = vec3(1.0, 1.0, 1.0);
     hit_record.material.emission_strength = 0.0;
     hit_record.material.alpha = 0.05;
@@ -479,12 +516,12 @@ void create_cornell_box(vec3 pos, vec3 size) {
 
     COUNT_QUADS += 6;
 
-    // PointLight point_light;
-    // point_light.pos = pos + vec3(size.x / 2.0, size.z - 0.1, 0.0);
-    // point_light.color = vec3(1.0, 1.0, 1.0);
-    // point_light.intensity = 0.1;
-    // point_lights[COUNT_POINT_LIGHTS] = point_light;
-    // COUNT_POINT_LIGHTS++;
+    PointLight point_light;
+    point_light.pos = pos + vec3(size.x / 2.0, size.z - 0.1, 0.0);
+    point_light.color = vec3(1.0, 1.0, 1.0);
+    point_light.intensity = 0.1;
+    point_lights[COUNT_POINT_LIGHTS] = point_light;
+    COUNT_POINT_LIGHTS++;
 }
 
 uint hash(uint x) {
@@ -558,8 +595,8 @@ bool find_closest_quad(out HitRecord closest_hit, Ray3 ray) {
 bool find_closest_triangle(out HitRecord closest_hit, Ray3 ray) {
     HitRecord closest, current;
     closest.dist = inf;
-    for (int i = 0; i < triangles_indices.length(); ++i) {
-        if (hit(triangles_indices[i], ray, current) && current.dist < closest.dist) {
+    for (int i = 0; i < CountTriangles; ++i) {                                    // triangles_indices.length()
+        if (hit(get_triangle(i), ray, current) && current.dist < closest.dist) {  // triangles_indices[i]
             closest = current;
         }
     }
