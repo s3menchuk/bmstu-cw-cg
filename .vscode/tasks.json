@@ -4,8 +4,13 @@
 		{
 			"type": "shell",
 			"label": "cmake: build + run",
-			"command": "cmake -B build -S . -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/Users/Mikhail/vcpkg/scripts/buildsystems/vcpkg.cmake && cmake --build build && build\\Debug\\app.exe",
 			"group": "build",
+			"windows": {
+				"command": "cmake -B build -S . -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/Users/Mikhail/vcpkg/scripts/buildsystems/vcpkg.cmake && cmake --build build && build\\Debug\\app.exe"
+			},
+			"osx": {
+				"command": "cmake -B build -S . && cmake --build build && ./build/app"
+			}
 		}
 	]
 }

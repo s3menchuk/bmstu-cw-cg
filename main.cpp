@@ -104,8 +104,8 @@ bool load(const std::string &path, std::vector<glm::vec4> &coords, std::vector<T
     return true;
 }
 
-static Camera camera(Settings::CAMERA_POS, Settings::CAMERA_DIR, Settings::WORLD_UP, Settings::FOV_Y, Settings::ASPECT, Settings::CAMERA_NEAR,
-                     Settings::CAMERA_FAR);
+static Camera camera(DefaultSettings::CAMERA_POS, DefaultSettings::CAMERA_DIR, DefaultSettings::WORLD_UP, DefaultSettings::FOV_Y,
+                     DefaultSettings::ASPECT, DefaultSettings::CAMERA_NEAR, DefaultSettings::CAMERA_FAR);
 
 static int frame_num = 0;
 static bool camera_mode = false;
@@ -168,45 +168,45 @@ void handle_keystrokes(GLFWwindow *window, Camera &camera) {
 
     // Movement
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camera.pos += camera.dir * Settings::CAMERA_MOVEMENT_SPEED;
+        camera.pos += camera.dir * DefaultSettings::CAMERA_MOVEMENT_SPEED;
         is_key_pressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        camera.pos -= camera.dir * Settings::CAMERA_MOVEMENT_SPEED;
+        camera.pos -= camera.dir * DefaultSettings::CAMERA_MOVEMENT_SPEED;
         is_key_pressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        camera.pos += camera.right * Settings::CAMERA_MOVEMENT_SPEED;
+        camera.pos += camera.right * DefaultSettings::CAMERA_MOVEMENT_SPEED;
         is_key_pressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        camera.pos -= camera.right * Settings::CAMERA_MOVEMENT_SPEED;
+        camera.pos -= camera.right * DefaultSettings::CAMERA_MOVEMENT_SPEED;
         is_key_pressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS) {
-        camera.pos += Settings::WORLD_UP * Settings::CAMERA_MOVEMENT_SPEED;
+        camera.pos += DefaultSettings::WORLD_UP * DefaultSettings::CAMERA_MOVEMENT_SPEED;
         is_key_pressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) {
-        camera.pos -= Settings::WORLD_UP * Settings::CAMERA_MOVEMENT_SPEED;
+        camera.pos -= DefaultSettings::WORLD_UP * DefaultSettings::CAMERA_MOVEMENT_SPEED;
         is_key_pressed = true;
     }
 
     // Rotation
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && camera.get_zenith() <= Settings::MAX_ZENITH_RADIANS) {
-        camera.rotate_vertically(Settings::CAMERA_ROTATION_SPEED);
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && camera.get_zenith() <= DefaultSettings::MAX_ZENITH_RADIANS) {
+        camera.rotate_vertically(DefaultSettings::CAMERA_ROTATION_SPEED);
         is_key_pressed = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && camera.get_zenith() >= -Settings::MAX_ZENITH_RADIANS) {
-        camera.rotate_vertically(-Settings::CAMERA_ROTATION_SPEED);
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && camera.get_zenith() >= -DefaultSettings::MAX_ZENITH_RADIANS) {
+        camera.rotate_vertically(-DefaultSettings::CAMERA_ROTATION_SPEED);
         is_key_pressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        camera.rotate_by(Settings::WORLD_UP, Settings::CAMERA_ROTATION_SPEED);
+        camera.rotate_by(DefaultSettings::WORLD_UP, DefaultSettings::CAMERA_ROTATION_SPEED);
         is_key_pressed = true;
     }
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        camera.rotate_by(Settings::WORLD_UP, -Settings::CAMERA_ROTATION_SPEED);
+        camera.rotate_by(DefaultSettings::WORLD_UP, -DefaultSettings::CAMERA_ROTATION_SPEED);
         is_key_pressed = true;
     }
 
@@ -233,14 +233,15 @@ void SetCursorPos_callback(GLFWwindow *window, double xpos, double ypos) {
     lastX = xpos;
     lastY = ypos;
 
-    xoffset *= Settings::MOUSE_SENSITIVITY;
-    yoffset *= Settings::MOUSE_SENSITIVITY;
+    xoffset *= DefaultSettings::MOUSE_SENSITIVITY;
+    yoffset *= DefaultSettings::MOUSE_SENSITIVITY;
 
-    if ((yoffset > 0 && camera.get_zenith() < Settings::MAX_ZENITH_RADIANS) || (yoffset < 0 && camera.get_zenith() > -Settings::MAX_ZENITH_RADIANS)) {
-        camera.rotate_vertically(yoffset * Settings::CAMERA_ROTATION_SPEED);
+    if ((yoffset > 0 && camera.get_zenith() < DefaultSettings::MAX_ZENITH_RADIANS) ||
+        (yoffset < 0 && camera.get_zenith() > -DefaultSettings::MAX_ZENITH_RADIANS)) {
+        camera.rotate_vertically(yoffset * DefaultSettings::CAMERA_ROTATION_SPEED);
     }
 
-    camera.rotate_by(Settings::WORLD_UP, -xoffset * Settings::CAMERA_ROTATION_SPEED);
+    camera.rotate_by(DefaultSettings::WORLD_UP, -xoffset * DefaultSettings::CAMERA_ROTATION_SPEED);
     frame_num = 0;
 }
 
@@ -294,10 +295,10 @@ bool save_to_ppm_binary(const std::vector<uint8_t> &image, const std::string &fi
     if (!fout.is_open())
         return false;
     fout << "P6" << '\n';
-    fout << Settings::WIDTH << ' ' << Settings::HEIGHT << '\n';
+    fout << DefaultSettings::WIDTH << ' ' << DefaultSettings::HEIGHT << '\n';
     fout << 255 << '\n';
-    for (size_t row = 0; row < Settings::HEIGHT; ++row) {
-        for (size_t col = 0; col < Settings::WIDTH; ++col) {
+    for (size_t row = 0; row < DefaultSettings::HEIGHT; ++row) {
+        for (size_t col = 0; col < DefaultSettings::WIDTH; ++col) {
             auto color = image[(row * col + col) * 3];
             fout.write(reinterpret_cast<char *>(&color), 3);
         }
@@ -341,15 +342,22 @@ void SetMouseButton_callback(GLFWwindow *window, int button, int action, int mod
 //     glViewport(0, 0, width, height);
 // }
 
+void error_callback(int error, const char *description) {
+    std::cerr << "GLFW Error " << error << ": " << description << std::endl;
+}
+
 int main() {
+    glfwSetErrorCallback(error_callback);
+
     if (!glfwInit())
         return -1;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(Settings::WIDTH, Settings::HEIGHT, Settings::APP_NAME.c_str(), nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(DefaultSettings::WIDTH, DefaultSettings::HEIGHT, DefaultSettings::APP_NAME.c_str(), nullptr, nullptr);
+
     if (!window) {
         glfwTerminate();
         return -1;
@@ -369,7 +377,9 @@ int main() {
         return -1;
     }
 
-    glViewport(0, 0, Settings::WIDTH, Settings::HEIGHT);
+    int fbw, fbh;
+    glfwGetFramebufferSize(window, &fbw, &fbh);
+    glViewport(0, 0, fbw, fbh);
 
     // OpenGL and GLSL versions
     // std::cout << "OpenGL: " << glGetString(GL_VERSION) << std::endl;
@@ -383,6 +393,16 @@ int main() {
         -1.0f, -1.0f,
          3.0f, -1.0f,
         -1.0f,  3.0f,
+    };
+    // clang-format on
+
+    // clang-format off
+    const GLfloat SCREEN_QUAD_VERTICES[] = {
+        // positions   // texCoords
+        -1.0f, -1.0f, 0.0f, 0.0f,
+        1.0f, -1.0f, 1.0f, 0.0f,
+        1.0f,  1.0f, 1.0f, 1.0f,
+        -1.0f,  1.0f, 0.0f, 1.0f
     };
     // clang-format on
 
@@ -408,7 +428,7 @@ int main() {
     for (int i = 0; i < 2; i++) {
         glBindFramebuffer(GL_FRAMEBUFFER, accumFBO[i]);
         glBindTexture(GL_TEXTURE_2D, accumTex[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, Settings::WIDTH, Settings::HEIGHT, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, fbw, fbh, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, accumTex[i], 0);
@@ -421,13 +441,16 @@ int main() {
     std::vector<TriangleGPU> faces;
     std::vector<glm::vec4> normals;
     std::vector<glm::vec4> textures;
+
     load("assets/models/utah_teapot-res2_unit.obj", coords, faces, normals, textures);
+    faces.clear();
+
     glUseProgram(tracer_shader);
     TBO coordsTBO = tbo_load(coords, GL_RGBA32F, tracer_shader);
     TBO facesTBO = tbo_load(faces, GL_RGBA32UI, tracer_shader);
     TBO normalsTBO = tbo_load(normals, GL_RGBA32F, tracer_shader);
     TBO texturesTBO = tbo_load(textures, GL_RGBA32F, tracer_shader);
-    
+
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_BUFFER, coordsTBO.tex);
     glUniform1i(glGetUniformLocation(tracer_shader, "CoordsBuffer"), 1);
@@ -478,14 +501,15 @@ int main() {
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, accumFBO[ping_pong_buffer]);
+        glViewport(0, 0, fbw, fbh);
 
         glUseProgram(tracer_shader);
         glUniform1i(glGetUniformLocation(tracer_shader, "FrameNum"), frame_num);
         glUniform1f(glGetUniformLocation(tracer_shader, "Time"), glfwGetTime());
         glUniform3f(glGetUniformLocation(tracer_shader, "CameraPos"), camera.pos.x, camera.pos.y, camera.pos.z);
         glUniform3f(glGetUniformLocation(tracer_shader, "CameraDir"), camera.dir.x, camera.dir.y, camera.dir.z);
-        glUniform1i(glGetUniformLocation(tracer_shader, "MaxRayBounces"), Settings::max_ray_bounces);
-        glUniform1i(glGetUniformLocation(tracer_shader, "SamplesPerPixel"), Settings::samples_per_pixel);
+        glUniform1i(glGetUniformLocation(tracer_shader, "MaxRayBounces"), DefaultSettings::max_ray_bounces);
+        glUniform1i(glGetUniformLocation(tracer_shader, "SamplesPerPixel"), DefaultSettings::samples_per_pixel);
 
         glUniform1i(glGetUniformLocation(tracer_shader, "CountTriangles"), faces.size());
 
@@ -499,6 +523,7 @@ int main() {
 
         // теперь выводим на экран
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, fbw, fbh);
 
         glUseProgram(screen_shader);
         glActiveTexture(GL_TEXTURE0);

@@ -6,7 +6,7 @@
 
 #include <string>
 
-namespace Settings {
+namespace DefaultSettings {
 const std::string APP_NAME = "Graphics Engine";
 const int FRAME_LIMIT = 60;
 
@@ -30,6 +30,6 @@ const Real CAMERA_ROTATION_SPEED = 0.1;
 
 const Real MOUSE_SENSITIVITY = 0.025f;
 
-const int max_ray_bounces = 10;
+const int max_ray_bounces = 2;
 const int samples_per_pixel = 1;
-}  // namespace Settings
+}  // namespace DefaultSettings

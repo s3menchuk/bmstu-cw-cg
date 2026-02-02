@@ -1,4 +1,4 @@
-#version 460 core
+#version 410 core
 out vec4 FragColor;
 
 in vec2 PixelCoords;
@@ -314,7 +314,7 @@ bool hit(TriangleIndices indices, Ray3 ray, out HitRecord hit_record) {
     hit_record.material.metallic = 0.0;
     hit_record.material.emission_color = vec3(1.0, 1.0, 1.0);
     hit_record.material.emission_strength = 0.0;
-    hit_record.material.alpha = 0.05;
+    hit_record.material.alpha = 1.00;
     hit_record.material.ior = 1.5;
 
     return true;
@@ -755,7 +755,7 @@ vec3 render_path_tracing() {
 }
 
 void init_scene() {
-    // create_sphere_scene();
+    create_sphere_scene();
     vec3 pos = vec3(-0.8, 0.0, 0.5);
     vec3 size = vec3(1.5, 1.0, 0.75);
     create_cornell_box(pos, size);

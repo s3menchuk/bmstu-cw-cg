@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "MacOS",
             "includePath": [
                 "${workspaceFolder}/**",
                 "${vcpkgRoot}/x64-windows/include"
@@ -14,6 +14,17 @@
             "windowsSdkVersion": "10.0.22621.0",
             "cStandard": "c23",
             "intelliSenseMode": "windows-msvc-x64"
+        },
+        {
+            "name": "MacOS",
+            "includePath": [
+                "${workspaceFolder}/**",
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "macos-clang-arm64"
         }
     ],
     "version": 4
