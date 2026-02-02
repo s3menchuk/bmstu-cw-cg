@@ -270,10 +270,8 @@ struct TBO {
 };
 
 template <typename T>
-TBO tbo_load(const std::vector<T> &data, GLenum internal_format, GLuint shader, std::string uniform_name) {
+TBO tbo_load(const std::vector<T> &data, GLenum internal_format, GLuint shader) {
     static_assert(sizeof(T) % 4 == 0, "TBO element must be 4-byte aligned");
-
-    static GLint tex_num = 1;
 
     TBO tbo;
 
@@ -287,11 +285,6 @@ TBO tbo_load(const std::vector<T> &data, GLenum internal_format, GLuint shader, 
 
     glBindBuffer(GL_TEXTURE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
-
-    glActiveTexture(GL_TEXTURE0 + tex_num);
-    glBindTexture(GL_TEXTURE_BUFFER, tbo.tex);
-    glUniform1i(glGetUniformLocation(shader, uniform_name.c_str()), tex_num);
-    tex_num++;
 
     return tbo;
 }
@@ -430,11 +423,11 @@ int main() {
     std::vector<glm::vec4> textures;
     load("assets/models/utah_teapot-res2_unit.obj", coords, faces, normals, textures);
     glUseProgram(tracer_shader);
-    TBO coordsTBO = tbo_load(coords, GL_RGBA32F, tracer_shader, "CoordsBuffer");
-    TBO facesTBO = tbo_load(faces, GL_RGBA32UI, tracer_shader, "TrianglesBuffer");
-    TBO normalsTBO = tbo_load(normals, GL_RGBA32F, tracer_shader, "NormalsBuffer");
-    TBO texturesTBO = tbo_load(textures, GL_RGBA32F, tracer_shader, "TexturesBuffer");
-
+    TBO coordsTBO = tbo_load(coords, GL_RGBA32F, tracer_shader);
+    TBO facesTBO = tbo_load(faces, GL_RGBA32UI, tracer_shader);
+    TBO normalsTBO = tbo_load(normals, GL_RGBA32F, tracer_shader);
+    TBO texturesTBO = tbo_load(textures, GL_RGBA32F, tracer_shader);
+    
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_BUFFER, coordsTBO.tex);
     glUniform1i(glGetUniformLocation(tracer_shader, "CoordsBuffer"), 1);
@@ -447,9 +440,9 @@ int main() {
     glBindTexture(GL_TEXTURE_BUFFER, normalsTBO.tex);
     glUniform1i(glGetUniformLocation(tracer_shader, "NormalsBuffer"), 3);
 
-    glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_BUFFER, texturesTBO.tex);
-    glUniform1i(glGetUniformLocation(tracer_shader, "TexturesBuffer"), 4);
+    // glActiveTexture(GL_TEXTURE4);
+    // glBindTexture(GL_TEXTURE_BUFFER, texturesTBO.tex);
+    // glUniform1i(glGetUniformLocation(tracer_shader, "TexturesBuffer"), 4);
 
     // glUseProgram(tracer_shader);
     // std::vector<glm::vec4> colors(5);
