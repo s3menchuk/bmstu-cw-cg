@@ -45,6 +45,28 @@ class SimpleSphere : public SceneCreator {
     }
 };
 
+class SimpleBox : public SceneCreator {
+  public:
+    Scene create_scene() const override {
+        Scene scene;
+        scene.background_color = sRGB::SKY_BLUE;
+        scene.world_up = {0, 1, 0};
+        scene.add_light(std::make_shared<DirectionLight>(Vec3(1, -1, -1), Color(sRGB::WHITE), 1));
+        Real radius = 1;
+        scene.add_object(
+            std::make_shared<Object>(std::make_shared<Box>(Vec3(0, 0, 0), Vec3(1, 1, 1)), Material{.color = sRGB::RED, .shininess = 0.1}));
+        scene.add_object(std::make_shared<Object>(std::make_shared<Plane>(scene.world_up, 0), Material{.color = sRGB::GRAY}));
+        return scene;
+    }
+
+    SceneView get_view() const override {
+        SceneView view;
+        view.pos = {0, 1, 3};
+        view.dir = {0, 0, -1};
+        return view;
+    }
+};
+
 class SimplePrism : public SceneCreator {
   public:
     Scene create_scene() const override {

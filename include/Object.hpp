@@ -34,6 +34,92 @@ class Hittable {
     virtual ~Hittable() = default;
 };
 
+class Translate : public Hittable {
+  public:
+    Translate(std::shared_ptr<Hittable> hittable, const Vec3 &offset) : hittable(hittable), offset(offset) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
+        Ray3 local_ray(ray.origin - offset, ray.direction);
+        bool is_hit = hittable->hit(local_ray, hit_record);
+        if (is_hit) {
+            hit_record.point += offset;
+        }
+        return is_hit;
+    }
+
+    AABB bounding_box() const override {
+        AABB aabb = hittable->bounding_box();
+        aabb.x.move(offset.x);
+        aabb.y.move(offset.y);
+        aabb.z.move(offset.z);
+        return aabb;
+    }
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+    Vec3 offset;
+};
+
+class Rotate : public Hittable {
+  public:
+    Rotate(std::shared_ptr<Hittable> hittable, const Vec3 &axis, float angle) : hittable(hittable), axis(axis), angle(angle) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
+        Ray3 local_ray(ray);
+        local_ray.origin.rotate(axis, -angle);
+        local_ray.direction.rotate(axis, -angle);
+        local_ray.direction.normalize();
+        bool is_hit = hittable->hit(local_ray, hit_record);
+        if (is_hit) {
+            hit_record.point.rotate(axis, angle);
+            hit_record.normal.rotate(axis, angle);
+            hit_record.normal.normalized();
+        }
+        return is_hit;
+    }
+
+    AABB bounding_box() const override {
+        AABB aabb = hittable->bounding_box();
+        return aabb;
+    }
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+    Vec3 axis;
+    float angle;
+};
+
+class Scale : public Hittable {
+  public:
+    Scale(std::shared_ptr<Hittable> hittable, const Vec3 &factor) : hittable(hittable), factor(factor) {}
+
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
+        Ray3 local_ray(ray.origin / factor, (ray.direction / factor).normalized());
+        bool is_hit = hittable->hit(local_ray, hit_record);
+        if (is_hit) {
+            hit_record.point = factor * hit_record.point;
+            hit_record.normal = (factor * hit_record.normal).normalized();
+            hit_record.dist *= factor;
+        }
+        return is_hit;
+    }
+
+    AABB bounding_box() const override {
+        AABB aabb = hittable->bounding_box();
+        aabb.x.min *= factor;
+        aabb.x.max *= factor;
+        aabb.y.min *= factor;
+        aabb.y.max *= factor;
+        aabb.z.min *= factor;
+        aabb.z.max *= factor;
+        return aabb;
+    }
+
+  private:
+    std::shared_ptr<Hittable> hittable;
+    Vec3 factor;
+};
+
 template <typename Iter>
 bool hit(HitRecord &hit_record, const Ray3 &ray, Iter begin, Iter end) {
     HitRecord closest, current;
@@ -53,21 +139,35 @@ bool hit(HitRecord &hit_record, const Ray3 &ray, Iter begin, Iter end) {
 class Object {
   public:
     Object(const std::shared_ptr<Hittable> &hittable, const Material &material, bool visible = true)
-        : hittable(hittable), material(material), visible(visible) {}
-
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const {
-        return hittable->hit(ray, hit_record);
-    }
-
-    std::shared_ptr<Hittable> get() {
-        return hittable;
-    }
+        : origin_hittable(hittable), material(material), visible(visible), transform_hittable(hittable) {}
 
     Material material;
     bool visible;
 
+    bool hit(const Ray3 &ray, HitRecord &hit_record) const {
+        return transform_hittable->hit(ray, hit_record);
+    }
+
+    std::shared_ptr<Hittable> get() {
+        return origin_hittable;
+    }
+
+    Vec3 get_rotation() const {
+        return rotation;
+    }
+
+    void set_rotation(Vec3 new_rotation) {
+        transform_hittable = origin_hittable;
+        transform_hittable = std::make_shared<Rotate>(transform_hittable, Vec3(1, 0, 0), new_rotation.x);
+        transform_hittable = std::make_shared<Rotate>(transform_hittable, Vec3(0, 1, 0), new_rotation.y);
+        transform_hittable = std::make_shared<Rotate>(transform_hittable, Vec3(0, 0, 1), new_rotation.z);
+        rotation = new_rotation;
+    }
+
   private:
-    std::shared_ptr<Hittable> hittable;
+    std::shared_ptr<Hittable> origin_hittable;
+    std::shared_ptr<Hittable> transform_hittable;
+    Vec3 rotation;
 };
 
 class Sphere : public Hittable {
@@ -486,90 +586,4 @@ class Model : public Hittable {
     std::vector<Vec3> coords;
     std::vector<Vec3> normals;
     std::vector<std::vector<VertexIndex>> faces;
-};
-
-class Translate : public Hittable {
-  public:
-    Translate(std::shared_ptr<Hittable> hittable, const Vec3 &offset) : hittable(hittable), offset(offset) {}
-
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        Ray3 local_ray(ray.origin - offset, ray.direction);
-        bool is_hit = hittable->hit(local_ray, hit_record);
-        if (is_hit) {
-            hit_record.point += offset;
-        }
-        return is_hit;
-    }
-
-    AABB bounding_box() const override {
-        AABB aabb = hittable->bounding_box();
-        aabb.x.move(offset.x);
-        aabb.y.move(offset.y);
-        aabb.z.move(offset.z);
-        return aabb;
-    }
-
-  private:
-    std::shared_ptr<Hittable> hittable;
-    Vec3 offset;
-};
-
-class Rotate : public Hittable {
-  public:
-    Rotate(std::shared_ptr<Hittable> hittable, const Vec3 &axis, float angle) : hittable(hittable), axis(axis), angle(angle) {}
-
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        Ray3 local_ray(ray);
-        local_ray.origin.rotate(axis, -angle);
-        local_ray.direction.rotate(axis, -angle);
-        local_ray.direction.normalize();
-        bool is_hit = hittable->hit(local_ray, hit_record);
-        if (is_hit) {
-            hit_record.point.rotate(axis, angle);
-            hit_record.normal.rotate(axis, angle);
-            hit_record.normal.normalized();
-        }
-        return is_hit;
-    }
-
-    AABB bounding_box() const override {
-        AABB aabb = hittable->bounding_box();
-        return aabb;
-    }
-
-  private:
-    std::shared_ptr<Hittable> hittable;
-    Vec3 axis;
-    float angle;
-};
-
-class Scale : public Hittable {
-  public:
-    Scale(std::shared_ptr<Hittable> hittable, const Vec3 &factor) : hittable(hittable), factor(factor) {}
-
-    bool hit(const Ray3 &ray, HitRecord &hit_record) const override {
-        Ray3 local_ray(ray.origin / factor, (ray.direction / factor).normalized());
-        bool is_hit = hittable->hit(local_ray, hit_record);
-        if (is_hit) {
-            hit_record.point = factor * hit_record.point;
-            hit_record.normal = (factor * hit_record.normal).normalized();
-            hit_record.dist *= factor;
-        }
-        return is_hit;
-    }
-
-    AABB bounding_box() const override {
-        AABB aabb = hittable->bounding_box();
-        aabb.x.min *= factor;
-        aabb.x.max *= factor;
-        aabb.y.min *= factor;
-        aabb.y.max *= factor;
-        aabb.z.min *= factor;
-        aabb.z.max *= factor;
-        return aabb;
-    }
-
-  private:
-    std::shared_ptr<Hittable> hittable;
-    Vec3 factor;
 };

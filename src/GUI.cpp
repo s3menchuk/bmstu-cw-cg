@@ -30,7 +30,8 @@ void draw_objects_ui(Scene &scene) {
 
             ImGui::PushID(&obj);
 
-            const ePrimitive obj_type = PRIMITIVE_TYPES.at(typeid(*obj->get()));
+            Hittable *raw_obj = obj->get().get();
+            const ePrimitive obj_type = PRIMITIVE_TYPES.at(typeid(*raw_obj));
             const std::string obj_name = PRIMITIVE_NAMES.at(obj_type);
 
             if (ImGui::TreeNode((obj_name + "##" + std::to_string(i)).c_str())) {
@@ -125,8 +126,14 @@ void draw_objects_ui(Scene &scene) {
                     throw std::runtime_error("Unknown primitive type");
 
                 // Rotation
+                Vec3 rotation_vec = obj->get_rotation();
+                float rotation_arr[3] = {rotation_vec.x, rotation_vec.y, rotation_vec.z};
+                ImGui::Text("Rotation");
+                ImGui::SameLine();
+                if (ImGui::DragFloat3(("##Rotation" + std::to_string(i)).c_str(), rotation_arr, 1.0f, 0.0f, 360.0f))
+                    obj->set_rotation(rotation_arr);
 
-                // Diffuse color
+                // Color
                 ImGui::Text("Color");
                 ImGui::SameLine();
                 std::array<float, 3> float_rgb = obj->material.color.as_linear_array();
@@ -134,6 +141,7 @@ void draw_objects_ui(Scene &scene) {
                 Color new_color(float_rgb[0], float_rgb[1], float_rgb[2]);
                 obj->material.color = new_color;
 
+                // Visible
                 ImGui::Text("Visible");
                 ImGui::SameLine();
                 ImGui::Checkbox("##", &obj->visible);
@@ -274,7 +282,8 @@ void draw_lights_ui(Scene &scene) {
 
             ImGui::PushID(&light);
 
-            const eLight light_type = LIGHT_TYPES.at(typeid(*light));
+            Light *raw_light = light.get();
+            const eLight light_type = LIGHT_TYPES.at(typeid(*raw_light));
             const std::string light_name = LIGHT_NAMES.at(light_type);
 
             if (ImGui::TreeNode((light_name + "##" + std::to_string(i)).c_str())) {
