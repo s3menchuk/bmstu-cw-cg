@@ -28,6 +28,6 @@ const int SAMPLES_PER_PIXEL = 1;
 
 // const auto SCENE_CREATOR = std::make_unique<UtahTeapotInCornellBox>(3, 3, 1.5, 2);
 // const auto SCENE_CREATOR = std::make_unique<UtahTeapot>();
-// const auto SCENE_CREATOR = std::make_unique<SimpleSphere>();
-const auto SCENE_CREATOR = std::make_unique<SimpleBox>();
+const auto SCENE_CREATOR = std::make_unique<SimpleSphere>();
+// const auto SCENE_CREATOR = std::make_unique<SimpleBox>();
 }  // namespace DefaultSettings
