@@ -1,0 +1,5 @@
+{
+  "cmake.configureOnOpen": false,
+  "latex-workshop.latex.outDir": "build",
+  "latex-workshop.latex.external.build.command": ""
+}

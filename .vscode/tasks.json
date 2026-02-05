@@ -1,0 +1,51 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake Configure",
+            "type": "shell",
+            "command": "cmake -B build",
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake Build",
+            "type": "shell",
+            "command": "cmake --build build",
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake Run",
+            "type": "shell",
+            "command": "build\\src\\Debug\\app.exe",
+            "dependsOn": [
+                "CMake Configure",
+                "CMake Build"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "pdflatex",
+            "type": "shell",
+            "command": "cd docs\\rpz && set TEXINPUTS=bmstu\\; && pdflatex main.tex -output-directory=build && start build\\main.pdf",
+            "problemMatcher": []
+        },
+        {
+            "label": "biber",
+            "type": "shell",
+            "command": "cd docs\\rpz && biber --output-directory=build main",
+            "problemMatcher": []
+        },
+        {
+            "label": "all latex build",
+            "type": "shell",
+            "dependsOn": [
+                "pdflatex",
+                "biber",
+                "pdflatex",
+                "pdflatex"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        }
+    ]
+}
