@@ -379,7 +379,6 @@ int main() {
 
     int fbw, fbh;
     glfwGetFramebufferSize(window, &fbw, &fbh);
-    glViewport(0, 0, fbw, fbh);
 
     // OpenGL and GLSL versions
     // std::cout << "OpenGL: " << glGetString(GL_VERSION) << std::endl;
@@ -425,10 +424,12 @@ int main() {
     glGenFramebuffers(2, accumFBO);
     glGenTextures(2, accumTex);
 
+    float scale = 1.0f;
+
     for (int i = 0; i < 2; i++) {
         glBindFramebuffer(GL_FRAMEBUFFER, accumFBO[i]);
         glBindTexture(GL_TEXTURE_2D, accumTex[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, fbw, fbh, 0, GL_RGBA, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, DefaultSettings::WIDTH * scale, DefaultSettings::HEIGHT * scale, 0, GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, accumTex[i], 0);
@@ -443,7 +444,7 @@ int main() {
     std::vector<glm::vec4> textures;
 
     load("assets/models/utah_teapot-res2_unit.obj", coords, faces, normals, textures);
-    faces.clear();
+    // faces.clear();
 
     glUseProgram(tracer_shader);
     TBO coordsTBO = tbo_load(coords, GL_RGBA32F, tracer_shader);
@@ -501,7 +502,7 @@ int main() {
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, accumFBO[ping_pong_buffer]);
-        glViewport(0, 0, fbw, fbh);
+        glViewport(0, 0, DefaultSettings::WIDTH * scale, DefaultSettings::HEIGHT * scale);
 
         glUseProgram(tracer_shader);
         glUniform1i(glGetUniformLocation(tracer_shader, "FrameNum"), frame_num);

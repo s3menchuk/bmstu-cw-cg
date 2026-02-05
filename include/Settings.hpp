@@ -11,7 +11,7 @@ const std::string APP_NAME = "Graphics Engine";
 const int FRAME_LIMIT = 60;
 
 const Real ASPECT = 16.0f / 9.0f;
-const int WIDTH = 1280;
+const int WIDTH = 640;
 const int HEIGHT = WIDTH / ASPECT;
 
 const Vec3 CAMERA_POS(0, 0.35, 1);

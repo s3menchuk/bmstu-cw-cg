@@ -766,8 +766,8 @@ void main() {
     set_camera(CameraPos, CameraDir);
 
     vec3 prev_color = texture(AccumTex, TexCoords).rgb;
-    vec3 curr_color = render_path_tracing();
-    // vec3 curr_color = render_ray_tracing();
+    // vec3 curr_color = render_path_tracing();
+    vec3 curr_color = render_ray_tracing();
     vec3 final_color = (prev_color * float(FrameNum - 1) + curr_color) / float(FrameNum);
     FragColor = vec4(final_color, 1.0);
 }
