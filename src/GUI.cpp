@@ -161,7 +161,7 @@ void draw_objects_ui(Scene &scene) {
         static ePrimitive selected_obj_type = ePrimitive::Sphere;
 
         if (ImGui::BeginCombo("##combo_primitives", PRIMITIVE_NAMES.at(selected_obj_type).c_str())) {
-            for (const auto &[primitive_type, primitive] : PRIMITIVE_TYPES) {
+            for (auto primitive : SELECTED_AVAILABLE_PRIMITIVES) {
                 bool is_selected = (selected_obj_type == primitive);
                 if (ImGui::Selectable(PRIMITIVE_NAMES.at(primitive).c_str(), is_selected)) {
                     selected_obj_type = primitive;
@@ -256,7 +256,7 @@ void draw_objects_ui(Scene &scene) {
         ImGui::ColorEdit3("", rgb, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 
         if (ImGui::Button("Add object")) {
-            std::shared_ptr<Hittable> primitive;
+            std::shared_ptr<Hittable> primitive = nullptr;
             if (selected_obj_type == ePrimitive::Sphere)
                 primitive = std::make_shared<Sphere>(sphere_center, sphere_radius);
             if (selected_obj_type == ePrimitive::Plane)
@@ -268,9 +268,11 @@ void draw_objects_ui(Scene &scene) {
             if (selected_obj_type == ePrimitive::RightPyramid)
                 primitive = std::make_shared<RightPyramid>(pyramid_base_center, pyramid_radius, pyramid_height, pyramid_order);
 
-            Color color(rgb);
-            auto object = std::make_shared<Object>(primitive, Material(color, 0));
-            scene.add_object(object);
+            if (primitive) {
+                Color color(rgb);
+                auto object = std::make_shared<Object>(primitive, Material(color, 0));
+                scene.add_object(object);
+            }
         }
     }
 }

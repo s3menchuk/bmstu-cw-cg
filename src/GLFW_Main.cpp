@@ -11,6 +11,7 @@
 #include "imgui.h"
 #include <SFML/Graphics.hpp>
 
+// #include <GLFW/glfw3.h>
 #include <iostream>
 #include <memory>
 #include <omp.h>
@@ -37,6 +38,17 @@ void render_frame(AppContext &app) {
 }
 
 int main() {
+    // if (!glfwInit()) {
+    //     return -1;
+    // }
+
+    // glfwInitHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    // glfwInitHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    // glfwInitHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    // GLFWwindow *window = glfwCreateWindow(DefaultSettings::WIDTH, DefaultSettings::HEIGHT, DefaultSettings::APP_NAME.c_str(), nullptr, nullptr);
+    // glfwMakeContextCurrent(window);
+
     sf::RenderWindow window(sf::VideoMode({DefaultSettings::WIDTH, DefaultSettings::HEIGHT}), DefaultSettings::APP_NAME);
     // window.setFramerateLimit(Settings::FRAME_LIMIT);
     if (!ImGui::SFML::Init(window))
