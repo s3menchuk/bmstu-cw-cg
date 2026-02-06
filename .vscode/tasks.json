@@ -2,26 +2,15 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "CMake Configure",
             "type": "shell",
-            "command": "cmake -B build",
-            "problemMatcher": []
-        },
-        {
-            "label": "CMake Build",
-            "type": "shell",
-            "command": "cmake --build build",
-            "problemMatcher": []
-        },
-        {
-            "label": "CMake Run",
-            "type": "shell",
-            "command": "build\\src\\Debug\\app.exe",
-            "dependsOn": [
-                "CMake Configure",
-                "CMake Build"
-            ],
-            "problemMatcher": []
+            "label": "cmake: build + run",
+            "group": "build",
+            "osx": {
+                "command": "cmake -B build && cmake --build build && ./build/src/app"
+            },
+            "windows": {
+                "command": "cmake -B build && cmake --build build && && build\\Debug\\app.exe"
+            }
         },
         {
             "label": "pdflatex",

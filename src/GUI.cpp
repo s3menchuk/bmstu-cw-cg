@@ -158,6 +158,8 @@ void draw_objects_ui(Scene &scene) {
             ImGui::PopID();
         }
 
+        ImGui::Separator();
+
         static ePrimitive selected_obj_type = ePrimitive::Sphere;
 
         if (ImGui::BeginCombo("##combo_primitives", PRIMITIVE_NAMES.at(selected_obj_type).c_str())) {
@@ -215,7 +217,7 @@ void draw_objects_ui(Scene &scene) {
 
             ImGui::Text("Sizes");
             ImGui::SameLine();
-            ImGui::DragFloat("##box-sizes", box_sizes);
+            ImGui::DragFloat3("##box-sizes", box_sizes);
         } else if (selected_obj_type == ePrimitive::RightPrism) {
             ImGui::Text("Base center");
             ImGui::SameLine();
@@ -270,7 +272,7 @@ void draw_objects_ui(Scene &scene) {
 
             if (primitive) {
                 Color color(rgb);
-                auto object = std::make_shared<Object>(primitive, Material(color, 0));
+                auto object = std::make_shared<Object>(primitive, Material{.color = color, .reflectance = 0});
                 scene.add_object(object);
             }
         }
@@ -338,6 +340,8 @@ void draw_lights_ui(Scene &scene) {
             ImGui::PopID();
         }
 
+        ImGui::Separator();
+
         static eLight selected_light_type = eLight::Directional;
 
         if (ImGui::BeginCombo("##combo_lights", LIGHT_NAMES.at(selected_light_type).c_str())) {
@@ -369,7 +373,8 @@ void draw_lights_ui(Scene &scene) {
         ImGui::Text("Color");
         ImGui::SameLine();
         static float light_color[3] = {1, 1, 1};
-        ImGui::ColorEdit3("", light_color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+        ImGui::ColorEdit3(("LightColor" + std::to_string(scene.lights.size())).c_str(), light_color,
+                          ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 
         static float light_intensity = 1;
         ImGui::Text("Intensity");

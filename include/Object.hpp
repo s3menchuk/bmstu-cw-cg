@@ -303,10 +303,10 @@ class Mesh : public Hittable {
         return aabb;
     }
 
-    static Mesh get_base(const Vec3 &center, Real radius, size_t order, Real offset) {
+    static Mesh get_base(Vec3 center, Real radius, size_t order, Real offset) {
         std::vector<Point3> points = get_points_on_circle(center, radius, order);
-        move_points_by(points, Vec3(offset, 0, 0));
-        const Point3 lower_base_center = center + Vec3(offset, 0, 0);
+        move_points_by(points, Vec3(0, offset, 0));
+        const Point3 lower_base_center = center + Vec3(0, offset, 0);
         std::vector<Triangle> triangles;
         for (size_t i = 0; i < points.size(); ++i)
             triangles.push_back({points[i], points[(i + 1) % order], lower_base_center});
@@ -369,8 +369,8 @@ class Box : public Hittable {
 
 class RightPrism : public Hittable {
   public:
-    RightPrism(const Point3 &base_center, Real radius, Real height, size_t order)
-        : upper_base(get_upper_base(base_center, radius, height, order)), lower_base(get_lower_base(base_center, radius, height, order)) {
+    RightPrism(Point3 lower_base_center, Real radius, Real height, size_t order)
+        : upper_base(get_upper_base(lower_base_center, radius, height, order)), lower_base(get_lower_base(lower_base_center, radius, height, order)) {
 
         if (radius <= 0)
             throw std::invalid_argument("Radius must be positive");
@@ -379,24 +379,24 @@ class RightPrism : public Hittable {
         if (order < 3)
             throw std::invalid_argument("Vertex count must be at least 3");
 
-        this->base_center = base_center;
+        this->lower_base_center = lower_base_center;
         this->radius = radius;
         this->height = height;
         this->order = order;
 
+        const Vec3 v(0, height, 0);
         for (size_t i = 0; i < order; ++i) {
             Real radians1 = static_cast<Real>(i) / order * (2 * std::numbers::pi);
             Real dx1 = std::cos(radians1);
-            Real dy1 = std::sin(radians1);
-            Point3 q1 = base_center + Vec3(0, dx1, dy1) * radius + Vec3(height / 2, 0, 0);
+            Real dz1 = std::sin(radians1);
+            Point3 q1 = lower_base_center + Vec3(dx1, 0, dz1) * radius;
 
             Real radians2 = static_cast<Real>((i + 1) % order) / order * (2 * std::numbers::pi);
             Real dx2 = std::cos(radians2);
-            Real dy2 = std::sin(radians2);
-            Point3 q2 = base_center + Vec3(0, dx2, dy2) * radius + Vec3(height / 2, 0, 0);
+            Real dz2 = std::sin(radians2);
+            Point3 q2 = lower_base_center + Vec3(dx2, 0, dz2) * radius;
 
             Vec3 u = q2 - q1;
-            Vec3 v(-height, 0, 0);
             Quad side_face(q1, u, v);
             side_faces.push_back(side_face);
         }
@@ -414,15 +414,15 @@ class RightPrism : public Hittable {
         return aabb;
     }
 
-    static Mesh get_upper_base(const Vec3 &center, Real radius, Real height, size_t order) {
-        return Mesh::get_base(center, radius, order, height / 2);
+    static Mesh get_upper_base(Vec3 center, Real radius, Real height, size_t order) {
+        return Mesh::get_base(center, radius, order, height);
     }
-    static Mesh get_lower_base(const Vec3 &center, Real radius, Real height, size_t order) {
-        return Mesh::get_base(center, radius, order, -height / 2);
+    static Mesh get_lower_base(Vec3 center, Real radius, Real height, size_t order) {
+        return Mesh::get_base(center, radius, order, 0);
     }
 
     Point3 get_base_center() const {
-        return base_center;
+        return lower_base_center;
     }
 
     void set_base_center(const Point3 &new_base_center) {
@@ -434,7 +434,7 @@ class RightPrism : public Hittable {
     }
 
     void set_radius(Real new_radius) {
-        *this = RightPrism(base_center, new_radius, height, order);
+        *this = RightPrism(lower_base_center, new_radius, height, order);
     }
 
     Real get_height() const {
@@ -442,7 +442,7 @@ class RightPrism : public Hittable {
     }
 
     void set_height(Real new_height) {
-        *this = RightPrism(base_center, radius, new_height, order);
+        *this = RightPrism(lower_base_center, radius, new_height, order);
     }
 
     size_t get_order() const {
@@ -450,11 +450,11 @@ class RightPrism : public Hittable {
     }
 
     void set_order(size_t new_order) {
-        *this = RightPrism(base_center, radius, height, new_order);
+        *this = RightPrism(lower_base_center, radius, height, new_order);
     }
 
   private:
-    Vec3 base_center;
+    Point3 lower_base_center;
     Real radius;
     Real height;
     size_t order;
@@ -466,7 +466,7 @@ class RightPrism : public Hittable {
 
 class RightPyramid : public Hittable {
   public:
-    RightPyramid(const Point3 &base_center, Real radius, Real height, size_t order) : base(Mesh::get_base(base_center, radius, order, 0)) {
+    RightPyramid(Point3 base_center, Real radius, Real height, size_t order) : base(Mesh::get_base(base_center, radius, order, 0)) {
         if (radius <= 0)
             throw std::invalid_argument("Radius must be positive");
         if (height <= 0)
@@ -479,7 +479,7 @@ class RightPyramid : public Hittable {
         this->height = height;
         this->order = order;
 
-        const Point3 top = base_center - Vec3(height, 0, 0);
+        const Point3 top = base_center + Vec3(0, height, 0);
         const std::vector<Point3> points = get_points_on_circle(base_center, radius, order);
         for (size_t i = 0; i < points.size(); ++i) {
             side_faces.push_back({points[i], points[(i + 1) % order], top});

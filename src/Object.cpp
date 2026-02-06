@@ -13,8 +13,8 @@ std::vector<Point3> get_points_on_circle(Vec3 center, Real radius, size_t order)
     for (size_t i = 0; i < order; ++i) {
         auto radians = static_cast<Real>(i) / order * (2 * std::numbers::pi);
         auto dx = std::cos(radians);
-        auto dy = std::sin(radians);
-        Point3 point = center + Vec3(0, dx, dy) * radius;
+        auto dz = std::sin(radians);
+        Point3 point = center + Vec3(dx, 0, dz) * radius;
         res.push_back(point);
     }
     return res;
