@@ -22,6 +22,7 @@
 % Установка базового класса
 \LoadClass[a4paper,oneside,14pt]{extreport}
 
+\usepackage{cmap} % EDIT: for searchable and copyable PDFs
 % Настройка кодировки и языков
 \RequirePackage[T1,T2A]{fontenc}
 \RequirePackage[utf8]{inputenc}
