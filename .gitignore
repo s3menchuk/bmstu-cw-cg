@@ -4,3 +4,4 @@ __pycache__
 imgui.ini
 .vs
 .DS_Store
+c_cpp_properties.json
