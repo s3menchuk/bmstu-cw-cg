@@ -21,6 +21,18 @@ GUI библиотека: Dear ImGui
 
 ![](images/GUI.png)
 
+## Docs
+
+- UML
+  ![](docs/rpz/images/UML.svg)
+
+- IDEF0 (Overview)
+  ![](docs/rpz/images/IDEF0_specific.pdf)
+
+- IDEF0 (Ray tracing)
+  ![](docs/rpz/images/IDEF0_RayTracing.pdf)
+
+
 ## Build
 
 ```
