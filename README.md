@@ -27,10 +27,10 @@ GUI библиотека: Dear ImGui
   ![](docs/rpz/images/UML.svg)
 
 - IDEF0 (Overview)
-  ![](docs/rpz/images/IDEF0_specific.pdf)
+  ![](docs/rpz/images/IDEF0_specific.svg)
 
 - IDEF0 (Ray tracing)
-  ![](docs/rpz/images/IDEF0_RayTracing.pdf)
+  ![](docs/rpz/images/IDEF0_RayTracing.svg)
 
 
 ## Build
