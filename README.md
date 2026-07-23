@@ -24,12 +24,15 @@ GUI библиотека: Dear ImGui
 ## Docs
 
 - UML
+
   ![](docs/rpz/images/UML.svg)
 
 - IDEF0 (Overview)
+
   ![](docs/rpz/images/IDEF0_specific.svg)
 
 - IDEF0 (Ray tracing)
+
   ![](docs/rpz/images/IDEF0_RayTracing.svg)
 
 
